@@ -26,15 +26,17 @@
     "check": "npm run --ws check",
     "fix": "npm run --ws fix",
     "verify:brand": "node scripts/verify-rebrand.mjs",
-    "release:check": "npm run verify:lock && npm run verify:brand && npm pack --dry-run",
-    "prepublishOnly": "npm run verify:brand",
+    "release:check": "npm run verify:version && npm run verify:lock && npm run verify:brand && npm run verify:package",
+    "prepublishOnly": "npm run verify:version && npm run verify:brand",
     "deploy:all": "bash scripts/deploy.sh",
     "deploy:site": "bash scripts/deploy-site.sh",
     "deploy:npm": "bash scripts/deploy.sh --npm-only",
     "site:start": "npm --prefix website start",
     "site:build": "npm --prefix website run build",
     "site:generate": "npm --prefix website run generate",
-    "verify:lock": "node scripts/verify-package-lock.mjs"
+    "verify:lock": "node scripts/verify-package-lock.mjs",
+    "verify:version": "python3 scripts/sync_version.py verify",
+    "verify:package": "node scripts/verify-package-contents.mjs"
   },
   "repository": {
     "type": "git",
@@ -103,7 +105,14 @@
     "*.py",
     "README.md",
     "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "!**/__pycache__/**",
+    "!**/*.pyc",
+    "!**/*.pyo",
+    "!**/*.pyd",
+    "!**/*.egg-info/**",
+    "!MagicMock/**",
+    "!svg/**"
   ],
   "publishConfig": {
     "access": "public",

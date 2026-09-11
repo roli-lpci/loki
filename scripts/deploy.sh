@@ -14,6 +14,13 @@ APPLY_INFRA=false
 DRY_RUN=false
 YES=false
 TEMP_NPMRC=""
+AUTO_VERSION=true
+VERSION_BUMP="patch"
+EXPLICIT_VERSION=""
+VERSION_GIT=true
+VERSION_CHANGED=false
+VERSION_GIT_ACTIVE=false
+VERSION_FILES=(package.json pyproject.toml loki_cli/__init__.py apps/desktop/package.json uv.lock package-lock.json)
 
 cleanup() {
   if [ -n "$TEMP_NPMRC" ] && [ -f "$TEMP_NPMRC" ]; then
@@ -32,6 +39,10 @@ Options:
   --with-infra       Run terraform init/plan/apply before site upload
   --dry-run          Build and validate without publishing or uploading
   --yes              Skip the production confirmation prompt
+  --bump PART        Auto-version collision bump: patch, minor, or major (default: patch)
+  --version X.Y.Z    Publish an explicit version and synchronize all version metadata
+  --no-auto-version  Do not choose a new version automatically; fail on registry collisions
+  --no-version-git   Allow a non-git/dirty release and do not commit/push version metadata
   -h, --help         Show this help
 
 Environment:
@@ -44,6 +55,7 @@ Environment:
   TF_VAR_hosted_zone_id                  Optional override; defaults to loki.computer zone Z09046593O6AIZUOSG6X8
   AWS_PROFILE                             Optional AWS CLI profile
   AWS_REGION                              Optional AWS region, defaults to us-east-1
+  LOKI_VERSION_BUMP                       Optional default bump component: patch, minor, or major
 USAGE
 }
 
@@ -330,6 +342,32 @@ while [ "$#" -gt 0 ]; do
     --yes)
       YES=true
       ;;
+    --bump)
+      if [ "$#" -lt 2 ]; then
+        printf '%s\n' '--bump requires patch, minor, or major.' >&2
+        exit 1
+      fi
+      VERSION_BUMP="$2"
+      case "$VERSION_BUMP" in
+        patch|minor|major) ;;
+        *) printf 'Invalid --bump value: %s\n' "$VERSION_BUMP" >&2; exit 1 ;;
+      esac
+      shift
+      ;;
+    --version)
+      if [ "$#" -lt 2 ]; then
+        printf '%s\n' '--version requires X.Y.Z.' >&2
+        exit 1
+      fi
+      EXPLICIT_VERSION="$2"
+      shift
+      ;;
+    --no-auto-version)
+      AUTO_VERSION=false
+      ;;
+    --no-version-git)
+      VERSION_GIT=false
+      ;;
     -h|--help)
       usage
       exit 0
@@ -345,6 +383,13 @@ done
 
 require_command node
 require_command npm
+require_command python3
+
+VERSION_BUMP="${LOKI_VERSION_BUMP:-$VERSION_BUMP}"
+case "$VERSION_BUMP" in
+  patch|minor|major) ;;
+  *) printf 'Invalid LOKI_VERSION_BUMP/--bump value: %s\n' "$VERSION_BUMP" >&2; exit 1 ;;
+esac
 
 if $DEPLOY_SITE && ! $DRY_RUN; then
   require_command aws
@@ -427,14 +472,80 @@ if $APPLY_INFRA; then
 fi
 
 if $DEPLOY_NPM; then
+  PACKAGE_NAME="$(node -p "require('./package.json').name")"
+  LOCAL_VERSION="$(node -p "require('./package.json').version")"
+  REGISTRY_VERSION=""
+  TARGET_VERSION="$LOCAL_VERSION"
+
+  printf '\n==> Resolving npm release version\n'
+
+  if $VERSION_GIT && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    VERSION_GIT_ACTIVE=true
+    DIRTY_WORKTREE="$(git status --porcelain)"
+    if [ -n "$DIRTY_WORKTREE" ]; then
+      printf '%s\n' 'Release worktree is not clean. Commit/stash all changes before deploying, or use --no-version-git intentionally.' >&2
+      printf '%s\n' "$DIRTY_WORKTREE" >&2
+      exit 1
+    fi
+  fi
+
+  set +e
+  REGISTRY_VERSION="$(npm view "$PACKAGE_NAME" version --registry=https://registry.npmjs.org 2>/dev/null)"
+  REGISTRY_LOOKUP_STATUS=$?
+  set -e
+  if [ "$REGISTRY_LOOKUP_STATUS" -ne 0 ]; then
+    if npm ping --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+      REGISTRY_VERSION=""
+    else
+      printf '%s\n' 'Unable to query the npm registry. Refusing to guess a release version.' >&2
+      exit 1
+    fi
+  fi
+
+  if [ -n "$EXPLICIT_VERSION" ]; then
+    TARGET_VERSION="$EXPLICIT_VERSION"
+    python3 scripts/sync_version.py next --local "$TARGET_VERSION" --bump patch >/dev/null
+    set +e
+    npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org >/dev/null 2>&1
+    VERSION_EXISTS=$?
+    set -e
+    if [ "$VERSION_EXISTS" -eq 0 ]; then
+      printf '%s@%s already exists on npm; choose a new --version.\n' "$PACKAGE_NAME" "$TARGET_VERSION" >&2
+      exit 1
+    fi
+  elif $AUTO_VERSION; then
+    TARGET_VERSION="$(python3 scripts/sync_version.py next --local "$LOCAL_VERSION" --registry "$REGISTRY_VERSION" --bump "$VERSION_BUMP")"
+  fi
+
+  if [ "$TARGET_VERSION" != "$LOCAL_VERSION" ]; then
+    printf 'Version plan: %s@%s -> %s (registry latest: %s)\n' \
+      "$PACKAGE_NAME" "$LOCAL_VERSION" "$TARGET_VERSION" "${REGISTRY_VERSION:-none}"
+    if $DRY_RUN; then
+      printf 'Dry run: would synchronize release metadata to %s before publishing.\n' "$TARGET_VERSION"
+    else
+      RELEASE_DATE="$(python3 - <<'PYDATE'
+from datetime import date
+value = date.today()
+print(f"{value.year}.{value.month}.{value.day}")
+PYDATE
+)"
+      python3 scripts/sync_version.py set "$TARGET_VERSION" --date "$RELEASE_DATE"
+      VERSION_CHANGED=true
+    fi
+  else
+    if [ -n "$REGISTRY_VERSION" ] && [ "$TARGET_VERSION" = "$REGISTRY_VERSION" ]; then
+      printf '%s@%s is already published and auto-versioning is disabled.\n' "$PACKAGE_NAME" "$TARGET_VERSION" >&2
+      exit 1
+    fi
+    printf 'Version plan: publish existing local version %s (registry latest: %s).\n' \
+      "$TARGET_VERSION" "${REGISTRY_VERSION:-none}"
+  fi
+
   printf '\n==> Validating npm package\n'
   npm run release:check
 
-  PACKAGE_NAME="$(node -p "require('./package.json').name")"
-  PACKAGE_VERSION="$(node -p "require('./package.json').version")"
-
   if $DRY_RUN; then
-    printf 'Dry run: would publish %s@%s\n' "$PACKAGE_NAME" "$PACKAGE_VERSION"
+    printf 'Dry run: would publish %s@%s\n' "$PACKAGE_NAME" "$TARGET_VERSION"
   else
     if [ -n "${NPM_TOKEN:-}" ]; then
       TEMP_NPMRC="$(mktemp)"
@@ -448,19 +559,44 @@ if $DEPLOY_NPM; then
       exit 1
     fi
 
-    if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
-      printf '%s@%s is already published; skipping npm publish.\n' "$PACKAGE_NAME" "$PACKAGE_VERSION"
-    else
-      npm publish --access public --provenance=false
+    if $VERSION_GIT_ACTIVE; then
+      if $VERSION_CHANGED; then
+        VERSION_GIT_FILES=()
+        for version_file in "${VERSION_FILES[@]}"; do
+          if [ -e "$version_file" ]; then
+            VERSION_GIT_FILES+=("$version_file")
+          fi
+        done
+        git add -- "${VERSION_GIT_FILES[@]}"
+        if ! git diff --cached --quiet; then
+          git commit -m "chore: bump version to v$TARGET_VERSION"
+        fi
+      fi
+
+      CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
+      if [ -z "$CURRENT_BRANCH" ]; then
+        printf '%s\n' 'Cannot publish from a detached HEAD with release git integration enabled. Re-run with --no-version-git only if that is intentional.' >&2
+        exit 1
+      fi
+      printf 'Pushing release source on %s before npm publish...\n' "$CURRENT_BRANCH"
+      git push origin HEAD
     fi
 
-    PUBLISHED_VERSION="$(npm view "$PACKAGE_NAME" version --registry=https://registry.npmjs.org 2>/dev/null || true)"
-    if [ "$PUBLISHED_VERSION" != "$PACKAGE_VERSION" ]; then
-      printf 'npm registry still reports %s (expected %s). Re-run `%s --npm-only` after checking npm auth/registry status.\n' \
-        "${PUBLISHED_VERSION:-unknown}" "$PACKAGE_VERSION" "$0" >&2
+    if npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+      printf '%s@%s appeared on npm before publish. Refusing to skip or overwrite it; rerun deploy to select the next version.\n' \
+        "$PACKAGE_NAME" "$TARGET_VERSION" >&2
       exit 1
     fi
-    printf 'npm registry confirmed %s@%s.\n' "$PACKAGE_NAME" "$PACKAGE_VERSION"
+
+    npm publish --access public --provenance=false
+
+    CONFIRMED_VERSION="$(npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org 2>/dev/null || true)"
+    if [ "$CONFIRMED_VERSION" != "$TARGET_VERSION" ]; then
+      printf 'npm registry did not confirm %s@%s after publish. Re-run `%s --npm-only` after checking npm auth/registry status.\n' \
+        "$PACKAGE_NAME" "$TARGET_VERSION" "$0" >&2
+      exit 1
+    fi
+    printf 'npm registry confirmed %s@%s.\n' "$PACKAGE_NAME" "$TARGET_VERSION"
   fi
 fi
 

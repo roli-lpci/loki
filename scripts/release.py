@@ -30,6 +30,8 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from sync_version import sync_version
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VERSION_FILE = REPO_ROOT / "loki_cli" / "__init__.py"
 PYPROJECT_FILE = REPO_ROOT / "pyproject.toml"
@@ -2185,50 +2187,8 @@ def bump_version(current: str, part: str) -> str:
 
 
 def update_version_files(semver: str, calver_date: str):
-    """Update version strings in source files."""
-    # Update __init__.py
-    content = VERSION_FILE.read_text(encoding="utf-8")
-    content = re.sub(
-        r'__version__\s*=\s*"[^"]+"',
-        f'__version__ = "{semver}"',
-        content,
-    )
-    content = re.sub(
-        r'__release_date__\s*=\s*"[^"]+"',
-        f'__release_date__ = "{calver_date}"',
-        content,
-    )
-    VERSION_FILE.write_text(content, encoding="utf-8")
-
-    # Update pyproject.toml
-    pyproject = PYPROJECT_FILE.read_text(encoding="utf-8")
-    pyproject = re.sub(
-        r'^version\s*=\s*"[^"]+"',
-        f'version = "{semver}"',
-        pyproject,
-        # Turn-end file-mutation verifier footer appended by run_agent.py
-        # (``_format_file_mutation_failure_footer``). It's a UI affordance — reading "warning file mutation
-        # verifier, 2 files were NOT modified..." aloud is noise (#40772). The footer is a ``⚠️
-        # File-mutation verifier:`` header line followed by indented ``•`` bullet lines; strip the whole
-        # block.
-        flags=re.MULTILINE,
-    )
-    PYPROJECT_FILE.write_text(pyproject, encoding="utf-8")
-
-    # Keep the desktop Electron app's package.json version in lockstep with the
-    # Python package version. The desktop About panel reads the live Loki
-    # version at runtime, but app.getVersion()/packaging metadata still come
-    # from this field, so it must track pyproject to avoid drift.
-    desktop_pkg = REPO_ROOT / "apps" / "desktop" / "package.json"
-    if desktop_pkg.exists():
-        pkg_text = desktop_pkg.read_text(encoding="utf-8")
-        pkg_text = re.sub(
-            r'("version"\s*:\s*)"[^"]+"',
-            rf'\g<1>"{semver}"',
-            pkg_text,
-            count=1,
-        )
-        desktop_pkg.write_text(pkg_text, encoding="utf-8")
+    """Update every release version surface from one source of truth."""
+    sync_version(semver, calver_date)
 
 
 def resolve_author(name: str, email: str) -> str:
@@ -2568,7 +2528,16 @@ def main():
             print(f"  ✓ Updated version files to v{new_version} ({calver_date})")
 
             # Commit version bump
-            add_files = [str(VERSION_FILE), str(PYPROJECT_FILE)]
+            add_files = [
+                str(VERSION_FILE),
+                str(PYPROJECT_FILE),
+                str(REPO_ROOT / "package.json"),
+                str(REPO_ROOT / "apps" / "desktop" / "package.json"),
+                str(REPO_ROOT / "uv.lock"),
+            ]
+            package_lock = REPO_ROOT / "package-lock.json"
+            if package_lock.exists():
+                add_files.append(str(package_lock))
             add_result = git_result("add", *add_files)
             if add_result.returncode != 0:
                 print(f"  ✗ Failed to stage version files: {add_result.stderr.strip()}")
