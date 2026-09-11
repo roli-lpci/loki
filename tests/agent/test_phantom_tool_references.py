@@ -22,7 +22,7 @@ class TestLokiAgentHelpGuidance:
     def test_no_skills_variant_has_no_skill_view_reference(self):
         from agent.prompt_builder import LOKI_AGENT_HELP_GUIDANCE_NO_SKILLS
         assert "skill_view" not in LOKI_AGENT_HELP_GUIDANCE_NO_SKILLS
-        assert "loki-agent.wundercorp.com/docs" in LOKI_AGENT_HELP_GUIDANCE_NO_SKILLS
+        assert "doku.sh" in LOKI_AGENT_HELP_GUIDANCE_NO_SKILLS
 
 
 class TestExecutionGuidanceText:

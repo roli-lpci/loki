@@ -138,7 +138,7 @@ describe('MessagingView setup-guide link', () => {
   })
 
   it('opens a real docs URL through the validated external opener', async () => {
-    const docsUrl = 'https://loki.computer/docs/user-guide/messaging/teams'
+    const docsUrl = 'https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243'
     getMessagingPlatforms.mockResolvedValue({ platforms: [platform({ docs_url: docsUrl })] })
 
     await renderMessaging()

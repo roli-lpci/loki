@@ -543,7 +543,7 @@ _SSH_HINT_LOOPBACK = (
     "         ssh -N -L {port}:127.0.0.1:{port} <user>@<this-host>\n"
     "       then open the URL above and let it redirect normally.\n"
     "\n"
-    "  See: https://loki.computer/docs/guides/oauth-over-ssh\n")
+    "  See: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243\n")
 
 
 def _announce_authorization_url(authorization_url: str, port: int, redirect_uri: str | None) -> None:
@@ -696,7 +696,7 @@ def remove_oauth_tokens(server_name: str, *, loki_home: str | Path | None = None
 # CIMD (OAuth Client ID Metadata Documents): the client_id IS an HTTPS URL the server fetches for our
 # name/logo/redirect URIs, replacing per-install DCR. The SDK does the protocol; Loki only decides
 # eligibility. Published from ``website/static/oauth/client-metadata.json``; the github.io origin is
-# deliberate — servers MUST NOT follow redirects when fetching it, and loki-agent.wundercorp.com/docs/* 301s here.
+# deliberate — servers MUST NOT follow redirects when fetching it, and doku.sh/* 301s here.
 _CIMD_CLIENT_METADATA_URL = "https://wundercorp.github.io/loki-agent/docs/oauth/client-metadata.json"
 # Loopback ports/hosts declared in that document (exact match, so no ephemeral port under CIMD);
 # below Linux's 32768 ephemeral floor. tests/tools/test_mcp_cimd.py keeps them in sync.

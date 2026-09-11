@@ -49,7 +49,7 @@ class TestDiscordToolPreviewFormatting:
         from agent.display import ToolPreview
 
         adapter = _make_discord_adapter()
-        url = "https://loki.computer/docs/gateway/discord/tool-progress"
+        url = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
         visible = "https://loki-agent.wundercorp..."
 
         out = adapter.format_tool_preview(ToolPreview(visible, truncated=True, url=url))
@@ -89,7 +89,7 @@ class TestDiscordToolPreviewFormatting:
         from gateway.stream_events import ToolCallChunk
 
         adapter = _make_discord_adapter()
-        url = "https://loki.computer/docs/gateway/discord/tool-progress"
+        url = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
         visible = url[:37] + "..."
 
         out = adapter.format_tool_event(

@@ -435,7 +435,7 @@ def build_parser(parent_subparsers: argparse._SubParsersAction) -> argparse.Argu
         description="Durable SQLite-backed task board shared across Loki profiles. "
                     "Tasks are claimed atomically, can depend on other tasks, and "
                     "are executed by a named profile in an isolated workspace. "
-                    "See https://loki.computer/docs/user-guide/features/kanban "
+                    "See https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243 "
                     "or docs/loki-kanban-v1-spec.pdf for the full design.",
     )
     # --board scopes every subcommand to one board's DB; when omitted the

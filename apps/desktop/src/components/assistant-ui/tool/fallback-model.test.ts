@@ -153,28 +153,28 @@ describe('buildToolView browser_navigate title', () => {
     const view = buildToolView(
       part({
         toolName: 'browser_navigate',
-        args: { url: 'https://loki.computer/docs' },
+        args: { url: 'https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243' },
         result: { success: false, error: 'Command timed out after 60 seconds' }
       }),
       ''
     )
 
     expect(view.status).toBe('error')
-    expect(view.title).toBe('Failed to open loki-agent.wundercorp.com/docs')
+    expect(view.title).toBe('Failed to open doku.sh')
   })
 
   it('shows opened title on success', () => {
     const view = buildToolView(
       part({
         toolName: 'browser_navigate',
-        args: { url: 'https://loki.computer/docs' },
-        result: { success: true, url: 'https://loki.computer/docs', title: 'Docs' }
+        args: { url: 'https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243' },
+        result: { success: true, url: 'https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243', title: 'Docs' }
       }),
       ''
     )
 
     expect(view.status).toBe('success')
-    expect(view.title).toBe('Opened loki-agent.wundercorp.com/docs')
+    expect(view.title).toBe('Opened doku.sh')
   })
 })
 

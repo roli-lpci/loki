@@ -133,7 +133,7 @@ def _print_curator_first_run_notice() -> None:
     )
     print("  Preview now:  loki curator run --dry-run")
     print("  Pause it:     loki curator pause")
-    print("  Docs:         https://loki.computer/docs/user-guide/features/curator")
+    print("  Docs:         https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243")
 
 
 def _print_fts_optimize_available_notice() -> None:

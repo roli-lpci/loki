@@ -64,7 +64,7 @@ def build_catalog() -> dict:
         "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "metadata": {
             "source": "loki-agent repo",
-            "docs": "https://loki.computer/docs/reference/model-catalog",
+            "docs": "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243",
         },
         "providers": {
             "openrouter": {

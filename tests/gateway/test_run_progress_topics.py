@@ -351,7 +351,7 @@ class LongPreviewAgent:
 
 
 class UrlPreviewAgent:
-    URL = "https://loki.computer/docs/gateway/discord/tool-progress"
+    URL = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
 
     def __init__(self, **kwargs):
         self.tool_progress_callback = kwargs.get("tool_progress_callback")

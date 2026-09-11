@@ -9,7 +9,7 @@ from loki_cli.config import load_config
 
 DEFAULT_PORTAL_URL = "https://portal.wundercorp.com"
 SUBSCRIPTION_URL = "https://portal.wundercorp.com/manage-subscription"
-DOCS_URL = "https://loki.computer/docs/user-guide/features/tool-gateway"
+DOCS_URL = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
 # Static `portal tools` catalog — the partners Tool Gateway routes to today: (key, label, partner).
 _CATALOG = [
     ("web", "Web search & extract", "Firecrawl"),

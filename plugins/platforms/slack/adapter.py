@@ -6396,7 +6396,7 @@ def interactive_setup() -> None:
     for line in _SETUP_STEPS:
         print_info(line)
     print()
-    print_info("   Full guide: https://loki.computer/docs/user-guide/messaging/slack/")
+    print_info("   Full guide: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243")
     print()
     # Write the manifest up-front for the "Create from manifest" flow.
     _write_slack_manifest_and_instruct()

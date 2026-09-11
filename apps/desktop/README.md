@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/wundercorp/loki/releases"><img src="https://img.shields.io/badge/Download-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-FFD700?style=for-the-badge" alt="Download"></a>
-  <a href="https://loki.computer/docs/"><img src="https://img.shields.io/badge/Docs-loki--agent.wundercorp.com-FFD700?style=for-the-badge" alt="Documentation"></a>
+  <a href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"><img src="https://img.shields.io/badge/Docs-doku.sh-FFD700?style=for-the-badge" alt="Documentation"></a>
   <a href="https://discord.gg/yEaT8dv5Xn"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   <a href="https://github.com/wundercorp/loki/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
 </p>
@@ -232,7 +232,7 @@ Remove-Item -Recurse -Force "$env:LOCALAPPDATA\loki\loki-agent\venv"
 ## Community
 
 - 💬 [Discord](https://discord.gg/yEaT8dv5Xn)
-- 📖 [Documentation](https://loki.computer/docs/)
+- 📖 [Documentation](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)
 - 🐛 [Issues](https://github.com/wundercorp/loki/issues)
 
 ---

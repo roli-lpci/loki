@@ -28,7 +28,7 @@ What makes Loki different:
 
 **This skill is a hub.** The body covers identity, quick start, spawning/orchestration, and hard invariants. Everything else lives in reference files — **load the matching reference (below) before answering**; do not answer detail questions from the body alone.
 
-**Docs:** https://loki.computer/docs/
+**Docs:** https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ## Scope & Verification
 

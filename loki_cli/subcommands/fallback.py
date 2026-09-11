@@ -12,7 +12,7 @@ def build_fallback_parser(subparsers) -> None:
         description="Manage the fallback provider chain.  Fallback providers are tried "
             "in order when the primary model fails with rate-limit, overload, or "
             "connection errors.  See: "
-            "https://loki.computer/docs/user-guide/features/fallback-providers")
+            "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243")
     fallback_subparsers = fallback_parser.add_subparsers(dest="fallback_command")
     fallback_subparsers.add_parser(
         "list", aliases=["ls"], help="Show the current fallback chain (default when no subcommand)")

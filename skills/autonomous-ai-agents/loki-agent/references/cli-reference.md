@@ -1,7 +1,7 @@
 # Loki CLI Reference
 
 Live sources when anything looks stale: `loki --help`, `loki <command> --help`,
-https://loki.computer/docs/reference/cli-commands
+https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### Global Flags
 
@@ -79,7 +79,7 @@ loki gateway run|install|start|stop|restart|status|setup
 ```
 
 20+ platforms: Telegram, Discord, Slack, WhatsApp (Baileys + Business Cloud API), iMessage (Photon — `loki photon setup`), Signal, Email, SMS, Matrix, Mattermost, Teams, LINE, SimpleX, ntfy, Google Chat, Home Assistant, DingTalk, Feishu, WeCom, Weixin, API Server, Webhooks. Open WebUI connects via the API Server adapter. Most adapters ship under `plugins/platforms/`.
-Docs: https://loki.computer/docs/user-guide/messaging/
+Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### Sessions
 
@@ -141,10 +141,10 @@ Plugin- and provider-supplied subcommands (e.g. `loki photon setup`) only appear
 
 | Looking for... | Location |
 |---|---|
-| Config options | `loki config edit` · [Configuration docs](https://loki.computer/docs/user-guide/configuration) |
-| Tools / toolsets | `loki tools list` · [Tools reference](https://loki.computer/docs/reference/tools-reference) |
-| Skills catalog | `loki skills browse` · [Skills catalog](https://loki.computer/docs/reference/skills-catalog) |
-| Provider setup | `loki model` · [Providers guide](https://loki.computer/docs/integrations/providers) |
-| Env variables | `loki config env-path` · [Env vars reference](https://loki.computer/docs/reference/environment-variables) |
+| Config options | `loki config edit` · [Configuration docs](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) |
+| Tools / toolsets | `loki tools list` · [Tools reference](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) |
+| Skills catalog | `loki skills browse` · [Skills catalog](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) |
+| Provider setup | `loki model` · [Providers guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) |
+| Env variables | `loki config env-path` · [Env vars reference](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) |
 | Gateway logs | `~/.loki/logs/gateway.log` (or `loki logs`) |
 | Sessions | `loki sessions browse` (reads state.db) |

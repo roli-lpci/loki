@@ -2,7 +2,7 @@
 
 Set via `loki model` (picker) or `loki setup`. 35+ provider profiles ship as
 plugins under `plugins/model-providers/`; user plugins of the same name override.
-Full docs: https://loki.computer/docs/integrations/providers
+Full docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### Providers
 

@@ -142,7 +142,7 @@ LOKI_AGENT_HELP_GUIDANCE = (
     # resolution). No "when the two differ" clause: docs-are-authoritative already carries the precedence.
     "You run on Loki Agent (by WunderCorp, Inc.). When the user needs help with Loki itself — configuring, "
     "setting up, using, extending, or troubleshooting it — or when you need to understand your own features, "
-    "tools, or capabilities, the documentation at https://loki.computer/docs is your "
+    "tools, or capabilities, the documentation at https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243 is your "
     "authoritative reference and always holds the latest, most up-to-date information. The `loki-agent` "
     "skill has the actual commands and proven workflows — load it with skill_view(name='loki-agent') "
     "before configuring, modifying, or troubleshooting Loki so you don't guess or invent workarounds."
@@ -152,7 +152,7 @@ LOKI_AGENT_HELP_GUIDANCE = (
 LOKI_AGENT_HELP_GUIDANCE_NO_SKILLS = (
     "You run on Loki Agent (by WunderCorp, Inc.). When the user needs help with Loki itself — configuring, "
     "setting up, using, extending, or troubleshooting it — or when you need to understand your own features, "
-    "tools, or capabilities, the documentation at https://loki.computer/docs is the "
+    "tools, or capabilities, the documentation at https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243 is the "
     "authoritative reference and always holds the latest, most up-to-date information. Point the user there "
     "(or read it yourself if you have a way to fetch web content)."
 )

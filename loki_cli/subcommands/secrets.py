@@ -10,7 +10,7 @@ def build_secrets_parser(subparsers) -> None:
         description="Pull API keys from an external secret manager at process startup "
             "instead of storing them in ~/.loki/.env.  Supports Bitwarden "
             "Secrets Manager and 1Password.  See: "
-            "https://loki.computer/docs/user-guide/secrets/")
+            "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243")
     secrets_subparsers = secrets_parser.add_subparsers(dest="secrets_command")
 
     secrets_bw = secrets_subparsers.add_parser(

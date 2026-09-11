@@ -374,6 +374,6 @@ def run_whatsapp_cloud_setup() -> int:
         "    • Verified badge (the green check):",
         "        Requires Meta's business verification process —",
         "        Business Manager → Security Center → Start Verification.", "",
-        "  Docs: https://loki.computer/docs/user-guide/",
+        "  Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243",
         "        messaging/whatsapp-cloud", "")
     return 0

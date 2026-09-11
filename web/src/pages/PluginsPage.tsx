@@ -920,7 +920,7 @@ export default function PluginsPage() {
               {t.pluginsPage.catalogEmpty ?? "No catalog entries match."}{" "}
               <a
                 className="underline"
-                href="https://loki.computer/docs/plugins"
+                href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
                 target="_blank"
                 rel="noreferrer"
               >

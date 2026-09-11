@@ -472,7 +472,7 @@ def _maybe_setup_dashboard_auth_interactively(args) -> None:
             "    loki dashboard register\n"
             "  It provisions a WunderCorp Portal OAuth client and writes "
             "LOKI_DASHBOARD_OAUTH_CLIENT_ID into ~/.loki/.env for you.\n"
-            "  Docs: https://loki.computer/docs/"
+            "  Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
             "user-guide/features/web-dashboard#authentication-gated-mode"
         )
         sys.exit(0)

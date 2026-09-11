@@ -12,7 +12,7 @@ def build_egress_parser(subparsers) -> None:
         description="Manage iron-proxy, the optional TLS-intercepting egress firewall "
             "that swaps proxy tokens for real API credentials before outbound "
             "requests leave a sandbox.  Disabled by default.  See: "
-            "https://loki.computer/docs/user-guide/egress/iron-proxy")
+            "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243")
 
     from loki_cli import proxy_cli as _proxy_cli
     _proxy_cli.register_cli(egress_parser)

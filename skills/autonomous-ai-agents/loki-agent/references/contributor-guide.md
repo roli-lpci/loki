@@ -1,6 +1,6 @@
 # Contributor Quick Reference
 
-For occasional contributors and PR authors. Full developer docs: https://loki.computer/docs/developer-guide/
+For occasional contributors and PR authors. Full developer docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### Project Layout
 

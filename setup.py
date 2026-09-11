@@ -36,7 +36,7 @@ _IN_NIX_BUILD = os.environ.get("LOKI_NIX_BUILD") == "1"
 _BLOCK_MESSAGE = (
     "Building wheels or sdists for loki-agent is not supported.\n"
     "Loki is distributed via the shell installer, Docker image, or Nix.\n"
-    "See: https://loki.computer/docs/getting-started/installation\n"
+    "See: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243\n"
     "\n"
     "If you are developing, use an editable install instead:\n"
     "  uv sync          # or: uv pip install -e .\n"

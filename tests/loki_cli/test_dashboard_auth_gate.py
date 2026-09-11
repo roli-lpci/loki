@@ -77,7 +77,7 @@ def test_empty_provider_login_page_shows_supported_auth_paths():
     assert "SSH tunnel" in html
     assert "Tailscale" in html
     assert (
-        'href="https://loki.computer/docs/'
+        'href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243'
         'user-guide/features/web-dashboard#authentication-gated-mode"'
     ) in html
 

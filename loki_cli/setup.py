@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
-_DOCS_BASE = "https://loki.computer/docs"
+_DOCS_BASE = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"
 _BRACKETED_PASTE_PATTERN = re.compile(r"\x1b\[\s*200~|\x1b\[\s*201~")
 
 
@@ -372,7 +372,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     from loki_cli.config import load_config, save_config
     print_header("Inference Provider")
     _info("Choose how to connect to your main chat model.",
-          f"   Guide: {_DOCS_BASE}/integrations/providers", None)
+          f"   Guide: {_DOCS_BASE}", None)
     from loki_cli.main import select_provider_and_model
     try:
         select_provider_and_model()
@@ -435,7 +435,7 @@ _TOOL_PROGRESS_HELP = (
 def setup_agent_settings(config: dict):
     """Configure agent behavior: iterations, progress display and compression."""
     print_header("Agent Settings")
-    _info(f"   Guide: {_DOCS_BASE}/user-guide/configuration", None)
+    _info(f"   Guide: {_DOCS_BASE}", None)
 
     # ── Max Iterations ── (config.yaml is authoritative; never surface a stale legacy .env value)
     # If a legacy .env entry is still around (from pre-PR#18413 setups), prefer the config value so we don't

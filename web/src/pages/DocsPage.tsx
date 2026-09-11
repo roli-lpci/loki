@@ -5,7 +5,7 @@ import { usePageHeader } from "@/contexts/usePageHeader";
 import { cn } from "@/lib/utils";
 import { PluginSlot } from "@/plugins";
 
-export const LOKI_DOCS_URL = "https://loki.computer/docs/";
+export const LOKI_DOCS_URL = "https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243";
 
 const DS_BUTTON_OUTLINED_LINK_CN = cn(
   "group relative inline-grid grid-cols-[auto_1fr_auto] items-center",

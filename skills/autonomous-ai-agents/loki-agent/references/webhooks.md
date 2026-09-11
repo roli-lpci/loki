@@ -83,7 +83,7 @@ loki webhook subscribe todoist-loki \
   --deliver telegram --deliver-chat-id "12345"
 ```
 
-Full filter syntax: https://loki.computer/docs/user-guide/messaging/webhooks#payload-filters
+Full filter syntax: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### List subscriptions
 ```bash

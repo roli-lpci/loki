@@ -2085,7 +2085,7 @@ updates:
 #     are skipped with a startup warning (never a silent clobber)
 #   - a source's override_existing lets it beat .env/shell values, but
 #     never another secret source's claim
-# Docs: https://loki.computer/docs/user-guide/secrets/
+# Docs: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 #
 # secrets:
 #   # Optional explicit ordering of enabled sources.

@@ -1,7 +1,7 @@
 # Configuration, Toolsets & Voice
 
 Edit with `loki config edit` or `loki config set section.key value`.
-Full reference: https://loki.computer/docs/user-guide/configuration
+Full reference: https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243
 
 ### Config Sections (most-used keys)
 
