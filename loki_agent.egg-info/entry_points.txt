@@ -1,0 +1,4 @@
+[console_scripts]
+loki = loki_cli.main:main
+loki-acp = acp_adapter.entry:main
+loki-agent = run_agent:main

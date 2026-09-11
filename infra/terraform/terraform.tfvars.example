@@ -1,0 +1,3 @@
+domain_name    = "loki.computer"
+hosted_zone_id = "Z09046593O6AIZUOSG6X8"
+environment    = "production"

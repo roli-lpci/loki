@@ -9,7 +9,7 @@ node_modules/
 .yarn/unplugged/
 .yarn/build-state.yml
 .yarn/install-state.gz
-__pycache__
+__pycache__/
 
 # Build output
 dist/
