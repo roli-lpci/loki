@@ -1,5 +1,6 @@
 cat > .gitignore <<'EOF'
 # Dependencies
+infra/
 MagicMock/
 node_modules/
 .pnp/
