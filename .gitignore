@@ -1,0 +1,109 @@
+cat > .gitignore <<'EOF'
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build output
+dist/
+build/
+out/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Loki packaging output
+.loki-container-build/
+loki-agent-*.tgz
+loki-agent-*.zip
+loki-runtime-*.zip
+
+# Local Loki runtime/config/state
+.loki/
+.loki-home/
+.loki-sessions/
+.loki-cache/
+.loki-logs/
+
+# Loki local/runtime artifacts
+loki-agent-runtimes/
+loki-swarms/
+.loki/sessions/
+.loki/cache/
+.loki/logs/
+.loki/tmp/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cert
+*.secret
+secrets/
+credentials/
+service-account*.json
+
+# Package manager lockfiles
+# Keep yarn.lock because Loki is using Yarn.
+package-lock.json
+npm-shrinkwrap.json
+pnpm-lock.yaml
+
+# Docker/local container artifacts
+.docker/
+docker-compose.override.yml
+
+# OS/editor
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Test/temp fixtures
+tmp/
+temp/
+.cache/
+.nyc_output/
+
+# Local reports
+reports/
+validation-report.json
+smoke-output.json
+capabilities-output.json
+
+# GitHub/package auth
+.npmrc
+.yarnrc
+EOF
+
+# Terraform local state / operator-specific inputs
+infra/terraform/.terraform/
+infra/terraform/backend.tf
+infra/terraform/*.tfvars
+!infra/terraform/terraform.tfvars.example
+infra/terraform/tfplan
+*.tfstate
+*.tfstate.*

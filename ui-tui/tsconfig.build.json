@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@wundercorp/loki-ink": ["src/types/loki-ink.d.ts"]
+    }
+  }
+}

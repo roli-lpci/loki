@@ -1,0 +1,30 @@
+{
+  "name": "@wundercorp/loki-site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Loki Agent splash site and Doku documentation payload.",
+  "scripts": {
+    "prestart": "node scripts/prebuild.mjs",
+    "start": "node scripts/doku.mjs serve",
+    "portal": "node scripts/doku.mjs portal",
+    "generate": "node scripts/doku.mjs generate",
+    "prebuild": "node scripts/prebuild.mjs",
+    "build": "node scripts/doku.mjs build",
+    "clean": "node scripts/doku.mjs clean",
+    "lint:diagrams": "ascii-guard lint --exclude-code-blocks docs",
+    "portal:force": "node scripts/doku.mjs portal --force",
+    "deploy": "bash ../scripts/deploy-site.sh"
+  },
+  "dependencies": {
+    "@wundercorp/doku": "0.2.4"
+  },
+  "engines": {
+    "node": ">=18.18.0",
+    "npm": ">=9.0.0"
+  },
+  "doku": {
+    "public": {
+      "baseUrl": "https://loki.computer"
+    }
+  }
+}

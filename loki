@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""
+Loki Agent CLI launcher.
+
+When the repository-local .venv exists, this wrapper automatically re-executes
+with that interpreter so `./loki` works after `uv sync` without requiring
+manual virtual-environment activation.
+"""
+
+import os
+import sys
+from pathlib import Path
+
+
+def _repo_python() -> Path | None:
+    root = Path(__file__).resolve().parent
+    candidates = [
+        root / ".venv" / "bin" / "python",
+        root / ".venv" / "Scripts" / "python.exe",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _reexec_in_repo_venv() -> None:
+    local_python = _repo_python()
+    if local_python is None:
+        return
+
+    try:
+        current_python = Path(sys.executable).resolve()
+        target_python = local_python.resolve()
+    except OSError:
+        return
+
+    if current_python == target_python:
+        return
+
+    os.execv(
+        str(target_python),
+        [str(target_python), str(Path(__file__).resolve()), *sys.argv[1:]],
+    )
+
+
+def _print_bootstrap_help(missing_module: str) -> None:
+    root = Path(__file__).resolve().parent
+    print(
+        f"Loki Agent is missing the Python module '{missing_module}' in "
+        f"{sys.executable}.\n\n"
+        "Bootstrap the repository environment with:\n\n"
+        f"  cd {root}\n"
+        "  uv sync\n"
+        "  ./loki setup   # or: ./loki setup\n\n"
+        "Or run directly through uv:\n\n"
+        "  uv run loki setup   # or: uv run loki setup\n",
+        file=sys.stderr,
+    )
+
+
+if __name__ == "__main__":
+    _reexec_in_repo_venv()
+
+    try:
+        from loki_cli.main import main
+    except ModuleNotFoundError as error:
+        _print_bootstrap_help(error.name or "unknown")
+        raise SystemExit(1) from error
+
+    main()

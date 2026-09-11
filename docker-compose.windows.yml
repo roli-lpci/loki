@@ -1,0 +1,38 @@
+#
+# docker-compose.windows.yml — Windows Docker Desktop compatible
+#
+# Differences from docker-compose.yml:
+#   - Removes `network_mode: host` (not supported on Docker Desktop for Windows)
+#   - Uses explicit port mappings instead
+#   - Uses Windows-style volume path for ~/.loki
+#
+# Usage:
+#   docker compose -f docker-compose.windows.yml up -d
+#
+services:
+  gateway:
+    image: wundercorp/loki-agent:latest
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ${USERPROFILE}/.loki:/opt/data
+    environment:
+      - LOKI_UID=10000
+      - LOKI_GID=10000
+    command: ["gateway", "run"]
+
+  dashboard:
+    image: wundercorp/loki-agent:latest
+    container_name: loki-dashboard
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    volumes:
+      - ${USERPROFILE}/.loki:/opt/data
+    environment:
+      - LOKI_UID=10000
+      - LOKI_GID=10000
+      - LOKI_DASHBOARD_HOST=0.0.0.0
+    ports:
+      - "127.0.0.1:9119:9119"
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open", "--insecure"]

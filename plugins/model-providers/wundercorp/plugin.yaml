@@ -1,0 +1,5 @@
+name: wundercorp-provider
+kind: model-provider
+version: 1.0.0
+description: WunderCorp, Inc. Portal
+author: WunderCorp, Inc.
