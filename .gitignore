@@ -110,3 +110,10 @@ infra/terraform/*.tfvars
 infra/terraform/tfplan
 *.tfstate
 *.tfstate.*
+
+# Local/generated files
+svg/
+*.py[cod]
+*.egg-info/
+loki_agent.egg-info/
+.pytest_cache/
