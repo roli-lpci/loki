@@ -38,6 +38,8 @@ def test_venv_launcher_bypasses_uv_console_script_that_requires_realpath(tmp_pat
     result = tmp_path / "launch-result"
     venv_bin.mkdir(parents=True)
     minimal_path.mkdir()
+    command_dir.mkdir()
+    (command_dir / "loki").symlink_to("loki")
 
     dirname = shutil.which("dirname")
     assert dirname is not None
@@ -75,8 +77,12 @@ def test_venv_launcher_bypasses_uv_console_script_that_requires_realpath(tmp_pat
     }
     subprocess.run(["/bin/bash", "-c", harness], env=env, check=True)
 
+    launcher = command_dir / "loki"
+    assert launcher.exists()
+    assert not launcher.is_symlink()
+
     completed = subprocess.run(
-        [command_dir / "loki", "--version"],
+        [launcher, "--version"],
         env=os.environ | {"LAUNCH_RESULT": str(result)},
         text=True,
         capture_output=True,

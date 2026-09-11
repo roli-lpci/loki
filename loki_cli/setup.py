@@ -80,7 +80,7 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("◉ Loki Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color("𖤍 Loki Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
@@ -588,7 +588,7 @@ def _run_setup_section(config: dict, section: str) -> None:
         print_info(f"Available sections: {', '.join(k for k, _, _ in SETUP_SECTIONS)}")
         return
     label, func = entry
-    _print_banner(f"│     ◉ Loki Setup — {label:<34s} │")
+    _print_banner(f"│     𖤍 Loki Setup — {label:<34s} │")
     _run_setup_steps([(label, lambda: func(config))])
     save_config(config)
     print()
@@ -634,7 +634,7 @@ def _run_full_setup(config: dict, loki_home, *, is_existing: bool, migration_ran
 
 # First-time mode picker: (menu label, setup_quick runner name) — None falls through to Full Setup.
 _FIRST_TIME_MODES = (
-    ("Quick Setup (WunderCorp Portal) — free OAuth login, no API keys, model + tools (recommended)",
+    ("Quick Setup (OpenRouter) — API key + model, then recommended defaults",
      "_run_first_time_quick_setup"),
     ("Full setup — configure every provider, tool & option yourself (bring your own keys)", None),
     ("Blank Slate — everything off except the bare minimum; opt in to each capability", "_run_blank_slate_setup"),
@@ -679,7 +679,7 @@ def _run_setup_wizard_impl(args):
     from loki_cli.auth import get_active_provider
     is_existing = bool(get_env_value("OPENROUTER_API_KEY") or get_env_value("OPENAI_BASE_URL")
                        or get_active_provider() is not None)
-    _print_banner("│             ◉ Loki Agent Setup Wizard                │",
+    _print_banner("│             𖤍 Loki Agent Setup Wizard                │",
                   "├─────────────────────────────────────────────────────────┤",
                   "│  Let's configure your Loki Agent installation.       │",
                   "│  Press Ctrl+C at any time to exit.                     │")

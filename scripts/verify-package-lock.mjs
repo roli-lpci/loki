@@ -3,7 +3,19 @@ import { join, relative } from 'node:path';
 
 const root = new URL('../', import.meta.url);
 const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
-const packageLock = JSON.parse(await readFile(new URL('package-lock.json', root), 'utf8'));
+
+let packageLock;
+try {
+  packageLock = JSON.parse(await readFile(new URL('package-lock.json', root), 'utf8'));
+} catch (error) {
+  if (error?.code === 'ENOENT') {
+    console.warn(`npm lockfile verification skipped for ${packageJson.name}@${packageJson.version}: root package-lock.json is not present.`);
+    console.warn('Run `npm install --package-lock-only --ignore-scripts` and commit package-lock.json if npm lockfile enforcement is desired.');
+    process.exit(0);
+  }
+  throw error;
+}
+
 const lockedRoot = packageLock.packages?.[''];
 
 const failures = [];

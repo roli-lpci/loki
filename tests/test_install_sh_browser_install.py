@@ -55,6 +55,20 @@ def test_install_script_supports_skip_browser_flag() -> None:
     assert "--skip-browser Skip Playwright/Chromium install" in text
 
 
+def test_macos_installs_playwright_browser_without_linux_dependency_warning() -> None:
+    text = INSTALL_SH.read_text()
+    import re
+
+    function_match = re.search(r"^install_node_deps\(\) \{.*?^\}", text, re.MULTILINE | re.DOTALL)
+    assert function_match is not None
+    match = re.search(r"\n\s*macos\)\n(?P<body>.*?)\n\s*;;", function_match.group(0), re.DOTALL)
+    assert match is not None
+    body = match.group("body")
+    assert "run_playwright_install 600 npx playwright install chromium" in body
+    assert "automatic dependency installation" not in body
+    assert "Browser tools will not work until dependencies are installed" not in body
+
+
 
 
 

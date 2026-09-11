@@ -1,4 +1,4 @@
-# Loki Agent ◉
+# Loki Agent 𖤍
 <p align="center">
   <a href="https://loki.computer/">Loki Agent</a> | <a href="https://loki.computer/">Loki Desktop</a>
 </p>
@@ -54,7 +54,7 @@ If you already have Git installed, the installer detects it and uses that instea
 >
 > **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything. If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\loki`; WSL2 installs under `~/.loki` as on Linux.
 
-After installation:
+After installation, the first-run quick setup uses OpenRouter by default. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys), then choose your model when prompted.
 
 ```bash
 source ~/.bashrc    # reload shell (or: source ~/.zshrc)
@@ -238,5 +238,3 @@ scripts/run_tests.sh
 MIT — see [LICENSE](LICENSE).
 
 Built by [WunderCorp, Inc.](https://wundercorp.co).
-# loki
-# loki

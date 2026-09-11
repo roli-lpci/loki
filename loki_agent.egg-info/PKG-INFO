@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: loki-agent
-Version: 0.21.1
+Version: 0.21.4
 Summary: The self-improving AI agent — creates skills from experience, improves them during use, and runs anywhere
 Author: WunderCorp, Inc.
 License-Expression: MIT
@@ -213,7 +213,7 @@ After `uv sync`, the repository launcher works directly as `./loki`, and install
   <img src="assets/banner.png" alt="Loki Agent" width="100%">
 </p>
 
-# Loki Agent ◉
+# Loki Agent 𖤍
 <p align="center">
   <a href="https://loki.computer/">Loki Agent</a> | <a href="https://loki.computer/">Loki Desktop</a>
 </p>
@@ -269,7 +269,7 @@ If you already have Git installed, the installer detects it and uses that instea
 >
 > **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything. If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\loki`; WSL2 installs under `~/.loki` as on Linux.
 
-After installation:
+After installation, the first-run quick setup uses OpenRouter by default. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys), then choose your model when prompted.
 
 ```bash
 source ~/.bashrc    # reload shell (or: source ~/.zshrc)

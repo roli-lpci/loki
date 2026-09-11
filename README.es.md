@@ -2,7 +2,7 @@
   <img src="assets/banner.png" alt="Loki Agent" width="100%">
 </p>
 
-# Loki Agent ☤
+# Loki Agent 𖤍
 <p align="center">
   <a href="https://loki.computer/">Loki Agent</a> | <a href="https://loki.computer/">Loki Desktop</a>
 </p>

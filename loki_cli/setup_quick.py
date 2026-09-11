@@ -1,4 +1,4 @@
-"""Streamlined setup flows: the WunderCorp Portal one-shot (`loki portal`), first-time quick setup,
+"""Streamlined setup flows: the optional WunderCorp Portal one-shot, OpenRouter-first quick setup,
 Blank Slate setup and the `--quick` missing-items pass. Names from setup.py are imported lazily
 per function so test patches on ``loki_cli.setup`` take effect."""
 
@@ -57,7 +57,7 @@ def _run_wundercorp_flow(config: dict, *, context: str, cancel_exc: tuple, cance
 def _run_portal_one_shot(config: dict) -> None:
     """One-shot WunderCorp Portal setup (``loki setup --portal`` / ``loki portal``)."""
     from loki_cli.setup import _info, _print_banner, print_error, print_info, print_success
-    _print_banner("│     ◉ Loki Setup — WunderCorp Portal (one-shot)             │")
+    _print_banner("│     𖤍 Loki Setup — WunderCorp Portal (one-shot)             │")
     _info(None, "  One subscription, 300+ models, plus the Tool Gateway:",
           "    web search, image generation, TTS, browser automation",
           "    — all routed through your WunderCorp Portal sub.", None,
@@ -82,33 +82,31 @@ def _run_portal_one_shot(config: dict) -> None:
 
 
 def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool):
-    """Streamlined first-time setup via WunderCorp Portal: OAuth, model, terminal & messaging;
+    """Streamlined first-time setup via OpenRouter: API key, model, terminal and messaging;
     everything else gets defaults."""
     from loki_cli.setup import (
         _apply_default_agent_settings, _info, print_header, print_info, _print_setup_summary, print_success,
         print_warning, prompt_choice, save_config, setup_gateway, setup_terminal_backend
     )
-    # Step 1: WunderCorp Portal — OAuth login + model selection (provider set to "wundercorp" by the save).
-    print_header("WunderCorp Portal", gap=True)
-    _info("One subscription, 300+ models, plus the Tool Gateway:",
-          "  web search, image generation, TTS, browser automation.",
-          "Sign up: https://portal.wundercorp.com/manage-subscription", None)
+    print_header("OpenRouter", gap=True)
+    _info("OpenRouter is the default provider for new Loki installs.",
+          "Create an API key: https://openrouter.ai/keys", None)
 
-    def _on_error(exc: Exception) -> None:
-        print_warning(f"WunderCorp Portal setup encountered an error: {exc}")
+    try:
+        from loki_cli.model_setup_flows import _model_flow_openrouter
+        _model_flow_openrouter(config)
+    except (KeyboardInterrupt, EOFError, SystemExit):
+        _info(None, "OpenRouter setup cancelled.", "You can try again later with: loki model")
+    except Exception as exc:
+        logger.debug("OpenRouter setup error during quick setup: %s", exc)
+        print_warning(f"OpenRouter setup encountered an error: {exc}")
         print_info("You can try again later with: loki model")
-
-    _run_wundercorp_flow(config, context="quick setup", cancel_exc=(KeyboardInterrupt, EOFError),
-                   cancel_lines=(None, "WunderCorp Portal setup cancelled."), print_error=_on_error)
-    # The wizard's later save_config(config) must not clobber the login/model save.
     _reload_config_into(config)
 
-    # Step 2: Terminal Backend; Step 3: defaults for everything else.
     setup_terminal_backend(config)
     _apply_default_agent_settings(config)
     save_config(config)
 
-    # Step 4: Offer messaging gateway setup
     print()
     gateway_choice = prompt_choice("Connect a messaging platform? (Telegram, Discord, etc.)", [
         "Set up messaging now (recommended)", "Skip — set up later with 'loki setup gateway'",
@@ -117,8 +115,6 @@ def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool):
         setup_gateway(config)
         save_config(config)
     else:
-        # Messaging skipped — still install/start the gateway service so cron jobs run and
-        # platforms come alive as soon as tokens are added later (e.g. via `loki import`).
         from loki_cli.gateway import ensure_gateway_service
         ensure_gateway_service(context="setup")
     print()

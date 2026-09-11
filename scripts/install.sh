@@ -2104,17 +2104,6 @@ EOF
     chmod +x "$command_link_dir/loki"
     log_success "Installed loki launcher → $command_link_display_dir/loki"
 
-    # Short alias: `loki` is intentionally equivalent to `loki`. Keep it
-    # as a relative symlink so moving the command directory preserves the pair.
-    rm -f "$command_link_dir/loki"
-    if ln -s "loki" "$command_link_dir/loki" 2>/dev/null; then
-        :
-    else
-        cp "$command_link_dir/loki" "$command_link_dir/loki"
-        chmod +x "$command_link_dir/loki"
-    fi
-    log_success "Installed loki launcher → $command_link_display_dir/loki"
-
     # Also expose `loki-agent`. The `loki-agent` console script declared in
     # pyproject.toml's [project.scripts] lives inside the venv, which is not on
     # the login-shell PATH. Without this launcher users can't invoke the agent
@@ -2780,6 +2769,12 @@ install_node_deps() {
                         log_warn "Playwright browser installation failed — install dependencies above and retry."
                     }
                     ;;
+                macos)
+                    cd "$INSTALL_DIR" && run_playwright_install 600 npx playwright install chromium || {
+                        log_warn "Playwright browser installation failed — browser tools will not work."
+                        log_warn "Try running manually: cd $INSTALL_DIR && npx playwright install chromium"
+                    }
+                    ;;
                 *)
                     log_warn "Playwright does not support automatic dependency installation on $DISTRO."
                     log_info "Install Chromium/browser system dependencies for your distribution, then run:"
@@ -3136,7 +3131,7 @@ print_success() {
     echo ""
     echo -e "${CYAN}${BOLD}🚀 Commands:${NC}"
     echo ""
-    echo -e "   ${GREEN}loki / loki${NC}       Start chatting"
+    echo -e "   ${GREEN}loki${NC}              Start chatting"
     echo -e "   ${GREEN}loki setup${NC}        Configure API keys & settings"
     echo -e "   ${GREEN}loki config${NC}       View/edit configuration"
     echo -e "   ${GREEN}loki config edit${NC}  Open config in editor"
@@ -3147,13 +3142,13 @@ print_success() {
     echo -e "${CYAN}─────────────────────────────────────────────────────────${NC}"
     echo ""
     if [ "$DISTRO" = "termux" ]; then
-        echo -e "${YELLOW}⚡ 'loki' and 'loki' were linked into $(get_command_link_display_dir), which is already on PATH in Termux.${NC}"
+        echo -e "${YELLOW}⚡ 'loki' was installed into $(get_command_link_display_dir), which is already on PATH in Termux.${NC}"
         echo ""
     elif [ "$ROOT_FHS_LAYOUT" = true ]; then
-        echo -e "${YELLOW}⚡ 'loki' and 'loki' were linked into /usr/local/bin and are ready to use — no shell reload needed.${NC}"
+        echo -e "${YELLOW}⚡ 'loki' was installed into /usr/local/bin and is ready to use — no shell reload needed.${NC}"
         echo ""
     else
-        echo -e "${YELLOW}⚡ Reload your shell to use the 'loki' or 'loki' commands:${NC}"
+        echo -e "${YELLOW}⚡ Reload your shell to use the 'loki' command:${NC}"
         echo ""
         LOGIN_SHELL="$(basename "${SHELL:-/bin/bash}")"
         if [ "$LOGIN_SHELL" = "zsh" ]; then

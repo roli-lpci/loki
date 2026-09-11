@@ -2,7 +2,7 @@
   <img src="assets/banner.png" alt="Loki Agent" width="100%">
 </p>
 
-# Loki Agent ☤
+# Loki Agent 𖤍
 
 <p align="center">
   <a href="https://loki.computer/docs/"><img src="https://img.shields.io/badge/Docs-loki--agent.wundercorp.com-FFD700?style=for-the-badge" alt="Documentation"></a>
