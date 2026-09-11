@@ -57,7 +57,7 @@ def _wings(*glyphs) -> List[List[str]]:
 
 # Branding shared by every Loki-named built-in (mono/daylight override help_header).
 _LOKI_BRANDING: Dict[str, str] = _branding(
-    "Loki", "◉", "Farewell! 𓆩✧𓆪", prompt="❯", help_header="(◉) Available Commands")
+    "Loki", "𖤍", "Farewell! 𓆩✧𓆪", prompt="❯", help_header="(𖤍) Available Commands")
 
 _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
     "default": {

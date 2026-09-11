@@ -423,10 +423,10 @@ class CLIStreamMixin:
             try:
                 from loki_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
-                label = _skin.get_branding("response_label", "◉ Loki")
+                label = _skin.get_branding("response_label", "𖤍 Loki")
                 _text_hex = _skin.get_color("banner_text", "#E6F1FF")
             except Exception:
-                label = "◉ Loki"
+                label = "𖤍 Loki"
                 _text_hex = "#E6F1FF"
             try:  # true-color escape so streamed text matches the Rich Panel appearance
                 _r, _g, _b = (int(_text_hex[i:i + 2], 16) for i in (1, 3, 5))

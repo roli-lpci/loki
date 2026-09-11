@@ -1478,7 +1478,7 @@ DEFAULT_CONFIG = {
     },
 
     "whatsapp": {
-        # reply_prefix: None = built-in "◉ *Loki Agent*" header; "" disables; \n allowed.
+        # reply_prefix: None = built-in "𖤍 *Loki Agent*" header; "" disables; \n allowed.
     },
 
     "telegram": {
