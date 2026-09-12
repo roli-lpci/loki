@@ -606,12 +606,12 @@ class CLIChatTurnMixin:
                 from loki_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
                 label = _skin.get_branding("response_label", "𖤍 Loki")
-                _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#16A34A"))
-                _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#ECFDF5"))
+                _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#2563EB"))
+                _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#EFF6FF"))
             except Exception:
                 label = "𖤍 Loki"
-                _resp_color = _maybe_remap_for_light_mode("#16A34A")
-                _resp_text = _maybe_remap_for_light_mode("#ECFDF5")
+                _resp_color = _maybe_remap_for_light_mode("#2563EB")
+                _resp_text = _maybe_remap_for_light_mode("#EFF6FF")
 
             is_error_response = turn.result and (turn.result.get("failed") or turn.result.get("partial"))
             already_streamed = self._stream_started and self._stream_box_opened and not is_error_response
@@ -647,7 +647,7 @@ class CLIChatTurnMixin:
                 try:
                     ChatConsole().print(Panel(
                         "\n".join(_cta_lines), title="[#CD7F32 bold]⚡ Out of credits[/]",
-                        title_align="left", border_style="#16A34A", box=rich_box.HORIZONTALS,
+                        title_align="left", border_style="#2563EB", box=rich_box.HORIZONTALS,
                         padding=(1, 4), width=self._scrollback_box_width(),
                     ))
                 except Exception:

@@ -26,9 +26,9 @@ def _primary_hex() -> str:
         from loki_cli.skin_engine import get_active_skin
 
         skin = get_active_skin()
-        return skin.get_color("ui_primary", "") or skin.get_color("banner_title", "#4ADE80")
+        return skin.get_color("ui_primary", "") or skin.get_color("banner_title", "#60A5FA")
     except Exception:
-        return "#4ADE80"
+        return "#60A5FA"
 
 
 @lru_cache(maxsize=1)

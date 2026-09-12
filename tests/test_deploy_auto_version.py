@@ -157,3 +157,111 @@ def test_deploy_commits_and_pushes_version_before_publish(tmp_path):
         check=True,
     )
     assert json.loads(remote_package.stdout)["version"] == "0.21.5"
+
+
+def test_deploy_waits_for_registry_propagation_after_publish(tmp_path):
+    repo = prepare_repo(tmp_path)
+    bin_dir = tmp_path / "bin-delayed"
+    bin_dir.mkdir()
+    script = bin_dir / "npm"
+    counter = tmp_path / "confirm-counter"
+    published = tmp_path / "published-delayed"
+    script.write_text(
+        f"""#!/usr/bin/env bash
+set -e
+published=\"{published}\"
+counter=\"{counter}\"
+if [ \"$1\" = \"view\" ]; then
+  target=\"$2\"
+  if [ \"$target\" = \"@wundercorp/loki\" ]; then
+    printf '%s\\n' '0.21.4'
+    exit 0
+  fi
+  if [ \"$target\" = \"@wundercorp/loki@0.21.5\" ]; then
+    if [ ! -f \"$published\" ]; then
+      exit 1
+    fi
+    count=0
+    if [ -f \"$counter\" ]; then count=\"$(cat \"$counter\")\"; fi
+    count=$((count + 1))
+    printf '%s' \"$count\" > \"$counter\"
+    if [ \"$count\" -lt 3 ]; then
+      exit 1
+    fi
+    printf '%s\\n' '0.21.5'
+    exit 0
+  fi
+  exit 1
+fi
+if [ \"$1\" = \"ping\" ]; then exit 0; fi
+if [ \"$1\" = \"whoami\" ]; then printf '%s\\n' test-user; exit 0; fi
+if [ \"$1\" = \"run\" ] && [ \"$2\" = \"release:check\" ]; then exit 0; fi
+if [ \"$1\" = \"publish\" ]; then touch \"$published\"; printf '%s\\n' '+ @wundercorp/loki@0.21.5'; exit 0; fi
+printf 'unexpected npm command: %s\\n' \"$*\" >&2
+exit 1
+""",
+        encoding="utf-8",
+    )
+    script.chmod(0o755)
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["LOKI_NPM_CONFIRM_ATTEMPTS"] = "5"
+    env["LOKI_NPM_CONFIRM_DELAY"] = "0"
+
+    result = subprocess.run(
+        ["bash", "scripts/deploy.sh", "--npm-only", "--yes", "--no-version-git"],
+        cwd=repo,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "registry metadata is still propagating" in result.stdout
+    assert "npm registry confirmed @wundercorp/loki@0.21.5." in result.stdout
+
+
+def test_deploy_does_not_fail_after_successful_publish_when_registry_confirmation_lags(tmp_path):
+    repo = prepare_repo(tmp_path)
+    bin_dir = tmp_path / "bin-never-confirm"
+    bin_dir.mkdir()
+    script = bin_dir / "npm"
+    published = tmp_path / "published-never-confirm"
+    script.write_text(
+        f"""#!/usr/bin/env bash
+set -e
+published=\"{published}\"
+if [ \"$1\" = \"view\" ]; then
+  target=\"$2\"
+  if [ \"$target\" = \"@wundercorp/loki\" ]; then
+    printf '%s\\n' '0.21.4'
+    exit 0
+  fi
+  exit 1
+fi
+if [ \"$1\" = \"ping\" ]; then exit 0; fi
+if [ \"$1\" = \"whoami\" ]; then printf '%s\\n' test-user; exit 0; fi
+if [ \"$1\" = \"run\" ] && [ \"$2\" = \"release:check\" ]; then exit 0; fi
+if [ \"$1\" = \"publish\" ]; then touch \"$published\"; printf '%s\\n' '+ @wundercorp/loki@0.21.5'; exit 0; fi
+printf 'unexpected npm command: %s\\n' \"$*\" >&2
+exit 1
+""",
+        encoding="utf-8",
+    )
+    script.chmod(0o755)
+    env = os.environ.copy()
+    env["PATH"] = f"{bin_dir}:{env['PATH']}"
+    env["LOKI_NPM_CONFIRM_ATTEMPTS"] = "3"
+    env["LOKI_NPM_CONFIRM_DELAY"] = "0"
+
+    result = subprocess.run(
+        ["bash", "scripts/deploy.sh", "--npm-only", "--yes", "--no-version-git"],
+        cwd=repo,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "npm publish accepted @wundercorp/loki@0.21.5" in result.stderr
+    assert "Continuing deployment because npm publish exited successfully" in result.stderr

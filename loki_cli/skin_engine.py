@@ -61,33 +61,33 @@ _LOKI_BRANDING: Dict[str, str] = _branding(
 
 _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
     "default": {
-        "name": "default", "description": "Loki green — emerald, jade, and forest",
-        # Dark-authored; values match the TUI's DARK_THEME so both render the same Loki green.
+        "name": "default", "description": "Loki blue — cobalt, azure, and midnight",
+        # Dark-authored; values match the TUI's DARK_THEME so both render the same Loki blue.
         "colors": {
-            "banner_border": "#16A34A", "banner_title": "#4ADE80", "banner_accent": "#34D399",
-            "banner_dim": "#64748B", "banner_text": "#ECFDF5", "ui_accent": "#34D399",
-            "ui_label": "#86EFAC", "ui_ok": "#4ADE80", "ui_error": "#F87171", "ui_warn": "#FBBF24",
-            "prompt": "#ECFDF5", "input_rule": "#16A34A", "response_border": "#4ADE80",
-            "status_bar_bg": "#071A0F", "status_bar_text": "#CBD5E1",
-            "status_bar_strong": "#4ADE80", "status_bar_dim": "#64748B",
+            "banner_border": "#2563EB", "banner_title": "#93C5FD", "banner_accent": "#60A5FA",
+            "banner_dim": "#64748B", "banner_text": "#EFF6FF", "ui_accent": "#60A5FA",
+            "ui_label": "#BFDBFE", "ui_ok": "#4ADE80", "ui_error": "#F87171", "ui_warn": "#FBBF24",
+            "prompt": "#EFF6FF", "input_rule": "#2563EB", "response_border": "#60A5FA",
+            "status_bar_bg": "#06142D", "status_bar_text": "#CBD5E1",
+            "status_bar_strong": "#60A5FA", "status_bar_dim": "#64748B",
             "status_bar_good": "#4ADE80", "status_bar_warn": "#FBBF24", "status_bar_bad": "#FB923C",
-            "status_bar_critical": "#F87171", "session_label": "#86EFAC",
-            "session_border": "#466B52", "completion_menu_bg": "#071A0F",
-            "completion_menu_current_bg": "#052E16", "selection_bg": "#14532D",
-            "shell_dollar": "#34D399", "voice_status_bg": "#071A0F"},
-        # Light overlay (merged onto `colors`). Emerald and jade tones are darkened for
-        # readable contrast on white while preserving the same green identity. Fills (*_bg)
+            "status_bar_critical": "#F87171", "session_label": "#93C5FD",
+            "session_border": "#3B5F91", "completion_menu_bg": "#06142D",
+            "completion_menu_current_bg": "#0B1F3A", "selection_bg": "#1E3A8A",
+            "shell_dollar": "#60A5FA", "voice_status_bg": "#06142D"},
+        # Light overlay (merged onto `colors`). Cobalt and azure tones are darkened for
+        # readable contrast on white while preserving the same blue identity. Fills (*_bg)
         # flip the dark navy surfaces to light polarity.
         "light_colors": {
-            "banner_title": "#15803D", "banner_accent": "#047857", "banner_dim": "#475569",
-            "banner_text": "#052E16", "ui_accent": "#047857", "ui_label": "#16A34A",
-            "ui_ok": "#15803D", "ui_error": "#B91C1C", "ui_warn": "#B45309", "prompt": "#052E16",
-            "response_border": "#15803D", "session_label": "#16A34A", "status_bar_text": "#334155",
-            "status_bar_strong": "#15803D", "status_bar_dim": "#64748B",
+            "banner_title": "#1D4ED8", "banner_accent": "#2563EB", "banner_dim": "#475569",
+            "banner_text": "#0F172A", "ui_accent": "#2563EB", "ui_label": "#1D4ED8",
+            "ui_ok": "#15803D", "ui_error": "#B91C1C", "ui_warn": "#B45309", "prompt": "#0F172A",
+            "response_border": "#1D4ED8", "session_label": "#2563EB", "status_bar_text": "#334155",
+            "status_bar_strong": "#1D4ED8", "status_bar_dim": "#64748B",
             "status_bar_good": "#15803D", "status_bar_warn": "#B45309", "status_bar_bad": "#C2410C",
-            "status_bar_critical": "#B91C1C", "shell_dollar": "#047857",
-            "completion_menu_bg": "#F8FAFC", "completion_menu_current_bg": "#A7F3D0",
-            "selection_bg": "#BBF7D0", "status_bar_bg": "#F0FDF4", "voice_status_bg": "#F0FDF4"},
+            "status_bar_critical": "#B91C1C", "shell_dollar": "#2563EB",
+            "completion_menu_bg": "#F8FAFC", "completion_menu_current_bg": "#DBEAFE",
+            "selection_bg": "#BFDBFE", "status_bar_bg": "#EFF6FF", "voice_status_bg": "#EFF6FF"},
         "spinner": {},  # empty = hardcoded defaults in display.py
         "branding": _LOKI_BRANDING,
         "tool_prefix": "┊"},

@@ -379,10 +379,10 @@ def _print_side_result_panel(cli, *, header_lines, body, title_suffix, empty_not
         from loki_cli.skin_engine import get_active_skin
         _skin = get_active_skin()
         label = _skin.get_branding("response_label", "𖤍 Loki")
-        _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#16A34A"))
-        _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#ECFDF5"))
+        _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#2563EB"))
+        _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#EFF6FF"))
     except Exception:
-        label, _resp_color, _resp_text = "𖤍 Loki", "#16A34A", "#ECFDF5"
+        label, _resp_color, _resp_text = "𖤍 Loki", "#2563EB", "#EFF6FF"
     rich_console.print(Panel(
         _render_final_assistant_content(body, mode=cli.final_response_markdown),
         title=f"[{_resp_color} bold]{label} {title_suffix}[/]", title_align="left",

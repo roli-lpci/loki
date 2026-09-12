@@ -368,41 +368,41 @@ export function buildPalette(seeds: ThemeSeeds, isLight: boolean): ThemeColors {
 }
 
 export const DARK_SEEDS: ThemeSeeds = {
-  accent: '#34D399',
-  activeRow: '#052E16',
-  bg: '#04150A',
-  border: '#16A34A',
+  accent: '#60A5FA',
+  activeRow: '#0B1F3A',
+  bg: '#030B1A',
+  border: '#2563EB',
   error: '#F87171',
   ok: '#4ADE80',
-  primary: '#4ADE80',
-  prompt: '#ECFDF5',
-  selection: '#14532D',
-  shellDollar: '#34D399',
+  primary: '#60A5FA',
+  prompt: '#EFF6FF',
+  selection: '#1E3A8A',
+  shellDollar: '#60A5FA',
   statusBad: '#FB923C',
   statusCritical: '#F87171',
   statusGood: '#4ADE80',
   statusWarn: '#FBBF24',
-  surface: '#071A0F',
-  text: '#ECFDF5',
+  surface: '#06142D',
+  text: '#EFF6FF',
   warn: '#FBBF24'
 }
 
-// Light-terminal seeds keep the same emerald/jade identity with darker values
-// selected for white backgrounds. Text and prompt use deep forest for crisp contrast.
+// Light-terminal seeds keep the same cobalt/azure identity with darker values
+// selected for white backgrounds. Text and prompt use deep navy for crisp contrast.
 export const LIGHT_SEEDS: ThemeSeeds = {
-  accent: '#047857',
+  accent: '#2563EB',
   bg: '#ffffff',
-  border: '#15803D',
+  border: '#1D4ED8',
   error: '#B91C1C',
   ok: '#15803D',
-  primary: '#15803D',
-  prompt: '#052E16',
-  shellDollar: '#047857',
+  primary: '#1D4ED8',
+  prompt: '#0F172A',
+  shellDollar: '#2563EB',
   statusBad: '#C2410C',
   statusCritical: '#B91C1C',
   statusGood: '#15803D',
   statusWarn: '#B45309',
-  text: '#052E16',
+  text: '#0F172A',
   warn: '#B45309'
 }
 

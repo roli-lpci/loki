@@ -228,10 +228,10 @@ class CLISessionMixin:
             from loki_cli.skin_engine import get_active_skin
             skin = get_active_skin()
             separator_color = skin.get_color("banner_dim", "#64748B")
-            accent_color = skin.get_color("ui_accent", "#34D399")
-            label_color = skin.get_color("ui_label", "#86EFAC")
+            accent_color = skin.get_color("ui_accent", "#60A5FA")
+            label_color = skin.get_color("ui_label", "#93C5FD")
         except Exception:
-            separator_color, accent_color, label_color = "#64748B", "#34D399", "cyan"
+            separator_color, accent_color, label_color = "#64748B", "#60A5FA", "cyan"
         sep = f" [dim {separator_color}]·[/] "
         toolsets_info = ""
         if self.enabled_toolsets and "all" not in self.enabled_toolsets:

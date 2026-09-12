@@ -5,12 +5,22 @@
   const dismiss = document.getElementById('cookie-dismiss');
   const consentKey = 'loki-cookie-banner-v1';
   const installCommands = {
-    curl: 'curl -fsSL https://loki.computer/install.sh | bash',
-    npm: 'npm install -g @wundercorp/loki',
-    github: 'https://github.com/wundercorp/loki',
+    curl: { value: 'curl -fsSL https://loki.computer/install.sh | bash', link: false },
+    npm: { value: 'npm install -g @wundercorp/loki', link: false },
+    github: { value: 'https://github.com/wundercorp/loki', link: true },
   };
+  const taglineActions = [
+    'evolves with you',
+    'works across your tools',
+    'automates recurring work',
+    'keeps context across sessions',
+    'turns intent into action',
+  ];
   const installTabs = [...document.querySelectorAll('.install-tab')];
-  const installCode = document.querySelector('#install-command code');
+  const installCode = document.querySelector('.install-command-code');
+  const installLink = document.querySelector('.install-command-link');
+  const tagline = document.querySelector('.tagline');
+  const taglineAction = document.getElementById('tagline-action');
   const copyCommand = document.querySelector('.copy-command');
   const copyStatus = document.querySelector('.copy-status');
 
@@ -34,8 +44,10 @@
   };
 
   copyCommand?.addEventListener('click', async () => {
-    if (!installCode) return;
-    const value = installCode.textContent ?? '';
+    const activeTab = installTabs.find(tab => tab.classList.contains('is-active'));
+    const activeKey = activeTab?.dataset.install ?? 'curl';
+    const value = installCommands[activeKey]?.value ?? '';
+    if (!value) return;
     try {
       await copyText(value);
       copyCommand.classList.add('is-copied');
@@ -58,15 +70,32 @@
   installTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const key = tab.dataset.install;
-      if (!key || !installCommands[key] || !installCode) return;
+      const config = key ? installCommands[key] : null;
+      if (!config || !installCode || !installLink) return;
       installTabs.forEach(item => {
         const active = item === tab;
         item.classList.toggle('is-active', active);
         item.setAttribute('aria-selected', active ? 'true' : 'false');
       });
-      installCode.textContent = installCommands[key];
+      installCode.textContent = config.value;
+      installCode.hidden = config.link;
+      installLink.hidden = !config.link;
+      if (config.link) {
+        installLink.href = config.value;
+        installLink.textContent = config.value;
+      }
     });
   });
+
+  if (tagline && taglineAction && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let taglineIndex = 0;
+    window.setInterval(() => {
+      taglineIndex = (taglineIndex + 1) % taglineActions.length;
+      const action = taglineActions[taglineIndex];
+      taglineAction.textContent = action;
+      tagline.setAttribute('aria-label', `The agent that ${action}`);
+    }, 3600);
+  }
 
   if (mesh && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     window.addEventListener('pointermove', event => {

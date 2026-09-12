@@ -51,7 +51,7 @@ describe('DEFAULT_THEME', () => {
   it('has color palette', async () => {
     const { DEFAULT_THEME } = await importThemeWithCleanEnv()
 
-    expect(DEFAULT_THEME.color.primary).toBe('#4ADE80')
+    expect(DEFAULT_THEME.color.primary).toBe('#60A5FA')
     expect(DEFAULT_THEME.color.error).toBe('#F87171')
   })
 })
@@ -60,8 +60,8 @@ describe('LIGHT_THEME', () => {
   it('avoids bright-yellow accents unreadable on white backgrounds (#11300)', async () => {
     const { LIGHT_THEME } = await importThemeWithCleanEnv()
 
-    expect(LIGHT_THEME.color.primary).not.toBe('#4ADE80')
-    expect(LIGHT_THEME.color.accent).not.toBe('#34D399')
+    expect(LIGHT_THEME.color.primary).not.toBe('#60A5FA')
+    expect(LIGHT_THEME.color.accent).not.toBe('#60A5FA')
     expect(LIGHT_THEME.color.muted).not.toBe('#64748B')
     expect(LIGHT_THEME.color.statusWarn).not.toBe('#FBBF24')
   })
@@ -434,19 +434,19 @@ describe('derived tone ladder', () => {
     const light = await importThemeWithEnv({ LOKI_TUI_BACKGROUND: '#ffffff' })
 
     const cases: Array<[string, string, string]> = [
-      [dark.DARK_THEME.color.muted, '#3d99c3', 'dark muted'],
-      [dark.DARK_THEME.color.label, '#41a3cf', 'dark label'],
-      [dark.DARK_THEME.color.statusFg, '#b9b9b9', 'dark statusFg'],
-      [dark.DARK_THEME.color.completionBg, '#071A0F', 'dark surface'],
-      [dark.DARK_THEME.color.completionCurrentBg, '#052E16', 'dark chip'],
-      [dark.DARK_THEME.color.selectionBg, '#14532D', 'dark selection'],
+      [dark.DARK_THEME.color.muted, '#5687c3', 'dark muted'],
+      [dark.DARK_THEME.color.label, '#5d90d0', 'dark label'],
+      [dark.DARK_THEME.color.statusFg, '#bdbdbd', 'dark statusFg'],
+      [dark.DARK_THEME.color.completionBg, '#06142D', 'dark surface'],
+      [dark.DARK_THEME.color.completionCurrentBg, '#0B1F3A', 'dark chip'],
+      [dark.DARK_THEME.color.selectionBg, '#1E3A8A', 'dark selection'],
       // Light canon = liftForContrast(dark literal, white, 4.5): the exact
       // colors xterm's minimumContrastRatio rendered on light hosts.
-      [light.LIGHT_THEME.color.muted, '#0783c2', 'light muted'],
-      [light.LIGHT_THEME.color.statusFg, '#666666', 'light statusFg'],
-      [light.LIGHT_THEME.color.completionBg, '#f4f9fc', 'light surface'],
-      [light.LIGHT_THEME.color.completionCurrentBg, '#b8dcef', 'light chip'],
-      [light.LIGHT_THEME.color.selectionBg, '#cce6f4', 'light selection']
+      [light.LIGHT_THEME.color.muted, '#2863e4', 'light muted'],
+      [light.LIGHT_THEME.color.statusFg, '#5d5d5d', 'light statusFg'],
+      [light.LIGHT_THEME.color.completionBg, '#f6f8fd', 'light surface'],
+      [light.LIGHT_THEME.color.completionCurrentBg, '#c2d3f8', 'light chip'],
+      [light.LIGHT_THEME.color.selectionBg, '#d3e0fb', 'light selection']
     ]
 
     for (const [got, original, label] of cases) {

@@ -56,6 +56,8 @@ Environment:
   AWS_PROFILE                             Optional AWS CLI profile
   AWS_REGION                              Optional AWS region, defaults to us-east-1
   LOKI_VERSION_BUMP                       Optional default bump component: patch, minor, or major
+  LOKI_NPM_CONFIRM_ATTEMPTS                Registry confirmation polls after successful npm publish (default: 24)
+  LOKI_NPM_CONFIRM_DELAY                   Seconds between confirmation polls (default: 5)
 USAGE
 }
 
@@ -490,7 +492,7 @@ if $DEPLOY_NPM; then
   fi
 
   set +e
-  REGISTRY_VERSION="$(npm view "$PACKAGE_NAME" version --registry=https://registry.npmjs.org 2>/dev/null)"
+  REGISTRY_VERSION="$(npm view "$PACKAGE_NAME" version --registry=https://registry.npmjs.org --prefer-online --fetch-retries=0 2>/dev/null)"
   REGISTRY_LOOKUP_STATUS=$?
   set -e
   if [ "$REGISTRY_LOOKUP_STATUS" -ne 0 ]; then
@@ -506,7 +508,7 @@ if $DEPLOY_NPM; then
     TARGET_VERSION="$EXPLICIT_VERSION"
     python3 scripts/sync_version.py next --local "$TARGET_VERSION" --bump patch >/dev/null
     set +e
-    npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org >/dev/null 2>&1
+    npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org --prefer-online --fetch-retries=0 >/dev/null 2>&1
     VERSION_EXISTS=$?
     set -e
     if [ "$VERSION_EXISTS" -eq 0 ]; then
@@ -582,7 +584,7 @@ PYDATE
       git push origin HEAD
     fi
 
-    if npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+    if npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org --prefer-online --fetch-retries=0 >/dev/null 2>&1; then
       printf '%s@%s appeared on npm before publish. Refusing to skip or overwrite it; rerun deploy to select the next version.\n' \
         "$PACKAGE_NAME" "$TARGET_VERSION" >&2
       exit 1
@@ -590,13 +592,39 @@ PYDATE
 
     npm publish --access public --provenance=false
 
-    CONFIRMED_VERSION="$(npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org 2>/dev/null || true)"
-    if [ "$CONFIRMED_VERSION" != "$TARGET_VERSION" ]; then
-      printf 'npm registry did not confirm %s@%s after publish. Re-run `%s --npm-only` after checking npm auth/registry status.\n' \
-        "$PACKAGE_NAME" "$TARGET_VERSION" "$0" >&2
-      exit 1
+    NPM_CONFIRM_ATTEMPTS="${LOKI_NPM_CONFIRM_ATTEMPTS:-24}"
+    NPM_CONFIRM_DELAY="${LOKI_NPM_CONFIRM_DELAY:-5}"
+    CONFIRMED_VERSION=""
+    CONFIRM_ATTEMPT=1
+
+    while [ "$CONFIRM_ATTEMPT" -le "$NPM_CONFIRM_ATTEMPTS" ]; do
+      CONFIRMED_VERSION="$(npm view "$PACKAGE_NAME@$TARGET_VERSION" version \
+        --registry=https://registry.npmjs.org \
+        --prefer-online \
+        --fetch-retries=0 \
+        2>/dev/null || true)"
+
+      if [ "$CONFIRMED_VERSION" = "$TARGET_VERSION" ]; then
+        break
+      fi
+
+      if [ "$CONFIRM_ATTEMPT" -lt "$NPM_CONFIRM_ATTEMPTS" ]; then
+        printf 'npm accepted %s@%s; registry metadata is still propagating (%s/%s).\n' \
+          "$PACKAGE_NAME" "$TARGET_VERSION" "$CONFIRM_ATTEMPT" "$NPM_CONFIRM_ATTEMPTS"
+        sleep "$NPM_CONFIRM_DELAY"
+      fi
+
+      CONFIRM_ATTEMPT=$((CONFIRM_ATTEMPT + 1))
+    done
+
+    if [ "$CONFIRMED_VERSION" = "$TARGET_VERSION" ]; then
+      printf 'npm registry confirmed %s@%s.\n' "$PACKAGE_NAME" "$TARGET_VERSION"
+    else
+      printf 'WARNING: npm publish accepted %s@%s, but registry metadata has not propagated yet. Continuing deployment because npm publish exited successfully.\n' \
+        "$PACKAGE_NAME" "$TARGET_VERSION" >&2
+      printf 'Verify later with: npm view %s@%s version --registry=https://registry.npmjs.org --prefer-online\n' \
+        "$PACKAGE_NAME" "$TARGET_VERSION" >&2
     fi
-    printf 'npm registry confirmed %s@%s.\n' "$PACKAGE_NAME" "$TARGET_VERSION"
   fi
 fi
 
