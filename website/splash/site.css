@@ -1560,6 +1560,17 @@ button, a { border-radius: var(--radius); }
   gap: 10px;
 }
 
+.final-links i {
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.loki-mark {
+  color: #9bc3ff;
+  font-weight: 900;
+}
+
 .primary-link,
 .secondary-link {
   display: inline-flex;
