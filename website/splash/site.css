@@ -774,10 +774,19 @@ button, a { border-radius: var(--radius); }
 }
 
 .ledger-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
   color: #4f6f9f;
   font-size: 20px;
   text-align: right;
   transition: color 180ms ease, transform 180ms ease;
+}
+
+.ledger-mark i {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .ledger-item:hover .ledger-mark {
@@ -1169,6 +1178,7 @@ button, a { border-radius: var(--radius); }
   display: grid;
   grid-template-columns: 28px 1fr;
   width: 100%;
+  border-radius: 0;
   column-gap: 8px;
   min-height: 100px;
   align-content: center;
@@ -2291,7 +2301,7 @@ body {
 
   .section,
   .section-intro {
-    padding: 82px 12px;
+    padding: 82px 20px;
   }
 
   .section-heading h2,
@@ -2317,12 +2327,12 @@ body {
   }
 
   .footer-ascii-art {
-    width: calc(100% - 24px);
+    width: calc(100% - 40px);
     margin-top: 48px;
   }
 
   .section-final {
-    padding-inline: 12px;
+    padding-inline: 20px;
   }
 }
 
@@ -2356,7 +2366,7 @@ body {
   gap: 30px;
   white-space: nowrap;
   will-change: transform;
-  animation: company-ticker-left-to-right 34s linear infinite;
+  animation: company-ticker-right-to-left 34s linear infinite;
 }
 
 .company-ticker-item {
@@ -2388,9 +2398,9 @@ body {
   outline-offset: -3px;
 }
 
-@keyframes company-ticker-left-to-right {
-  from { transform: translate3d(-50%, 0, 0); }
-  to { transform: translate3d(0, 0, 0); }
+@keyframes company-ticker-right-to-left {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
 }
 
 .section-light-white .memory-visual::before {
