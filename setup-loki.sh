@@ -458,26 +458,8 @@ fi
 echo ""
 echo -e "${GREEN}✓ Setup complete!${NC}"
 echo ""
-echo "Next steps:"
+echo "Loki will reload your shell configuration and start automatically."
 echo ""
-if is_termux; then
-    echo "  1. Run the setup wizard to configure API keys:"
-    echo "     loki setup"
-    echo ""
-    echo "  2. Start chatting:"
-    echo "     loki"
-    echo ""
-else
-    echo "  1. Reload your shell:"
-    echo "     source $SHELL_CONFIG"
-    echo ""
-    echo "  2. Run the setup wizard to configure API keys:"
-    echo "     loki setup"
-    echo ""
-    echo "  3. Start chatting:"
-    echo "     loki"
-    echo ""
-fi
 echo "Other commands:"
 echo "  loki status        # Check configuration"
 if is_termux; then
@@ -496,4 +478,15 @@ if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z $REPLY ]]; then
     echo ""
     # Run directly with venv Python (no activation needed)
     "$SCRIPT_DIR/venv/bin/python" -m loki_cli.main setup
+fi
+
+if [ -r /dev/tty ] && [ -w /dev/tty ]; then
+    LOGIN_SHELL="$(basename "${SHELL:-/bin/bash}")"
+    echo "Reloading ${LOGIN_SHELL} configuration and starting Loki..."
+    case "$LOGIN_SHELL" in
+        zsh) exec zsh -ic 'exec loki' </dev/tty >/dev/tty 2>&1 ;;
+        bash) exec bash -ic 'exec loki' </dev/tty >/dev/tty 2>&1 ;;
+        fish) exec fish -ic 'exec loki' </dev/tty >/dev/tty 2>&1 ;;
+        *) exec "${SHELL:-/bin/bash}" -ic 'exec loki' </dev/tty >/dev/tty 2>&1 ;;
+    esac
 fi

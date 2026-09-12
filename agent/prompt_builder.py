@@ -785,7 +785,7 @@ WSL_ENVIRONMENT_HINT = (
 
 # Backends that run commands (and every file tool) in a separate container / remote host: host OS/$HOME/cwd
 # would mislead, so the agent only sees the machine it can touch.
-_REMOTE_TERMINAL_BACKENDS = frozenset({"docker", "singularity", "modal", "daytona", "ssh", "vercel_sandbox", "managed_modal"})
+_REMOTE_TERMINAL_BACKENDS = frozenset({"docker", "singularity", "modal", "daytona", "ssh", "agentvm", "vercel_sandbox", "managed_modal"})
 
 # Used when the live probe fails: only what the backend choice implies — never an invented cwd/user/$HOME.
 _BACKEND_FALLBACK_DESCRIPTIONS: dict[str, str] = {
@@ -796,6 +796,7 @@ _BACKEND_FALLBACK_DESCRIPTIONS: dict[str, str] = {
     "daytona": "a Daytona workspace (Linux)",
     "vercel_sandbox": "a Vercel sandbox (Linux)",
     "ssh": "a remote host reached over SSH (likely Linux)",
+    "agentvm": "an AgentVM reached over SSH (Linux)",
 }
 
 # Per-process probe cache keyed by (env_type, cwd_hint) so a mid-process backend switch rebuilds.

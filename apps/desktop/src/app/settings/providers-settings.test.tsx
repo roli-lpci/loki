@@ -43,7 +43,7 @@ function provider(id: string, loggedIn: boolean, patch: Partial<OAuthProvider> =
     docs_url: '',
     flow: 'device_code',
     id,
-    name: id === 'wundercorp' ? 'WunderCorp Portal' : 'MiniMax',
+    name: id === 'openai-codex' ? 'OpenAI Codex / ChatGPT' : id === 'wundercorp' ? 'Legacy provider' : 'MiniMax',
     status: {
       logged_in: loggedIn
     },
@@ -73,9 +73,9 @@ function keyVar(patch: Partial<EnvVarInfo> = {}): EnvVarInfo {
 beforeEach(() => {
   onboarding.set({ manual: false })
   getEnvVars.mockResolvedValue({})
-  disconnectOAuthProvider.mockResolvedValue({ ok: true, provider: 'wundercorp' })
+  disconnectOAuthProvider.mockResolvedValue({ ok: true, provider: 'minimax-oauth' })
   listOAuthProviders.mockResolvedValue({
-    providers: [provider('wundercorp', true), provider('minimax-oauth', false)]
+    providers: [provider('minimax-oauth', true), provider('openai-codex', false), provider('wundercorp', true)]
   })
 })
 
@@ -151,11 +151,12 @@ describe('ProvidersSettings', () => {
       await renderProvidersSettings()
       expect(getEnvVars).toHaveBeenCalledWith('beta')
       expect(listOAuthProviders).toHaveBeenCalledWith('beta')
-      fireEvent.click(await screen.findByText('WunderCorp Portal'))
-      expect(startManualProviderOAuth).toHaveBeenCalledWith('wundercorp', 'beta')
-      fireEvent.click(await screen.findByRole('button', { name: 'Remove WunderCorp Portal' }))
+      expect(screen.queryByText('Legacy provider')).toBeNull()
+      fireEvent.click(await screen.findByText('MiniMax'))
+      expect(startManualProviderOAuth).toHaveBeenCalledWith('minimax-oauth', 'beta')
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove MiniMax' }))
       fireEvent.click(await screen.findByRole('button', { name: 'Disconnect' }))
-      await waitFor(() => expect(disconnectOAuthProvider).toHaveBeenCalledWith('wundercorp', 'beta'))
+      await waitFor(() => expect(disconnectOAuthProvider).toHaveBeenCalledWith('minimax-oauth', 'beta'))
     } finally {
       $settingsScopeOverride.set(null)
     }
@@ -164,7 +165,7 @@ describe('ProvidersSettings', () => {
   it('disconnects a connected provider account and refreshes the accounts list', async () => {
     await renderProvidersSettings()
 
-    const remove = await screen.findByRole('button', { name: 'Remove WunderCorp Portal' })
+    const remove = await screen.findByRole('button', { name: 'Remove MiniMax' })
     await act(async () => {
       fireEvent.click(remove)
     })
@@ -177,7 +178,7 @@ describe('ProvidersSettings', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }))
     })
 
-    await waitFor(() => expect(disconnectOAuthProvider).toHaveBeenCalledWith('wundercorp', undefined))
+    await waitFor(() => expect(disconnectOAuthProvider).toHaveBeenCalledWith('minimax-oauth', undefined))
     expect(listOAuthProviders).toHaveBeenCalledTimes(2)
   })
 
@@ -185,7 +186,7 @@ describe('ProvidersSettings', () => {
     await renderProvidersSettings()
 
     await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Remove WunderCorp Portal' }))
+      fireEvent.click(await screen.findByRole('button', { name: 'Remove MiniMax' }))
     })
 
     await act(async () => {
@@ -199,10 +200,10 @@ describe('ProvidersSettings', () => {
     await renderProvidersSettings()
 
     await act(async () => {
-      fireEvent.click(await screen.findByText('WunderCorp Portal'))
+      fireEvent.click(await screen.findByText('MiniMax'))
     })
 
-    expect(startManualProviderOAuth).toHaveBeenCalledWith('wundercorp', undefined)
+    expect(startManualProviderOAuth).toHaveBeenCalledWith('minimax-oauth', undefined)
     expect(disconnectOAuthProvider).not.toHaveBeenCalled()
   })
 

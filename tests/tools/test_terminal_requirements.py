@@ -207,3 +207,12 @@ def test_vercel_backend_rejects_malformed_disk_without_raising(monkeypatch, capl
         "Invalid value for TERMINAL_CONTAINER_DISK" in record.getMessage()
         for record in caplog.records
     )
+
+
+def test_agentvm_backend_uses_ssh_requirements(monkeypatch):
+    _clear_terminal_env(monkeypatch)
+    monkeypatch.setenv("TERMINAL_ENV", "agentvm")
+    monkeypatch.setenv("TERMINAL_SSH_HOST", "vm.agentvm.example")
+    monkeypatch.setenv("TERMINAL_SSH_USER", "user")
+
+    assert terminal_tool_module.check_terminal_requirements() is True

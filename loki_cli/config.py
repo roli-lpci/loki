@@ -2041,7 +2041,7 @@ def terminal_config_env_var_for_key(key: str) -> Optional[str]:
 def _is_ssh_remote_tilde_cwd(backend: str, cwd: str) -> bool:
     """Whether the remote SSH shell must expand *cwd* itself: ``~`` expanded on the Loki host
     would name the host/container home instead of the SSH user's."""
-    return (backend or "").strip().lower() == "ssh" and (cwd == "~" or cwd.startswith("~/"))
+    return (backend or "").strip().lower() in {"ssh", "agentvm"} and (cwd == "~" or cwd.startswith("~/"))
 
 
 def apply_terminal_config_to_env(
@@ -2818,7 +2818,10 @@ def _show_terminal_section(config: Dict[str, Any]) -> None:
         ],
         'ssh': lambda: [
             f"  SSH host:     {get_env_value('TERMINAL_SSH_HOST') or '(not set)'}",
-            f"  SSH user:     {get_env_value('TERMINAL_SSH_USER') or '(not set)'}"]}
+            f"  SSH user:     {get_env_value('TERMINAL_SSH_USER') or '(not set)'}"],
+        'agentvm': lambda: [
+            f"  AgentVM SSH host: {get_env_value('TERMINAL_SSH_HOST') or '(not set)'}",
+            f"  AgentVM SSH user: {get_env_value('TERMINAL_SSH_USER') or '(not set)'}"]}
     for line in backend_lines.get(terminal.get('backend'), list)():
         print(line)
 

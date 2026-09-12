@@ -222,8 +222,8 @@ def _print_setup_summary(config: dict, loki_home):
         print()
         _setup.print_warning("No inference provider is configured — Loki cannot chat yet.")
         _setup._info("  Finish this one step with either of:",
-              "    loki model            (pick any provider/model)",
-              "    loki setup --portal   (WunderCorp Portal OAuth, no API key)")
+              "    loki model            (pick a provider and model)",
+              "    loki setup            (run the guided setup wizard)")
 
     print()
     _setup.print_header("Tool Availability Summary")

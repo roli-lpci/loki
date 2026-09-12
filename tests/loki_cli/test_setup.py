@@ -249,3 +249,33 @@ def test_vercel_setup_prefills_project_and_team_from_link_file(tmp_path, monkeyp
     assert os.environ["VERCEL_TEAM_ID"] == "linked-team"
     assert defaults["    Vercel project ID"] == "linked-project"
     assert defaults["    Vercel team ID"] == "linked-team"
+
+
+def test_agentvm_setup_saves_ssh_connection_details(tmp_path, monkeypatch):
+    monkeypatch.setenv("LOKI_HOME", str(tmp_path))
+    config = load_config()
+
+    def fake_prompt_choice(question, choices, default=0):
+        if question == "Select terminal backend:":
+            return next(i for i, choice in enumerate(choices) if choice.startswith("AgentVM -"))
+        raise AssertionError(f"Unexpected prompt_choice call: {question}")
+
+    prompt_values = iter(["vm.agentvm.example", "user", "2222", "~/.ssh/agentvm"])
+    monkeypatch.setattr("loki_cli.setup.prompt_choice", fake_prompt_choice)
+    monkeypatch.setattr("loki_cli.setup.prompt", lambda *args, **kwargs: next(prompt_values))
+    monkeypatch.setattr("loki_cli.setup.prompt_yes_no", lambda *args, **kwargs: False)
+    monkeypatch.setattr(
+        "loki_cli.setup_terminal.shutil.which",
+        lambda binary: "/usr/local/bin/avm" if binary == "avm" else None,
+    )
+
+    from loki_cli.setup import setup_terminal_backend
+
+    setup_terminal_backend(config)
+
+    assert config["terminal"]["backend"] == "agentvm"
+    assert os.environ["TERMINAL_ENV"] == "agentvm"
+    assert os.environ["TERMINAL_SSH_HOST"] == "vm.agentvm.example"
+    assert os.environ["TERMINAL_SSH_USER"] == "user"
+    assert os.environ["TERMINAL_SSH_PORT"] == "2222"
+    assert os.environ["TERMINAL_SSH_KEY"] == "~/.ssh/agentvm"

@@ -54,12 +54,7 @@ If you already have Git installed, the installer detects it and uses that instea
 >
 > **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything. If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\loki`; WSL2 installs under `~/.loki` as on Linux.
 
-After installation, the first-run quick setup uses OpenRouter by default. Create an API key at [openrouter.ai/keys](https://openrouter.ai/keys), then choose your model when prompted.
-
-```bash
-source ~/.bashrc    # reload shell (or: source ~/.zshrc)
-loki              # start chatting!
-```
+After installation, the installer reloads your shell configuration and starts `loki` automatically. The first-run quick setup uses OpenRouter by default; press `o` at the API-key prompt to open [openrouter.ai/keys](https://openrouter.ai/keys), then paste the key and choose your model.
 
 ### Troubleshooting
 

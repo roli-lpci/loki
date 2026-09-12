@@ -11,10 +11,8 @@ Loki uses two kinds of model slots:
 
 This page covers configuring both from the dashboard. If you prefer config files or the CLI, jump to [Alternative methods](#alternative-methods) at the bottom. To run models on your own machine instead of a cloud provider, see [Local Models](/user-guide/local-models).
 
-:::tip Fastest path: WunderCorp Portal
-[WunderCorp Portal](/user-guide/features/tool-gateway) provides 300+ models under one subscription. On a fresh install, run `loki setup --portal` to log in and set WunderCorp as your provider in one command. Inspect what's wired up with `loki portal info`.
-
-- Portal subscribers also get **10% off token-billed providers**.
+:::tip Fastest path
+Run `loki model`, choose **OpenRouter**, and press `o` at the API-key prompt to open the key page. Paste your key, then choose a model from the curated list.
 :::
 
 :::note `model:` schema — empty string vs. mapping
@@ -229,29 +227,6 @@ omitted, Loki keeps its normal provider and model capability detection.
 :::note Legacy format
 Older configs used a top-level `custom_providers:` list (with `base_url` instead of `api`). It still works and is auto-migrated to the `providers:` dict on `loki update` (config v12).
 :::
-
-### WunderCorp Portal: which wire carries Claude
-
-WunderCorp Portal serves its `anthropic/*` models on two routes: OpenAI-compatible `/v1/chat/completions` and the native Anthropic Messages wire `/v1/messages`. `wundercorp.anthropic_wire` picks one:
-
-```yaml
-wundercorp:
-  anthropic_wire: chat     # default. "native" = the Anthropic Messages wire; "auto" = decide per session
-```
-
-`chat` is the default for now. The native wire is the better transport (signed thinking blocks pass through unchanged, native `cache_control` scopes), but on the Portal's OpenRouter-served path it currently re-writes the previous turn's prompt cache on 14–20% of consecutive calls in concurrent tool loops, which is 15–20% of a fan-out's cache-write bill; the chat route measured 0 on the same test. Set `native` to opt back in (for example once the portal-side fix has shipped). Only `anthropic/*` models are affected; everything else on WunderCorp already uses chat/completions.
-
-`auto` is for when the Portal serves the same model from more than one upstream. A session starts on chat, Loki reads which upstream answered the first call, and switches that session to native only when the upstream is one where native is known to be clean (the switch happens between calls, so no in-flight response and no warm cache is lost). Today no upstream is cleared, so `auto` behaves exactly like `chat`; it exists so the flip can be made from a measurement rather than a config change.
-
-## When does it take effect?
-
-- **CLI** (`loki chat`): next `loki chat` invocation.
-- **Gateway** (Telegram, Discord, Slack, etc.): next *new* session. Existing sessions keep their model. Restart the gateway (`loki gateway restart`) if you want to force all sessions to pick up the change.
-- **Dashboard chat tab** (`/chat`): next new PTY. The currently-open chat keeps its model — use `/model` inside it to hot-swap.
-
-Changes never invalidate prompt caches on running sessions. That's deliberate: swapping the main model inside a session requires a cache reset (the system prompt contains model-specific content), and we reserve that for the explicit `/model` slash command inside chat.
-
-## Troubleshooting
 
 ### "No authenticated providers" in the picker
 

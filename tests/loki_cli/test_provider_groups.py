@@ -51,3 +51,7 @@ def test_multi_member_group_folds_to_one_row():
 
 
 
+
+
+def test_wundercorp_is_not_a_selectable_canonical_provider():
+    assert all(provider.slug != "wundercorp" for provider in CANONICAL_PROVIDERS)

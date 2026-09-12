@@ -69,11 +69,7 @@ iex (irm https://loki.computer/install.ps1)
 If you're installing on a phone, see the dedicated [Termux guide](./termux.md) for the tested manual path, supported extras, and current Android-specific limitations.
 :::
 
-After it finishes, reload your shell:
-
-```bash
-source ~/.bashrc   # or source ~/.zshrc
-```
+After it finishes, the installer reloads your shell configuration and starts `loki` automatically when a TTY is available.
 
 For detailed installation options, prerequisites, and troubleshooting, see the [Installation guide](./installation.md).
 
@@ -85,20 +81,14 @@ The single most important setup step. Use `loki model` to walk through the choic
 loki model
 ```
 
-:::tip Easiest path: WunderCorp Portal
-One subscription covers 300+ models plus the [Tool Gateway](../user-guide/features/tool-gateway.md) (web search, image generation, TTS, cloud browser). On a fresh install:
-
-```bash
-loki setup --portal
-```
-
-That logs you in, sets WunderCorp as your provider, and turns on the Tool Gateway in one command.
+:::tip Easiest path: OpenRouter
+Run `loki model`, choose **OpenRouter**, then press `o` at the API-key prompt to open the OpenRouter key page in your browser. Paste the key and pick a model.
 :::
 
 :::info Setup modes
 On a fresh install, `loki setup` offers three modes:
 
-- **Quick Setup (WunderCorp Portal)** — OAuth login, no API keys to manage; sets up a model plus the Tool Gateway tools, billed to your [WunderCorp Portal subscription](/integrations/wundercorp-portal). The recommended fast path.
+- **Quick Setup (OpenRouter)** — enter an OpenRouter API key, choose a model, then accept the recommended defaults.
 - **Full Setup** — walk through every provider, tool, and option yourself (bring your own keys).
 - **Blank Slate** — everything starts **off** except the bare minimum needed to run an agent: **provider & model, the File Operations toolset, and the Terminal toolset**. No web, browser, code execution, vision, memory, delegation, cron, skills, plugins, or MCP servers — and compression, checkpoints, smart routing, and memory capture are all disabled. After the minimal baseline is applied, you choose one of two paths: **start with everything disabled** (finish now with the minimal agent), or **walk through all configurations** (opt in to tools, skills, plugins, MCP, and messaging). Pick this when you want a minimal, fully-controlled agent and intend to enable only exactly what you need.
 
@@ -109,7 +99,6 @@ Good defaults:
 
 | Provider | What it is | How to set up |
 |----------|-----------|---------------|
-| **WunderCorp Portal** | Subscription-based, zero-config | OAuth login via `loki model` |
 | **OpenAI Codex** | ChatGPT or Codex subscription, uses Codex models | Device code auth via `loki model` → **ChatGPT or Codex Subscription** |
 | **Anthropic** | Claude models directly — Max plan + extra usage credits (OAuth), or API key for pay-per-token | `loki model` → OAuth login (requires Max + extra credits), or an Anthropic API key |
 | **OpenRouter** | Multi-provider routing across many models | Enter your API key |

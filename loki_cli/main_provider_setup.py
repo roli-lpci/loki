@@ -566,7 +566,8 @@ def _prompt_reasoning_effort_selection(efforts, current_effort=""):
     return "none" if idx == n else None
 
 
-def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "", existing_source: str = "") -> tuple:
+def _prompt_api_key(
+    pconfig, existing_key: str, provider_id: str = "", existing_source: str = "", open_url: str = "") -> tuple:
     """API-key entry for ``loki setup`` / ``loki model``: first-time entry, or [K]eep / [R]eplace /
     [C]lear when a key exists (a malformed paste is recoverable without editing ``.env``).
     Returns ``(resolved_key, abort)``; ``abort=True`` means the caller must ``return`` at once."""
@@ -579,13 +580,25 @@ def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "", existing_
         if lmstudio_default:
             prompt = f"{key_env} (Enter for no-auth default {LMSTUDIO_NOAUTH_PLACEHOLDER!r}): "
         else:
-            prompt = f"{key_env} (or Enter to cancel): "
-        entered = _ask(prompt, secret=True, cancel_msg="")
-        if entered is None:
-            return ""
-        if not entered and lmstudio_default:
-            return LMSTUDIO_NOAUTH_PLACEHOLDER
-        return entered
+            prompt = f"{key_env} ([O] open key page, or paste key; Enter to cancel): " if open_url else f"{key_env} (or Enter to cancel): "
+        while True:
+            entered = _ask(prompt, secret=True, cancel_msg="")
+            if entered is None:
+                return ""
+            if open_url and entered.lower() == "o":
+                import webbrowser
+                try:
+                    opened = webbrowser.open(open_url)
+                except Exception:
+                    opened = False
+                if opened:
+                    print(f"Opened {open_url}")
+                else:
+                    print(f"Open this page in your browser: {open_url}")
+                continue
+            if not entered and lmstudio_default:
+                return LMSTUDIO_NOAUTH_PLACEHOLDER
+            return entered
 
     if not existing_key:
         print(f"No {pconfig.name} API key configured.")

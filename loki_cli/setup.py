@@ -554,7 +554,7 @@ from loki_cli.setup_terminal import setup_terminal_backend  # noqa: E402
 from loki_cli.setup_platforms import setup_gateway  # noqa: E402
 from loki_cli.setup_summary import _print_setup_summary  # noqa: E402,F401
 from loki_cli.setup_migration import _offer_openclaw_migration, _skip_configured_section  # noqa: E402
-from loki_cli.setup_quick import _run_portal_one_shot, _run_quick_setup  # noqa: E402
+from loki_cli.setup_quick import _run_quick_setup  # noqa: E402
 
 
 # ── Main Wizard Orchestrator ──
@@ -642,7 +642,7 @@ _FIRST_TIME_MODES = (
 
 
 def _run_setup_wizard_impl(args):
-    """Run the interactive setup wizard: full/quick (auto-detected), ``--portal``, or one
+    """Run the interactive setup wizard: full/quick (auto-detected), or one
     ``loki setup <section>`` from SETUP_SECTIONS."""
     from loki_cli.config import is_managed, managed_error
     if is_managed():
@@ -666,9 +666,6 @@ def _run_setup_wizard_impl(args):
     # Non-interactive environments (headless SSH, Docker, CI/CD)
     if getattr(args, 'non_interactive', False) or not is_interactive_stdin():
         print_noninteractive_setup_guidance("Running in a non-interactive environment (no TTY detected).")
-        return
-    if getattr(args, "portal", False):  # one-shot WunderCorp Portal setup; skips the rest
-        _run_portal_one_shot(config)
         return
     section = getattr(args, "section", None)
     if section:

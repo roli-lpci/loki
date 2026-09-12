@@ -1,4 +1,4 @@
-"""Terminal-backend setup wizard (local/docker/singularity/modal/daytona/vercel/ssh/plugin).
+"""Terminal-backend setup wizard (local/docker/singularity/modal/daytona/vercel/ssh/agentvm/plugin).
 setup.py names are resolved through the module object so test patches on ``loki_cli.setup.<name>``
 take effect; setup.py re-exports the public entry points."""
 
@@ -257,6 +257,75 @@ def _setup_backend_ssh(config: dict) -> None:
             _setup.print_info("  Check your SSH key and host settings.")
 
 
+
+def _setup_backend_agentvm(config: dict) -> None:
+    _setup.print_success("Terminal backend: AgentVM")
+    _setup._info(
+        "Managed cloud Linux VM over SSH.",
+        "AgentVM: https://agentvm.sh",
+        "Loki uses AgentVM for machine lifecycle and its SSH connection for command execution.",
+    )
+    agentvm_cli = shutil.which("avm") or shutil.which("agentvm")
+    if agentvm_cli:
+        _setup.print_info(f"  AgentVM CLI found: {agentvm_cli}")
+    else:
+        _setup.print_warning("AgentVM CLI not found in PATH.")
+        npm = shutil.which("npm")
+        if npm and _setup.prompt_yes_no("  Install AgentVM CLI with npm now?", True):
+            import subprocess
+            result = subprocess.run([npm, "install", "-g", "@wundercorp/agentvm"], **_RUN_KW)
+            if result.returncode == 0:
+                agentvm_cli = shutil.which("avm") or shutil.which("agentvm")
+                _setup.print_success("  AgentVM CLI installed")
+            else:
+                _setup.print_warning("  AgentVM CLI install failed.")
+                if result.stderr:
+                    _setup.print_info(f"  Error: {result.stderr.strip().splitlines()[-1]}")
+        if not agentvm_cli:
+            _setup.print_info("  Install later with: npm install -g @wundercorp/agentvm")
+
+    _setup._info(
+        None,
+        "If you do not already have a running AgentVM, use:",
+        "  avm login",
+        "  avm new",
+        "  avm launch",
+        None,
+        "Then enter the SSH details AgentVM provides.",
+    )
+
+    fields = (
+        ("  AgentVM SSH host", "TERMINAL_SSH_HOST", ""),
+        ("  AgentVM SSH user", "TERMINAL_SSH_USER", "user"),
+        ("  AgentVM SSH port", "TERMINAL_SSH_PORT", "22"),
+        ("  AgentVM SSH private key path", "TERMINAL_SSH_KEY", ""),
+    )
+    values = []
+    for label, env_var, default in fields:
+        value = _setup.prompt(label, _setup.get_env_value(env_var) or default)
+        values.append(value)
+        if value and (env_var != "TERMINAL_SSH_PORT" or value != "22"):
+            _setup.save_env_value(env_var, value)
+        elif env_var == "TERMINAL_SSH_PORT" and value == "22":
+            _setup.remove_env_value(env_var)
+
+    host, user, port, ssh_key = values
+    if host and _setup.prompt_yes_no("  Test AgentVM SSH connection?", True):
+        _setup.print_info("  Testing connection...")
+        import subprocess
+        ssh_cmd = [
+            "ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+            *(["-i", os.path.expanduser(ssh_key)] if ssh_key else []),
+            *(["-p", port] if port and port != "22" else []),
+            f"{user}@{host}" if user else host, "echo ok",
+        ]
+        result = subprocess.run(ssh_cmd, timeout=10, **_RUN_KW)
+        if result.returncode == 0:
+            _setup.print_success("  AgentVM SSH connection successful!")
+        else:
+            _setup.print_warning(f"  AgentVM SSH connection failed: {result.stderr.strip()}")
+            _setup.print_info("  Check the SSH command shown by AgentVM and update these settings.")
+
 def _setup_backend_plugin(config: dict, backend: str) -> None:
     try:
         from agent.terminal_env_registry import get_provider
@@ -272,13 +341,17 @@ def _setup_backend_plugin(config: dict, backend: str) -> None:
 _BUILTIN_TERMINAL_BACKENDS = [
     ("local", "Local - run directly on this machine (default)"),
     ("docker", "Docker - isolated container with configurable resources"),
-    ("modal", "Modal - serverless cloud sandbox"), ("ssh", "SSH - run on a remote machine"),
+    ("modal", "Modal - serverless cloud sandbox"),
+    ("ssh", "SSH - run on a remote machine"),
     ("daytona", "Daytona - persistent cloud development environment"),
-    ("vercel_sandbox", "Vercel Sandbox - cloud microVM with snapshot filesystem persistence")]
+    ("vercel_sandbox", "Vercel Sandbox - cloud microVM with snapshot filesystem persistence"),
+    ("agentvm", "AgentVM - managed cloud Linux VM over SSH"),
+]
 _TERMINAL_BACKEND_SETUP = {
     "local": _setup_backend_local, "docker": _setup_backend_docker, "singularity": _setup_backend_singularity,
     "modal": _setup_backend_modal, "daytona": _setup_backend_daytona, "vercel_sandbox": _setup_backend_vercel,
-    "ssh": _setup_backend_ssh}
+    "ssh": _setup_backend_ssh, "agentvm": _setup_backend_agentvm,
+}
 # Backend -> env var mirrored from config after setup (config.yaml is the source of truth, but
 # terminal_tool reads these from .env).
 _BACKEND_ENV_MIRROR = {"modal": ("TERMINAL_MODAL_MODE", "modal_mode", "auto"),

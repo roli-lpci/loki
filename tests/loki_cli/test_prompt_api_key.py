@@ -107,3 +107,35 @@ def test_lmstudio_first_time_empty_uses_placeholder(profile_env):
     assert get_env_value("LM_API_KEY") == LMSTUDIO_NOAUTH_PLACEHOLDER
 
 
+
+
+def test_openrouter_first_time_o_opens_key_page_then_accepts_key(profile_env, monkeypatch, capsys):
+    from loki_cli.auth import ProviderConfig
+    from loki_cli.config import get_env_value
+
+    pconfig = ProviderConfig(
+        id="openrouter",
+        name="OpenRouter",
+        auth_type="api_key",
+        api_key_env_vars=("OPENROUTER_API_KEY",),
+    )
+    answers = iter(["o", "sk-or-v1-test"])
+    monkeypatch.setattr(
+        "loki_cli.secret_prompt.masked_secret_prompt",
+        lambda _prompt: next(answers),
+    )
+    opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: opened.append(url) or True)
+
+    key, abort = main_provider_setup._prompt_api_key(
+        pconfig,
+        "",
+        provider_id="openrouter",
+        open_url="https://openrouter.ai/keys",
+    )
+
+    assert abort is False
+    assert key == "sk-or-v1-test"
+    assert opened == ["https://openrouter.ai/keys"]
+    assert get_env_value("OPENROUTER_API_KEY") == "sk-or-v1-test"
+    assert "Opened https://openrouter.ai/keys" in capsys.readouterr().out

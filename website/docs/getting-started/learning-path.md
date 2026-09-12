@@ -13,7 +13,7 @@ If you haven't installed Loki Agent yet, begin with the [Installation guide](/ge
 :::
 
 :::tip First-time provider setup
-First-time users almost always want `loki setup --portal` — one OAuth covers a model plus the four Tool Gateway tools (search/image/TTS/browser). See [WunderCorp Portal](/integrations/wundercorp-portal).
+Run `loki model` and choose the provider you want. OpenRouter is the quickest general-purpose path; press `o` at its API-key prompt to open the key page directly.
 :::
 
 ## How to Use This Page

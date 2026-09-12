@@ -174,7 +174,7 @@ def _api_key_provider(
 # [, auth_type]])``; OAuth / bespoke rows are full ``ProviderConfig`` objects.
 _REGISTRY_ROWS: Tuple[Any, ...] = (
     ProviderConfig(
-        "wundercorp", "WunderCorp Portal", "oauth_device_code", portal_base_url=DEFAULT_WUNDERCORP_PORTAL_URL,
+        "wundercorp", "WunderCorp", "oauth_device_code", portal_base_url=DEFAULT_WUNDERCORP_PORTAL_URL,
         inference_base_url=DEFAULT_WUNDERCORP_INFERENCE_URL, client_id=DEFAULT_WUNDERCORP_CLIENT_ID,
         scope=DEFAULT_WUNDERCORP_SCOPE),
     ProviderConfig("openai-codex", "OpenAI Codex", "oauth_external", inference_base_url=DEFAULT_CODEX_BASE_URL),

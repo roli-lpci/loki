@@ -45,7 +45,7 @@ def _existing_api_key_for_model_flow(provider_id: str, pconfig) -> tuple[str, st
     return _resolve_api_key_provider_secret(provider_id, pconfig)
 
 
-def _ensure_flow_api_key(provider_id: str, pconfig, *, missing_hint=()) -> tuple[str, str, bool]:
+def _ensure_flow_api_key(provider_id: str, pconfig, *, missing_hint=(), open_url: str = "") -> tuple[str, str, bool]:
     """Resolve the stored key, print *missing_hint* lines when none exists, then run
     ``_prompt_api_key`` (users can replace a stale key in-flow via K/R/C).
 
@@ -56,7 +56,8 @@ def _ensure_flow_api_key(provider_id: str, pconfig, *, missing_hint=()) -> tuple
     if not existing_key:
         for line in missing_hint:
             print(line)
-    resolved, abort = _prompt_api_key(pconfig, existing_key, provider_id=provider_id, existing_source=existing_source)
+    resolved, abort = _prompt_api_key(
+        pconfig, existing_key, provider_id=provider_id, existing_source=existing_source, open_url=open_url)
     return existing_key, resolved, abort
 
 

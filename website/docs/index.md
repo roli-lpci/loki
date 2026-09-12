@@ -40,7 +40,7 @@ iex (irm https://loki.computer/install.ps1)
 
 See the full **[Installation Guide](/getting-started/installation)** for what the installer does, the per-user vs root layout, and Windows-specific notes. For the complete platform support matrix, see **[Platform Support](/getting-started/platform-support)**.
 
-> **Fastest path to a working agent:** After installing, run `loki setup --portal` — one OAuth covers a model plus all four Tool Gateway tools (web search, image generation, TTS, browser). See [WunderCorp Portal](/integrations/wundercorp-portal).
+> **Fastest path to a working agent:** After installing, run `loki model`, choose **OpenRouter**, and press `o` at the API-key prompt to open the key page. Paste the key, pick a model, and start Loki.
 
 ## What is Loki Agent?
 
@@ -73,14 +73,14 @@ It's not a coding copilot tethered to an IDE or a chatbot wrapper around a singl
 ## Key Features
 
 - **A closed learning loop** — Agent-curated memory with periodic nudges, autonomous skill creation, skill self-improvement during use, FTS5 cross-session recall with LLM summarization, and [Honcho](https://github.com/plastic-labs/honcho) dialectic user modeling
-- **Runs anywhere, not just your laptop** — 7 terminal backends: local, Docker, SSH, Daytona, Singularity, Modal, Vercel Sandbox. Daytona and Modal offer serverless persistence — your environment hibernates when idle, costing nearly nothing
+- **Runs anywhere, not just your laptop** — 8 terminal backends: local, Docker, SSH, AgentVM, Daytona, Singularity, Modal, Vercel Sandbox. Daytona and Modal offer serverless persistence — your environment hibernates when idle, costing nearly nothing
 - **Lives where you do** — CLI, Telegram, Discord, Slack, WhatsApp, Signal, Matrix, Mattermost, Email, SMS, DingTalk, Feishu, WeCom, Weixin, QQ Bot, Yuanbao, BlueBubbles, Home Assistant, Microsoft Teams, Google Chat, and more — 20+ platforms from one gateway
-- **Built by model trainers** — Created by [WunderCorp, Inc.](https://wundercorp.co), the lab behind Loki, Nomos, and Psyche. Works with [WunderCorp Portal](https://portal.wundercorp.com), [OpenRouter](https://openrouter.ai), OpenAI, or any endpoint
+- **Built by model trainers** — Created by [WunderCorp, Inc.](https://wundercorp.co), the lab behind Loki, Nomos, and Psyche. Works with [OpenRouter](https://openrouter.ai), OpenAI, Anthropic, or any compatible endpoint
 - **Scheduled automations** — Built-in cron with delivery to any platform
 - **[Bot Mode](/user-guide/bot-mode)** — Build a durable team of specialist Bots that work together in group chats and through `@mentions`
 - **Delegates & parallelizes** — Spawn isolated subagents for parallel workstreams. Programmatic Tool Calling via `execute_code` collapses multi-step pipelines into single inference calls
 - **Open standard skills** — Compatible with [agentskills.io](https://agentskills.io). Skills are portable, shareable, and community-contributed via the Skills Hub
-- **Full web control** — Search, extract, browse, vision, image generation, TTS — one subscription via [WunderCorp Portal](/integrations/wundercorp-portal) bundles all of them
+- **Full web control** — Search, extract, browse, vision, image generation, and TTS through configurable tool providers
 - **MCP support** — Connect to any MCP server for extended tool capabilities
 - **Research-ready** — Batch processing, trajectory export, RL training with Atropos. Built by [WunderCorp, Inc.](https://wundercorp.co) — the lab behind Loki, Nomos, and Psyche models
 

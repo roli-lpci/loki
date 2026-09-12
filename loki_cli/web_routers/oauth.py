@@ -543,13 +543,15 @@ def _build_oauth_catalog() -> list[Dict[str, Any]]:
     rows: list[Dict[str, Any]] = []
     seen: set[str] = set()
     for entry in _OAUTH_PROVIDER_CATALOG:
+        if entry["id"] == "wundercorp":
+            continue
         if entry["id"] not in seen:
             seen.add(entry["id"])
             rows.append(dict(entry))
     try:
         from loki_cli.provider_catalog import provider_catalog
         for d in provider_catalog():
-            if d.tab != "accounts" or d.slug in seen:
+            if d.slug == "wundercorp" or d.tab != "accounts" or d.slug in seen:
                 continue
             seen.add(d.slug)
             rows.append({

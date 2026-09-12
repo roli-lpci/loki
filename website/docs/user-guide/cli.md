@@ -9,7 +9,7 @@ description: "Master the Loki Agent terminal interface — commands, keybindings
 Loki Agent's CLI is a full terminal user interface (TUI) — not a web UI. It features multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output. Built for people who live in the terminal.
 
 :::tip First-time setup
-One command — `loki setup --portal` — and you're ready to `loki chat`. See [WunderCorp Portal](/integrations/wundercorp-portal).
+Run `loki setup` for the guided wizard, or `loki model` if you only need to connect a model provider. For OpenRouter, press `o` at the API-key prompt to open the key page.
 :::
 
 :::tip
@@ -34,7 +34,6 @@ loki chat --query-file - < prompt.txt
 loki chat --model "anthropic/claude-sonnet-4"
 
 # With a specific provider
-loki chat --provider wundercorp        # Use WunderCorp Portal
 loki chat --provider openrouter  # Force OpenRouter
 
 # With specific toolsets

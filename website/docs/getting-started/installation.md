@@ -54,12 +54,7 @@ The root-mode **FHS layout** (`/usr/local/lib/…`, `/usr/local/bin/loki`) match
 
 ### After Installation
 
-Reload your shell and start chatting:
-
-```bash
-source ~/.bashrc   # or: source ~/.zshrc
-loki             # Start chatting!
-```
+On an interactive install, the installer reloads your shell configuration and starts `loki` automatically. Non-interactive installs stop after setup so CI and provisioning scripts do not block on a chat session.
 
 To reconfigure individual settings later, use the dedicated commands:
 
@@ -72,14 +67,8 @@ loki config get     # Inspect individual config values
 loki setup          # Or run the full setup wizard to configure everything at once
 ```
 
-:::tip Fastest path: WunderCorp Portal
-One subscription covers 300+ models plus the [Tool Gateway](/user-guide/features/tool-gateway) (web search, image generation, TTS, cloud browser). Skip the per-tool key juggling:
-
-```bash
-loki setup --portal
-```
-
-That logs you in, sets WunderCorp as your provider, and turns on the Tool Gateway in one command.
+:::tip Fastest provider setup
+Run `loki model`, choose **OpenRouter**, then press `o` at the API-key prompt to open the OpenRouter key page. Paste your key and pick a model.
 :::
 
 :::tip Already running Loki on another machine?

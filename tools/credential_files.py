@@ -309,19 +309,19 @@ def from_agent_visible_cache_path(container_path: str, container_base: str = "/r
 
 # Backends whose file-sync lands under the remote home: ``~/.loki`` is
 # expanded by the remote shell, so it resolves regardless of the actual home.
-_HOME_RELATIVE_BACKENDS = frozenset({"ssh", "daytona", "vercel_sandbox"})
+_HOME_RELATIVE_BACKENDS = frozenset({"ssh", "agentvm", "daytona", "vercel_sandbox"})
 
 
 def to_agent_visible_cache_path(host_path: str, container_base: str = "/root/.loki") -> str:
     """Translate a host cache path to where the active backend (TERMINAL_ENV) sees it.
 
     Mirrors ``_agent_cache_base_for_env`` in tools/image_generation_tool.py: docker/modal mount at
-    ``/root/.loki``; ssh/daytona/vercel_sandbox under ``~/.loki``; plugin backends declare
+    ``/root/.loki``; ssh/agentvm/daytona/vercel_sandbox under ``~/.loki``; plugin backends declare
     ``cache_path_base`` (None = host paths stay correct); local/singularity/unknown unchanged
     (Apptainer auto-binds the host home, so translation would dangle).
 
     * docker / modal — bind-mounted (docker) or per-file-synced (modal) at ``/root/.loki`` (the
-    *container_base* default). * ssh / daytona / vercel_sandbox — file-synced under the remote user's home;
+    *container_base* default). * ssh / agentvm / daytona / vercel_sandbox — file-synced under the remote user's home;
     ``~/.loki`` is shell-expanded by the remote shell, so tool commands resolve it regardless of the
     actual remote home. Previously these backends synced the bytes but still rendered the dangling host path
     (#76577 gap).

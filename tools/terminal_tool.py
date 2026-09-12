@@ -2,7 +2,7 @@
 """Terminal tool: run shell commands in the configured backend.
 
 Backends (``TERMINAL_ENV``): local (default), docker, singularity, modal
-(direct or managed gateway), daytona, vercel_sandbox, ssh, plus
+(direct or managed gateway), daytona, vercel_sandbox, ssh, agentvm, plus
 plugin-registered backends. Handles background processes, sandbox lifecycle
 (per-task cache, idle reaper, atexit teardown) and sudo password plumbing.
 Cloud-sandbox persistent filesystems preserve working state across sandbox
@@ -562,7 +562,7 @@ def _ensure_terminal_env_bridged() -> None:
 
 
 # Default cwd per backend; anything else (container backends, plugins) is "/root".
-_DEFAULT_CWD_BY_BACKEND = {"ssh": "~", "vercel_sandbox": _VERCEL_SANDBOX_DEFAULT_CWD}
+_DEFAULT_CWD_BY_BACKEND = {"ssh": "~", "agentvm": "~", "vercel_sandbox": _VERCEL_SANDBOX_DEFAULT_CWD}
 
 
 def _resolve_config_cwd(env_type: str, mount_docker_cwd: bool) -> tuple:

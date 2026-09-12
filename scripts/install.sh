@@ -3148,18 +3148,7 @@ print_success() {
         echo -e "${YELLOW}⚡ 'loki' was installed into /usr/local/bin and is ready to use — no shell reload needed.${NC}"
         echo ""
     else
-        echo -e "${YELLOW}⚡ Reload your shell to use the 'loki' command:${NC}"
-        echo ""
-        LOGIN_SHELL="$(basename "${SHELL:-/bin/bash}")"
-        if [ "$LOGIN_SHELL" = "zsh" ]; then
-            echo "   source ~/.zshrc"
-        elif [ "$LOGIN_SHELL" = "bash" ]; then
-            echo "   source ~/.bashrc"
-        elif [ "$LOGIN_SHELL" = "fish" ]; then
-            echo "   source ~/.config/fish/config.fish"
-        else
-            echo "   source ~/.bashrc   # or ~/.zshrc"
-        fi
+        echo -e "${YELLOW}⚡ Loki will reload your shell configuration and start automatically.${NC}"
         echo ""
     fi
 
@@ -3188,6 +3177,35 @@ print_success() {
         fi
         echo -e "${NC}"
     fi
+}
+
+launch_loki_after_install() {
+    if [ "$NON_INTERACTIVE" = true ] || [ ! -r /dev/tty ] || [ ! -w /dev/tty ]; then
+        return 0
+    fi
+
+    local login_shell
+    login_shell="$(basename "${SHELL:-/bin/bash}")"
+    echo -e "${CYAN}Reloading ${login_shell} configuration and starting Loki...${NC}"
+    echo ""
+
+    case "$login_shell" in
+        zsh)
+            exec zsh -ic 'exec loki' </dev/tty >/dev/tty 2>&1
+            ;;
+        bash)
+            exec bash -ic 'exec loki' </dev/tty >/dev/tty 2>&1
+            ;;
+        fish)
+            exec fish -ic 'exec loki' </dev/tty >/dev/tty 2>&1
+            ;;
+        *)
+            if [ -n "${SHELL:-}" ] && [ -x "$SHELL" ]; then
+                exec "$SHELL" -ic 'exec loki' </dev/tty >/dev/tty 2>&1
+            fi
+            exec loki </dev/tty >/dev/tty 2>&1
+            ;;
+    esac
 }
 
 ensure_browser() {
@@ -3883,6 +3901,8 @@ main() {
     # stamp and wrongly blocks 'loki update' on this host install.
     # See detect_install_method().
     echo "git" > "$INSTALL_DIR/.install_method"
+
+    launch_loki_after_install
 }
 
 if [ "$MANIFEST_MODE" = true ]; then

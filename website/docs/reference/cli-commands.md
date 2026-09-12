@@ -84,7 +84,6 @@ loki [global-options] <command> [subcommand/options]
 | `loki acp` | Run Loki as an ACP server for editor integration. |
 | `loki mcp` | Manage MCP server configurations and run Loki as an MCP server. |
 | `loki plugins` | Manage Loki Agent plugins (install, enable, disable, remove). |
-| `loki portal` | WunderCorp Portal status, subscription link, and Tool Gateway routing. See [Tool Gateway](../user-guide/features/tool-gateway.md). |
 | `loki tools` | Configure enabled tools per platform. |
 | `loki computer-use` | Install or check the Computer Use (cua-driver) backend (macOS/Windows/Linux). |
 | `loki pets` | Browse, install, and select [petdex](../user-guide/features/pets.md) animated pets shown across the CLI, TUI, and desktop app. Subcommands: `list`, `install`, `select`, `show`, `off`, `scale`, `remove`, `doctor`. |
@@ -214,7 +213,7 @@ loki model
 
 Use this when you want to:
 - **add a new provider** (OpenRouter, Anthropic, Copilot, DeepSeek, custom, etc.)
-- log into OAuth-backed providers (Anthropic, Copilot, Codex, WunderCorp Portal)
+- log into OAuth-backed providers (Anthropic, Copilot, Codex, xAI, Qwen)
 - enter or update API keys
 - pick from provider-specific model lists
 - configure a custom/self-hosted endpoint
@@ -328,10 +327,8 @@ the full guide, supported languages, and configuration knobs.
 ## `loki setup`
 
 ```bash
-loki setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--reset] [--quick] [--reconfigure] [--portal]
+loki setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--reset] [--quick] [--reconfigure]
 ```
-
-**Easiest path:** `loki setup --portal` — OAuth into WunderCorp Portal and opt into the [Tool Gateway](../user-guide/features/tool-gateway.md) in one shot.
 
 **First run:** launches the first-time wizard.
 
@@ -355,23 +352,6 @@ Options:
 | `--non-interactive` | Use defaults / environment values without prompts. |
 | `--reset` | Reset configuration to defaults before setup. |
 | `--reconfigure` | Backwards-compat alias — bare `loki setup` on an existing install now does this by default. |
-| `--portal` | One-shot WunderCorp Portal setup: log in via OAuth, set WunderCorp as the inference provider, and opt into the [Tool Gateway](../user-guide/features/tool-gateway.md). Skips the rest of the wizard. |
-
-## `loki portal`
-
-```bash
-loki portal [status|open|tools]
-```
-
-Inspect WunderCorp Portal auth, Tool Gateway routing, and reach the subscription page. Subcommand-less invocation runs `status`.
-
-| Subcommand | Description |
-|------------|-------------|
-| `status` (default) | Portal auth state + per-tool Tool Gateway routing summary. Also shown when no subcommand is given. |
-| `open` | Open `portal.wundercorp.com/manage-subscription` in your default browser. |
-| `tools` | List every Tool Gateway partner (Firecrawl, FAL, OpenAI TTS, Browser Use, Modal) and which are routed via WunderCorp. |
-
-For configuration of the gateway itself, see [Tool Gateway](../user-guide/features/tool-gateway.md). For the one-shot setup path, see `loki setup --portal` above.
 
 ## `loki whatsapp`
 
@@ -554,7 +534,7 @@ Common flags for migration subcommands:
 loki proxy <subcommand>
 ```
 
-Run a local OpenAI-compatible HTTP server that forwards requests to an OAuth-authenticated upstream provider (e.g. WunderCorp Portal, xAI). External apps can point at the proxy with any bearer token; the proxy attaches your real OAuth credentials on the way out. See [Subscription Proxy](../user-guide/features/subscription-proxy.md) for the full guide.
+Run a local OpenAI-compatible HTTP server that forwards requests to an OAuth-authenticated upstream provider (e.g. xAI or Qwen). External apps can point at the proxy with any bearer token; the proxy attaches your real OAuth credentials on the way out. See [Subscription Proxy](../user-guide/features/subscription-proxy.md) for the full guide.
 
 | Subcommand | Description |
 |------------|-------------|

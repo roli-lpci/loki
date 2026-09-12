@@ -59,7 +59,9 @@ def _model_flow_openrouter(config, current_model=""):
     # OpenRouter isn't in PROVIDER_REGISTRY so we synthesize a minimal pconfig.
     pconfig = ProviderConfig(id="openrouter", name="OpenRouter", auth_type="api_key", api_key_env_vars=("OPENROUTER_API_KEY",))
     existing_key, _resolved, abort = _ensure_flow_api_key(
-        "openrouter", pconfig, missing_hint=("Get one at: https://openrouter.ai/keys", ""))
+        "openrouter", pconfig,
+        missing_hint=("Press O to open the OpenRouter API key page, or paste an existing key.", ""),
+        open_url="https://openrouter.ai/keys")
     if abort:
         return
 

@@ -533,6 +533,12 @@ def test_wundercorp_dashboard_poller_preserves_effective_scope_when_token_omits_
 
 
 
+def test_legacy_wundercorp_provider_is_not_listed_in_accounts_catalog():
+    resp = client.get("/api/providers/oauth", headers=HEADERS)
+    assert resp.status_code == 200, resp.text
+    assert all(provider["id"] != "wundercorp" for provider in resp.json()["providers"])
+
+
 def test_xai_oauth_listed_as_device_code_flow():
     """xAI Grok OAuth must surface in the catalog as a device-code flow."""
     resp = client.get("/api/providers/oauth", headers=HEADERS)

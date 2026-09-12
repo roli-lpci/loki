@@ -80,8 +80,7 @@ def test_status_routes_report_the_free_tier(portal):
     assert portal_status["free_tier"] is True
     assert portal_status["account_tier"] == "anonymous"
     providers = client.get("/api/providers/oauth", headers=HEADERS).json()["providers"]
-    wundercorp = next(p for p in providers if p["id"] == "wundercorp")
-    assert wundercorp["status"]["free_tier"] is True
+    assert all(provider["id"] != "wundercorp" for provider in providers)
 
 
 def test_a_sign_in_cancelled_while_waiting_never_persists_the_account(portal, free_account, monkeypatch):

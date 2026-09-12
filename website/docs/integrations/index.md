@@ -9,7 +9,7 @@ sidebar_position: 0
 Loki Agent connects to external systems for AI inference, tool servers, IDE workflows, programmatic access, and more. These integrations extend what Loki can do and where it can run.
 
 :::tip Start here
-If you only have time to set up one integration, set up [WunderCorp Portal](/integrations/wundercorp-portal) — a single OAuth login covers 300+ models plus the four Tool Gateway tools (web search, image generation, TTS, and browser automation).
+If you only have time to set up one inference integration, start with [OpenRouter](/integrations/providers). It gives Loki access to a broad model catalog through one API key.
 :::
 
 ## AI Providers & Routing
