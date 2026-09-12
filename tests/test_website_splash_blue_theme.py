@@ -18,7 +18,7 @@ def test_splash_uses_blue_brand_theme_and_action_pitch():
     assert "--green-" not in css
     assert "'works across your tools'" in javascript
     assert "'automates recurring work'" in javascript
-    assert "'keeps context across sessions'" in javascript
+    assert "'persists session memory'" in javascript
     assert "'turns intent into action'" in javascript
     assert 'const typeDelay = 58' in javascript
     assert 'const eraseDelay = 30' in javascript
@@ -47,7 +47,8 @@ def test_splash_has_repo_cta_sponsor_and_agent_alignment_fix():
     assert 'Run your agent sandboxes in the cloud' in html
     assert 'class="repo-button"' in html
     assert '<span>View Repo</span>' in html
-    assert 'class="github-mark"' in html
+    assert '<span>Join Discord</span>' in html
+    assert '<span class="repo-symbol" aria-hidden="true">💻</span>' in html
     assert '█████╗  ██████╗  ███████╗███╗   ██╗████████╗' in html
     assert '.sponsor-banner {' in css
     assert '.hero-actions {' in css

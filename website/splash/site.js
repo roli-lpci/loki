@@ -13,7 +13,7 @@
     'evolves with you',
     'works across your tools',
     'automates recurring work',
-    'keeps context across sessions',
+    'persists session memory',
     'turns intent into action',
   ];
   const installTabs = [...document.querySelectorAll('.install-tab')];
