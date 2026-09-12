@@ -2385,62 +2385,49 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
-  overflow: hidden;
   border-top: 1px solid rgba(147, 197, 253, 0.18);
   border-bottom: 1px solid rgba(147, 197, 253, 0.18);
   background: rgba(3, 10, 24, 0.88);
   color: #dbeafe;
-  font-family: var(--font-mono);
-}
-
-.company-ticker-viewport {
-  overflow: hidden;
-  padding: 22px 0;
-}
-
-.company-ticker-track {
-  display: flex;
-  align-items: center;
-  width: max-content;
-  min-width: 200%;
-  gap: 30px;
-  white-space: nowrap;
-  will-change: transform;
-  animation: company-ticker-right-to-left 34s linear infinite;
-}
-
-.company-ticker-item {
-  color: #e8f1ff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.015em;
-}
-
-.company-ticker-item span {
-  color: #86a9da;
-  font-weight: 500;
-}
-
-.company-ticker-separator {
-  color: #60a5fa;
-  font-size: 9px;
 }
 
 .company-ticker-link {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+  display: flex;
+  min-height: 104px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  padding: 28px 24px;
+  text-align: center;
+  text-decoration: none;
   border-radius: 0;
+}
+
+.company-ticker-title {
+  color: #eef6ff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.company-ticker-copy {
+  color: #8faed9;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.company-ticker-link:hover .company-ticker-copy {
+  color: #b9cff0;
 }
 
 .company-ticker-link:focus-visible {
   outline: 2px solid #93c5fd;
   outline-offset: -3px;
-}
-
-@keyframes company-ticker-right-to-left {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
 }
 
 .section-light-white .memory-visual::before {
@@ -2573,21 +2560,22 @@ body {
 }
 
 @media (max-width: 720px) {
-  .company-ticker-viewport {
-    padding: 18px 0;
+  .company-ticker-link {
+    min-height: 116px;
+    padding: 30px 20px;
+  }
+
+  .company-ticker-title {
+    font-size: 17px;
+  }
+
+  .company-ticker-copy {
+    max-width: 320px;
+    font-size: 13px;
   }
 
   .section-light-white .memory-flow {
     grid-template-columns: 1fr;
-  }
-
-  .company-ticker-track {
-    gap: 22px;
-    animation-duration: 28s;
-  }
-
-  .company-ticker-item {
-    font-size: 10px;
   }
 
   .section-light-blue .workflow-rail {
@@ -2605,8 +2593,4 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .company-ticker-track {
-    transform: none;
-    animation: none;
-  }
 }
