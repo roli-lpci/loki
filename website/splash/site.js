@@ -23,6 +23,11 @@
   const taglineAction = document.getElementById('tagline-action');
   const copyCommand = document.querySelector('.copy-command');
   const copyStatus = document.querySelector('.copy-status');
+  const miniInstallCopy = document.querySelector('.mini-install-copy');
+  const workflowStages = [...document.querySelectorAll('[data-workflow-stage]')];
+  const workflowLogs = [...document.querySelectorAll('[data-workflow-log]')];
+  const hero = document.querySelector('.hero');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 
   const copyText = async value => {
@@ -67,6 +72,53 @@
     }
   });
 
+  miniInstallCopy?.addEventListener('click', async () => {
+    const value = miniInstallCopy.dataset.copyValue ?? '';
+    const tooltip = miniInstallCopy.querySelector('.copy-tooltip');
+    if (!value) return;
+    try {
+      await copyText(value);
+      miniInstallCopy.classList.remove('is-copy-error');
+      miniInstallCopy.classList.add('is-copied');
+      miniInstallCopy.setAttribute('aria-label', 'Copied install command');
+      const icon = miniInstallCopy.querySelector('i');
+      icon?.classList.remove('ph-copy');
+      icon?.classList.add('ph-check');
+      if (tooltip) tooltip.textContent = 'Copied';
+      window.setTimeout(() => {
+        miniInstallCopy.classList.remove('is-copied');
+        miniInstallCopy.setAttribute('aria-label', 'Copy install command');
+        icon?.classList.remove('ph-check');
+        icon?.classList.add('ph-copy');
+      }, 1500);
+    } catch {
+      miniInstallCopy.classList.remove('is-copied');
+      miniInstallCopy.classList.add('is-copy-error');
+      miniInstallCopy.setAttribute('aria-label', 'Copy failed');
+      if (tooltip) tooltip.textContent = 'Copy failed';
+      window.setTimeout(() => {
+        miniInstallCopy.classList.remove('is-copy-error');
+        miniInstallCopy.setAttribute('aria-label', 'Copy install command');
+        if (tooltip) tooltip.textContent = 'Copied';
+      }, 1800);
+    }
+  });
+
+  workflowStages.forEach(stage => {
+    stage.addEventListener('click', () => {
+      const selectedStage = stage.dataset.workflowStage;
+      if (!selectedStage) return;
+      workflowStages.forEach(item => {
+        const isActive = item === stage;
+        item.classList.toggle('is-active', isActive);
+        item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      workflowLogs.forEach(log => {
+        log.classList.toggle('is-stage-highlighted', log.dataset.workflowLog === selectedStage);
+      });
+    });
+  });
+
   installTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const key = tab.dataset.install;
@@ -87,7 +139,7 @@
     });
   });
 
-  if (tagline && taglineAction && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (tagline && taglineAction && !reduceMotion.matches) {
     const typeDelay = 58;
     const eraseDelay = 30;
     const holdDelay = 1800;
@@ -126,13 +178,32 @@
     runTypewriter();
   }
 
-  if (mesh && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (!reduceMotion.matches) {
     window.addEventListener('pointermove', event => {
-      const x = ((event.clientX / window.innerWidth) - 0.5) * 28;
-      const y = ((event.clientY / window.innerHeight) - 0.5) * 28;
-      root.style.setProperty('--mesh-x', `${x}px`);
-      root.style.setProperty('--mesh-y', `${y}px`);
+      const normalizedX = (event.clientX / window.innerWidth) - 0.5;
+      const normalizedY = (event.clientY / window.innerHeight) - 0.5;
+      const meshX = normalizedX * 28;
+      const meshY = normalizedY * 28;
+      root.style.setProperty('--mesh-x', `${meshX}px`);
+      root.style.setProperty('--mesh-y', `${meshY}px`);
+      root.style.setProperty('--hero-grid-x', `${normalizedX * 14}px`);
+      root.style.setProperty('--hero-grid-y', `${normalizedY * 10}px`);
+      root.style.setProperty('--hero-parallax-x', `${normalizedX * 5}px`);
+      root.style.setProperty('--hero-parallax-y', `${normalizedY * 4}px`);
     }, { passive: true });
+
+    let heroScrollFrame = 0;
+    const updateHeroScroll = () => {
+      heroScrollFrame = 0;
+      if (!hero) return;
+      const scrollOffset = Math.min(window.scrollY * 0.055, 22);
+      root.style.setProperty('--hero-scroll-y', `${scrollOffset}px`);
+    };
+    window.addEventListener('scroll', () => {
+      if (heroScrollFrame) return;
+      heroScrollFrame = window.requestAnimationFrame(updateHeroScroll);
+    }, { passive: true });
+    updateHeroScroll();
   }
 
   try {

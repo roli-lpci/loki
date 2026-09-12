@@ -30,6 +30,7 @@
   <meta name="twitter:image" content="https://loki.computer/loki-og.png">
   <meta name="twitter:image:alt" content="Loki Agent serpent emblem on a dark blue background">
   <title>Loki Agent — WunderCorp, Inc.</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
   <link rel="stylesheet" href="/site.css">
 </head>
 <body>
@@ -216,7 +217,7 @@
         <article class="surface-card">
           <div class="surface-topline"><span>MESSAGING</span><span>03</span></div>
           <div class="message-stack" aria-hidden="true">
-            <span>Telegram</span><span>Discord</span><span>Slack</span><span>Teams</span><span>Signal</span><span>+ more</span>
+            <span>Telegram</span><span>Discord</span><span>Slack</span><span>Walton</span><span>Signal</span><span>+ more</span>
           </div>
           <h3>Send Loki a task from a supported chat app.</h3>
           <p>Supported messaging integrations can send tasks to Loki while the agent runs on another machine or remote environment.</p>
@@ -234,10 +235,10 @@
       </div>
       <div class="workflow-shell">
         <div class="workflow-rail" aria-label="Example workflow stages">
-          <div class="workflow-stage is-active"><span>01</span><strong>Understand</strong><small>Read project + intent</small></div>
-          <div class="workflow-stage"><span>02</span><strong>Operate</strong><small>Use tools + environments</small></div>
-          <div class="workflow-stage"><span>03</span><strong>Delegate</strong><small>Parallelize independent work</small></div>
-          <div class="workflow-stage"><span>04</span><strong>Deliver</strong><small>Return finished output</small></div>
+          <button class="workflow-stage is-active" type="button" data-workflow-stage="understand" aria-pressed="true"><span>01</span><strong>Understand</strong><small>Read project + intent</small></button>
+          <button class="workflow-stage" type="button" data-workflow-stage="operate" aria-pressed="false"><span>02</span><strong>Operate</strong><small>Use tools + environments</small></button>
+          <button class="workflow-stage" type="button" data-workflow-stage="delegate" aria-pressed="false"><span>03</span><strong>Delegate</strong><small>Parallelize independent work</small></button>
+          <button class="workflow-stage" type="button" data-workflow-stage="deliver" aria-pressed="false"><span>04</span><strong>Deliver</strong><small>Return finished output</small></button>
         </div>
         <div class="workflow-console">
           <div class="window-bar">
@@ -245,12 +246,12 @@
             <span class="window-state">running</span>
           </div>
           <div class="console-lines" aria-hidden="true">
-            <p><span class="console-time">09:41:03</span><span class="console-ok">✓</span> Loaded repository instructions and release checklist</p>
-            <p><span class="console-time">09:41:08</span><span class="console-ok">✓</span> Checked branch state and pending changes</p>
-            <p><span class="console-time">09:41:12</span><span class="console-run">↳</span> Delegated docs validation to subagent-1</p>
-            <p><span class="console-time">09:41:13</span><span class="console-run">↳</span> Delegated test sweep to subagent-2</p>
-            <p><span class="console-time">09:42:27</span><span class="console-ok">✓</span> Fixed 2 release blockers and reran checks</p>
-            <p><span class="console-time">09:43:02</span><span class="console-ok">✓</span> Release brief ready</p>
+            <p class="is-stage-highlighted" data-workflow-log="understand"><span class="console-time">09:41:03</span><span class="console-ok">✓</span> Loaded repository instructions and release checklist</p>
+            <p data-workflow-log="operate"><span class="console-time">09:41:08</span><span class="console-ok">✓</span> Checked branch state and pending changes</p>
+            <p data-workflow-log="delegate"><span class="console-time">09:41:12</span><span class="console-run">↳</span> Delegated docs validation to subagent-1</p>
+            <p data-workflow-log="delegate"><span class="console-time">09:41:13</span><span class="console-run">↳</span> Delegated test sweep to subagent-2</p>
+            <p data-workflow-log="operate"><span class="console-time">09:42:27</span><span class="console-ok">✓</span> Fixed 2 release blockers and reran checks</p>
+            <p data-workflow-log="deliver"><span class="console-time">09:43:02</span><span class="console-ok">✓</span> Release brief ready</p>
           </div>
           <div class="console-result">
             <span class="node-label">RESULT</span>
@@ -300,22 +301,22 @@
       </div>
       <div class="control-grid">
         <article class="control-card">
-          <span class="control-icon" aria-hidden="true">⌁</span>
+          <span class="control-icon" aria-hidden="true"><i class="ph ph-desktop-tower"></i></span>
           <h3>Run locally or remotely</h3>
           <p>Run Loki on your machine, in Docker, over SSH, or through a supported remote execution backend.</p>
         </article>
         <article class="control-card">
-          <span class="control-icon" aria-hidden="true">◇</span>
+          <span class="control-icon" aria-hidden="true"><i class="ph ph-cpu"></i></span>
           <h3>Choose a model for each task</h3>
           <p>Connect supported model providers and select one based on the task, cost, or deployment requirements.</p>
         </article>
         <article class="control-card">
-          <span class="control-icon" aria-hidden="true">+</span>
+          <span class="control-icon" aria-hidden="true"><i class="ph ph-plugs-connected"></i></span>
           <h3>Connect the systems Loki needs to use</h3>
           <p>Add skills, plugins, and MCP servers to give Loki access to procedures and external systems used by your team.</p>
         </article>
         <article class="control-card">
-          <span class="control-icon" aria-hidden="true">↺</span>
+          <span class="control-icon" aria-hidden="true"><i class="ph ph-clock-counter-clockwise"></i></span>
           <h3>Resume saved work</h3>
           <p>Saved sessions, project context, and checkpoints let you inspect long-running work and continue it later.</p>
         </article>
@@ -331,7 +332,13 @@
           <p>Get started or clone the repo today.</p>
         </div>
         <div class="final-actions">
-          <div class="mini-install"><code>curl -fsSL https://loki.computer/install.sh | bash</code></div>
+          <div class="mini-install">
+            <code>curl -fsSL https://loki.computer/install.sh | bash</code>
+            <button class="mini-install-copy" type="button" data-copy-value="curl -fsSL https://loki.computer/install.sh | bash" aria-label="Copy install command">
+              <i class="ph ph-copy" aria-hidden="true"></i>
+              <span class="copy-tooltip" role="status" aria-live="polite">Copied</span>
+            </button>
+          </div>
           <div class="final-links">
             <a class="primary-link" href="https://github.com/wundercorp/loki" target="_blank" rel="noopener noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
             <a class="secondary-link" href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243">Read the docs <span aria-hidden="true">→</span></a>

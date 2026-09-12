@@ -30,6 +30,37 @@ body {
 a { color: inherit; }
 button, a { border-radius: var(--radius); }
 
+:where(
+  .install-command-shell,
+  .discord-button,
+  .repo-button,
+  .cookie-banner,
+  .cookie-banner button,
+  .memory-window,
+  .memory-node,
+  .surface-card,
+  .desktop-mock,
+  .mock-message,
+  .terminal-mock,
+  .workflow-shell,
+  .workflow-stage,
+  .workflow-console,
+  .console-result,
+  .automation-panel,
+  .schedule-card,
+  .status-pill,
+  .control-card,
+  .control-icon,
+  .final-card,
+  .mini-install,
+  .primary-link,
+  .secondary-link,
+  .sponsor-label
+) {
+  border-radius: var(--radius);
+}
+
+
 .mesh {
   position: fixed;
   inset: -28vmax;
@@ -77,7 +108,7 @@ button, a { border-radius: var(--radius); }
 
 .sponsor-label {
   border: 1px solid rgba(96, 165, 250, 0.22);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 2px 6px;
   color: #7185a6;
   font-size: 8px;
@@ -120,17 +151,39 @@ body::before {
 }
 
 .shell {
+  position: relative;
   min-height: calc(100vh - 114px);
   display: grid;
   place-items: center;
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   padding: 80px 0 110px;
+  isolation: isolate;
+}
+
+.shell::before {
+  content: "";
+  position: absolute;
+  inset: -36px -6vw 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.36;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.075) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 44%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.82) 44%, transparent 100%);
+  transform: translate3d(calc(var(--hero-grid-x, 0px) * 0.22), calc(var(--hero-grid-y, 0px) * 0.22), 0);
+  transition: transform 180ms ease-out;
 }
 
 .hero {
   width: min(100%, 960px);
   text-align: center;
+  transform: translate3d(var(--hero-parallax-x, 0px), calc(var(--hero-parallax-y, 0px) + var(--hero-scroll-y, 0px)), 0);
+  transition: transform 180ms ease-out;
+  will-change: transform;
 }
 
 .presenter {
@@ -447,17 +500,41 @@ body::before {
 }
 
 .footer {
-  min-height: 78px;
+  position: relative;
+  min-height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 20px;
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
+  overflow: hidden;
   border-top: 1px solid rgba(96, 165, 250, 0.13);
   color: #7185a6;
   font-size: 12px;
   text-align: center;
+  isolation: isolate;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 -80px -36px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.23;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, transparent, #000 42%, #000);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 42%, #000);
+  animation: footer-grid-drift 14s linear infinite;
+}
+
+@keyframes footer-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 28px 28px, 28px 28px; }
 }
 .footer nav { display: flex; gap: 20px; }
 .footer a { color: #93a8c7; text-underline-offset: 4px; }
@@ -539,6 +616,8 @@ body::before {
 
 @media (prefers-reduced-motion: reduce) {
   .mesh { animation: none; }
+  .hero,
+  .shell::before { transform: none; transition: none; }
   .discord-button, .repo-button { transition: none; }
   .tagline-action::after { animation: none; opacity: 1; }
 }
@@ -728,6 +807,7 @@ body::before {
 .memory-window,
 .workflow-console,
 .schedule-card {
+  overflow: hidden;
   border: 1px solid rgba(96, 165, 250, 0.2);
   background: rgba(3, 13, 31, 0.78);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(219, 234, 254, 0.035);
@@ -912,7 +992,7 @@ body::before {
   width: 7px;
   height: 7px;
   border: 1px solid #425875;
-  border-radius: 2px;
+  border-radius: var(--radius);
 }
 
 .mock-dot.is-active {
@@ -1030,6 +1110,7 @@ body::before {
 .workflow-shell {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
+  overflow: hidden;
   border: 1px solid rgba(96, 165, 250, 0.18);
   background: rgba(4, 14, 32, 0.42);
 }
@@ -1041,15 +1122,34 @@ body::before {
 .workflow-stage {
   display: grid;
   grid-template-columns: 28px 1fr;
+  width: 100%;
   column-gap: 8px;
   min-height: 100px;
   align-content: center;
   padding: 16px 20px;
+  border: 0;
   border-bottom: 1px solid rgba(96, 165, 250, 0.11);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
 .workflow-stage:last-child {
   border-bottom: 0;
+}
+
+.workflow-stage:hover {
+  background: rgba(30, 64, 175, 0.09);
+}
+
+.workflow-stage:focus-visible {
+  position: relative;
+  z-index: 2;
+  outline: 2px solid var(--blue-2);
+  outline-offset: -2px;
 }
 
 .workflow-stage > span {
@@ -1071,7 +1171,8 @@ body::before {
 }
 
 .workflow-stage.is-active {
-  background: rgba(30, 64, 175, 0.13);
+  background: rgba(30, 64, 175, 0.18);
+  box-shadow: inset 3px 0 0 rgba(96, 165, 250, 0.72);
 }
 
 .workflow-stage.is-active > span,
@@ -1096,9 +1197,17 @@ body::before {
   grid-template-columns: 64px 18px 1fr;
   gap: 8px;
   margin: 0;
-  color: #9eb1cc;
+  color: #7890b0;
   font-size: 10px;
   line-height: 1.55;
+  opacity: 0.56;
+  transition: color 150ms ease, opacity 150ms ease, transform 150ms ease;
+}
+
+.console-lines p.is-stage-highlighted {
+  color: #c4d6ee;
+  opacity: 1;
+  transform: translateX(3px);
 }
 
 .console-time {
@@ -1257,7 +1366,12 @@ body::before {
   border: 1px solid rgba(96, 165, 250, 0.2);
   background: rgba(30, 64, 175, 0.1);
   color: var(--blue-3);
-  font-size: 18px;
+  font-size: 19px;
+}
+
+.control-icon i {
+  display: block;
+  line-height: 1;
 }
 
 .section-final {
@@ -1316,13 +1430,78 @@ body::before {
 }
 
 .mini-install {
-  overflow-x: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
   border: 1px solid rgba(96, 165, 250, 0.17);
   background: rgba(2, 9, 22, 0.72);
-  padding: 15px 16px;
   color: #b8cbe4;
   font-size: 10px;
+}
+
+.mini-install code {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  padding: 15px 0 15px 16px;
   white-space: nowrap;
+}
+
+.mini-install-copy {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  min-height: 42px;
+  margin-right: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #7f96b7;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.mini-install-copy:hover,
+.mini-install-copy.is-copied {
+  border-color: rgba(96, 165, 250, 0.18);
+  background: rgba(30, 64, 175, 0.2);
+  color: var(--blue-2);
+}
+
+.mini-install-copy:focus-visible {
+  outline: 2px solid var(--blue-2);
+  outline-offset: 2px;
+}
+
+.copy-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 9px);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: var(--radius);
+  background: #07152d;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+  padding: 6px 8px;
+  color: #dceaff;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.mini-install-copy.is-copied .copy-tooltip,
+.mini-install-copy.is-copy-error .copy-tooltip {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .final-links {
@@ -1440,11 +1619,12 @@ body::before {
   .ledger-item {
     grid-template-columns: 36px minmax(0, 1fr) 22px;
     gap: 12px;
-    min-height: 138px;
+    min-height: 0;
+    padding: 30px 0;
   }
 
   .ledger-item:hover {
-    padding: 0;
+    padding: 30px 0;
     background: transparent;
   }
 
@@ -1499,8 +1679,12 @@ body::before {
   }
 
   .workflow-stage {
-    min-height: 88px;
+    min-height: 96px;
     border-right: 1px solid rgba(96, 165, 250, 0.11);
+  }
+
+  .workflow-stage.is-active {
+    box-shadow: inset 0 3px 0 rgba(96, 165, 250, 0.72);
   }
 
   .console-lines {
@@ -1554,9 +1738,18 @@ body::before {
   .final-links {
     flex-direction: column;
   }
+
+  .mini-install code {
+    padding-left: 13px;
+  }
 }
 
+
 @media (prefers-reduced-motion: reduce) {
+  .footer::before {
+    animation: none;
+  }
+
   .flow-line span {
     animation: none;
     opacity: 1;
