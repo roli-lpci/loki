@@ -1,6 +1,5 @@
 (() => {
   const root = document.documentElement;
-  const mesh = document.querySelector('.mesh');
   const banner = document.getElementById('cookie-banner');
   const dismiss = document.getElementById('cookie-dismiss');
   const consentKey = 'loki-cookie-banner-v1';
@@ -26,15 +25,13 @@
   const miniInstallCopy = document.querySelector('.mini-install-copy');
   const workflowStages = [...document.querySelectorAll('[data-workflow-stage]')];
   const workflowLogs = [...document.querySelectorAll('[data-workflow-log]')];
-  const hero = document.querySelector('.hero');
   const desktopMock = document.querySelector('.desktop-mock');
   const terminalDemo = document.querySelector('[data-terminal-demo]');
   const scheduleCard = document.querySelector('.schedule-card');
   const workflowConsole = document.querySelector('.workflow-console');
+  const footerAsciiArt = document.querySelector('.footer-ascii-art');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const wait = delay => new Promise(resolve => window.setTimeout(resolve, delay));
-
-
   const copyText = async value => {
     if (navigator.clipboard?.writeText && window.isSecureContext) {
       await navigator.clipboard.writeText(value);
@@ -194,34 +191,6 @@
     };
 
     runTypewriter();
-  }
-
-  if (!reduceMotion.matches) {
-    window.addEventListener('pointermove', event => {
-      const normalizedX = (event.clientX / window.innerWidth) - 0.5;
-      const normalizedY = (event.clientY / window.innerHeight) - 0.5;
-      const meshX = normalizedX * 28;
-      const meshY = normalizedY * 28;
-      root.style.setProperty('--mesh-x', `${meshX}px`);
-      root.style.setProperty('--mesh-y', `${meshY}px`);
-      root.style.setProperty('--hero-grid-x', `${normalizedX * 14}px`);
-      root.style.setProperty('--hero-grid-y', `${normalizedY * 10}px`);
-      root.style.setProperty('--hero-parallax-x', `${normalizedX * 5}px`);
-      root.style.setProperty('--hero-parallax-y', `${normalizedY * 4}px`);
-    }, { passive: true });
-
-    let heroScrollFrame = 0;
-    const updateHeroScroll = () => {
-      heroScrollFrame = 0;
-      if (!hero) return;
-      const scrollOffset = Math.min(window.scrollY * 0.055, 22);
-      root.style.setProperty('--hero-scroll-y', `${scrollOffset}px`);
-    };
-    window.addEventListener('scroll', () => {
-      if (heroScrollFrame) return;
-      heroScrollFrame = window.requestAnimationFrame(updateHeroScroll);
-    }, { passive: true });
-    updateHeroScroll();
   }
 
   const typeWidgetText = async (element, speed = 24) => {
@@ -391,7 +360,7 @@
       }).join('');
     });
 
-    if (scheduleCard || workflowConsole || desktopMock || terminalDemo) {
+    if (scheduleCard || workflowConsole || desktopMock || terminalDemo || footerAsciiArt) {
       const contentObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.target === scheduleCard && entry.isIntersecting) {
@@ -407,12 +376,16 @@
           if (entry.target === terminalDemo) {
             terminalDemoVisible = entry.isIntersecting;
           }
+          if (entry.target === footerAsciiArt) {
+            footerAsciiArt.classList.toggle('is-mesh-active', entry.isIntersecting);
+          }
         });
-      }, { threshold: 0.28 });
+      }, { threshold: 0.18, rootMargin: '120px 0px' });
       if (scheduleCard) contentObserver.observe(scheduleCard);
       if (workflowConsole) contentObserver.observe(workflowConsole);
       if (desktopMock) contentObserver.observe(desktopMock);
       if (terminalDemo) contentObserver.observe(terminalDemo);
+      if (footerAsciiArt) contentObserver.observe(footerAsciiArt);
     }
 
     runDesktopDemo();
