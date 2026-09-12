@@ -16,7 +16,33 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 165, 250, 0.42) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: rgba(96, 165, 250, 0.42);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.62);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 html {
   min-height: 100%;
   width: 100%;
@@ -401,7 +427,7 @@ button, a { border-radius: var(--radius); }
   border-radius: var(--radius);
   background: transparent;
   color: #7185a6;
-  padding: 6px 10px;
+  padding: 8px 10px 6px;
   font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   cursor: pointer;
 }
@@ -416,7 +442,7 @@ button, a { border-radius: var(--radius); }
 .install-command-shell {
   position: relative;
   display: inline-flex;
-  align-items: stretch;
+  align-items: center;
   max-width: 100%;
   margin: 0 auto;
   border: 1px solid rgba(96, 165, 250, 0.20);
@@ -427,18 +453,22 @@ button, a { border-radius: var(--radius); }
 .install-command {
   min-width: 0;
   max-width: min(100%, 560px);
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   margin: 0;
   overflow-x: auto;
   border: 0;
   background: transparent;
-  padding: 11px 12px 11px 14px;
+  padding: 12px 12px 12px 14px;
   color: #dbeafe;
-  font: 700 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font: 700 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   text-align: left;
   white-space: pre;
 }
 
 .copy-command {
+  position: relative;
   display: inline-grid;
   place-items: center;
   flex: 0 0 38px;
@@ -468,6 +498,16 @@ button, a { border-radius: var(--radius); }
 .copy-command.is-copied {
   background: rgba(30, 64, 175, 0.24);
   color: var(--blue-2);
+}
+
+.copy-command.is-copied .copy-tooltip,
+.copy-command.is-copy-error .copy-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.copy-command-tooltip {
+  right: -1px;
 }
 
 
@@ -2524,9 +2564,12 @@ body {
   color: #1f5fc7;
 }
 
-.memory-node,
-.console-result {
+.memory-node {
   border-radius: var(--radius-internal);
+}
+
+.console-result {
+  border-radius: var(--radius);
 }
 
 @media (max-width: 720px) {

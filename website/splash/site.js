@@ -54,12 +54,15 @@
     const activeTab = installTabs.find(tab => tab.classList.contains('is-active'));
     const activeKey = activeTab?.dataset.install ?? 'curl';
     const value = installCommands[activeKey]?.value ?? '';
+    const tooltip = copyCommand.querySelector('.copy-tooltip');
     if (!value) return;
     try {
       await copyText(value);
+      copyCommand.classList.remove('is-copy-error');
       copyCommand.classList.add('is-copied');
       copyCommand.setAttribute('aria-label', 'Copied');
       copyCommand.setAttribute('title', 'Copied');
+      if (tooltip) tooltip.textContent = 'Copied';
       if (copyStatus) copyStatus.textContent = 'Copied to clipboard';
       window.setTimeout(() => {
         copyCommand.classList.remove('is-copied');
@@ -68,9 +71,19 @@
         if (copyStatus) copyStatus.textContent = '';
       }, 1400);
     } catch {
+      copyCommand.classList.remove('is-copied');
+      copyCommand.classList.add('is-copy-error');
       copyCommand.setAttribute('aria-label', 'Copy failed');
       copyCommand.setAttribute('title', 'Copy failed');
+      if (tooltip) tooltip.textContent = 'Copy failed';
       if (copyStatus) copyStatus.textContent = 'Could not copy to clipboard';
+      window.setTimeout(() => {
+        copyCommand.classList.remove('is-copy-error');
+        copyCommand.setAttribute('aria-label', 'Copy install command');
+        copyCommand.setAttribute('title', 'Copy');
+        if (tooltip) tooltip.textContent = 'Copied';
+        if (copyStatus) copyStatus.textContent = '';
+      }, 1800);
     }
   });
 
