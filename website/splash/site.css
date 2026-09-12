@@ -813,15 +813,6 @@ body::before {
   background: rgba(96, 165, 250, 0.25);
 }
 
-.flow-line::after {
-  content: ">";
-  position: absolute;
-  top: calc(50% - 7px);
-  right: -2px;
-  color: #5f7da7;
-  font-size: 11px;
-}
-
 .flow-line span {
   position: absolute;
   top: calc(50% - 2px);
@@ -1477,14 +1468,6 @@ body::before {
     left: 50%;
     width: 1px;
     height: auto;
-  }
-
-  .flow-line::after {
-    content: "⌄";
-    top: auto;
-    right: auto;
-    bottom: -1px;
-    left: calc(50% - 5px);
   }
 
   .flow-line span {
