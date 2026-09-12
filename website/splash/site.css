@@ -19,13 +19,23 @@
 * { box-sizing: border-box; }
 html {
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
   background: #020611;
+  overscroll-behavior-x: none;
   overscroll-behavior-y: none;
 }
 body {
+  position: relative;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   overscroll-behavior-y: none;
   background-color: #020611;
   background-image:
@@ -136,7 +146,7 @@ button, a { border-radius: var(--radius); }
   }
 
   .footer-ascii-art pre {
-    font-size: clamp(5.9px, 1.55vw, 7px);
+    font-size: clamp(4.5px, 1.48vw, 6.7px);
   }
 }
 
@@ -549,7 +559,7 @@ button, a { border-radius: var(--radius); }
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   overflow: hidden;
-  border-top: 1px solid rgba(96, 165, 250, 0.13);
+  border-top: 0;
   color: #7185a6;
   font-size: 12px;
   text-align: center;
@@ -559,7 +569,7 @@ button, a { border-radius: var(--radius); }
 .footer::before {
   content: "";
   position: absolute;
-  inset: 0 -80px -36px;
+  inset: 0 0 -36px;
   z-index: -1;
   pointer-events: none;
   opacity: 0.23;
@@ -636,7 +646,8 @@ button, a { border-radius: var(--radius); }
 @media (max-width: 720px) {
   .install-command-shell { width: 100%; }
   .install-command { flex: 1 1 auto; max-width: calc(100vw - 86px); }
-  .shell { width: min(100% - 24px, 1180px); padding-top: 70px; }
+  .shell { width: min(100% - 24px, 1180px); max-width: calc(100% - 24px); padding-top: 70px; }
+  .shell::before { inset: -36px 0 0; }
   .wordmark-block { font-size: clamp(4px, 1.55vw, 8px); }
   .tagline { margin-top: 34px; }
   .sponsor-banner a { gap: 6px; padding: 7px 0; text-align: center; }
@@ -645,6 +656,7 @@ button, a { border-radius: var(--radius); }
   .discord-button, .repo-button { flex: 1 1 190px; }
   .installer { width: 100%; }
   .footer { width: calc(100% - 24px); flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; text-align: center; }
+  .footer nav { flex-wrap: wrap; justify-content: center; gap: 12px 18px; }
   .cookie-banner { left: 12px; right: 12px; bottom: 12px; width: calc(100% - 24px); align-items: flex-start; flex-direction: column; gap: 12px; }
   .cookie-banner button { width: 100%; }
 }
@@ -1414,6 +1426,7 @@ button, a { border-radius: var(--radius); }
 
 .footer-ascii-art + .section-final {
   padding-top: 56px;
+  border-top: 0;
 }
 
 .final-card {
@@ -1552,6 +1565,7 @@ button, a { border-radius: var(--radius); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid rgba(96, 165, 250, 0.25);
@@ -1635,6 +1649,7 @@ button, a { border-radius: var(--radius); }
 @media (max-width: 720px) {
   .site-content {
     width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
   }
 
   .section,
