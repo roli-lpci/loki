@@ -218,9 +218,9 @@ print_banner() {
     echo ""
     echo -e "${MAGENTA}${BOLD}"
     echo "┌─────────────────────────────────────────────────────────┐"
-    echo "│             ⚕ Loki Agent Installer                    │"
+    echo "│             ⚕ Loki Agent Installer                      │"
     echo "├─────────────────────────────────────────────────────────┤"
-    echo "│  An open source AI agent by WunderCorp, Inc..              │"
+    echo "│  An open source AI agent by WunderCorp, Inc..           │"
     echo "└─────────────────────────────────────────────────────────┘"
     echo -e "${NC}"
 }
