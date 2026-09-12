@@ -85,7 +85,7 @@ They are **not recommended for use inside Loki Agent**, however. Loki 4 is tuned
 /model deepseek/deepseek-v4-pro        # cost-effective coder
 ```
 
-The Portal's own [model info page](https://portal.wundercorp.com/info) carries the same warning, so this isn't a Loki-side opinion — it's the official guidance from WunderCorp, Inc..
+The Portal's own [model info page](https://portal.wundercorp.com/info) carries the same warning, so this isn't a Loki-side opinion — it's the official guidance from WunderCorp, Inc.
 
 ## Setup
 

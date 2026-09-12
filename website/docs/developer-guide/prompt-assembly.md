@@ -63,7 +63,7 @@ Here is a simplified view of what the final system prompt looks like when all la
 
 ```
 # Layer 1: Agent Identity (from ~/.loki/SOUL.md)
-You are Loki Agent, an AI assistant created by WunderCorp, Inc..
+You are Loki Agent, an AI assistant created by WunderCorp, Inc.
 You are an expert software engineer and researcher.
 You value correctness, clarity, and efficiency.
 ...
@@ -190,7 +190,7 @@ When `load_soul_md()` returns content, it replaces the hardcoded `DEFAULT_AGENT_
 If `SOUL.md` doesn't exist, the system falls back to:
 
 ```
-You are Loki Agent, built by WunderCorp, Inc.. Be direct: match the length
+You are Loki Agent, built by WunderCorp, Inc. Be direct: match the length
 of your reply to the weight of the ask — a one-line question gets a
 one-line answer, and finished work gets a short report of what changed,
 what's verified, and what's left, never a replay of the process. No
