@@ -27,7 +27,12 @@
   const workflowStages = [...document.querySelectorAll('[data-workflow-stage]')];
   const workflowLogs = [...document.querySelectorAll('[data-workflow-log]')];
   const hero = document.querySelector('.hero');
+  const desktopMock = document.querySelector('.desktop-mock');
+  const terminalDemo = document.querySelector('[data-terminal-demo]');
+  const scheduleCard = document.querySelector('.schedule-card');
+  const workflowConsole = document.querySelector('.workflow-console');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const wait = delay => new Promise(resolve => window.setTimeout(resolve, delay));
 
 
   const copyText = async value => {
@@ -104,18 +109,31 @@
     }
   });
 
+  let workflowManualSelection = false;
+  let workflowVisible = false;
+  let desktopDemoVisible = false;
+  let terminalDemoVisible = false;
+
+  const selectWorkflowStage = (selectedStage, executing = false) => {
+    if (!selectedStage) return;
+    workflowStages.forEach(item => {
+      const isActive = item.dataset.workflowStage === selectedStage;
+      item.classList.toggle('is-active', isActive);
+      item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+    workflowLogs.forEach(log => {
+      const matches = log.dataset.workflowLog === selectedStage;
+      log.classList.toggle('is-stage-highlighted', matches);
+      log.classList.toggle('is-executing', matches && executing);
+    });
+  };
+
   workflowStages.forEach(stage => {
     stage.addEventListener('click', () => {
-      const selectedStage = stage.dataset.workflowStage;
-      if (!selectedStage) return;
-      workflowStages.forEach(item => {
-        const isActive = item === stage;
-        item.classList.toggle('is-active', isActive);
-        item.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      });
-      workflowLogs.forEach(log => {
-        log.classList.toggle('is-stage-highlighted', log.dataset.workflowLog === selectedStage);
-      });
+      workflowManualSelection = true;
+      workflowConsole?.classList.remove('is-running');
+      workflowConsole?.classList.add('is-complete');
+      selectWorkflowStage(stage.dataset.workflowStage, false);
     });
   });
 
@@ -204,6 +222,205 @@
       heroScrollFrame = window.requestAnimationFrame(updateHeroScroll);
     }, { passive: true });
     updateHeroScroll();
+  }
+
+  const typeWidgetText = async (element, speed = 24) => {
+    if (!element) return;
+    const finalText = element.dataset.typeText ?? element.textContent ?? '';
+    const caret = element.parentElement?.querySelector('.widget-caret');
+    element.textContent = '';
+    caret?.classList.add('is-active');
+    for (const character of finalText) {
+      element.textContent += character;
+      await wait(speed);
+    }
+    caret?.classList.remove('is-active');
+  };
+
+  const revealElement = element => {
+    element?.classList.add('is-visible');
+  };
+
+  const runDesktopDemo = async () => {
+    if (!desktopMock || reduceMotion.matches) return;
+    const userStep = desktopMock.querySelector('[data-desktop-step="user"]');
+    const agentStep = desktopMock.querySelector('[data-desktop-step="agent"]');
+    const terminalStep = desktopMock.querySelector('[data-desktop-step="terminal"]');
+    const userText = userStep?.querySelector('[data-type-text]');
+    const agentText = agentStep?.querySelector('[data-type-text]');
+    const commandText = terminalStep?.querySelector('[data-type-text]');
+    const process = desktopMock.querySelector('[data-desktop-process]');
+    const output = desktopMock.querySelector('[data-desktop-output]');
+    const review = desktopMock.querySelector('[data-desktop-review]');
+
+    while (desktopMock.isConnected) {
+      if (!desktopDemoVisible) {
+        await wait(500);
+        continue;
+      }
+      [agentStep, terminalStep, process, output, review].forEach(element => element?.classList.remove('is-visible', 'is-running'));
+      if (userText) userText.textContent = '';
+      if (agentText) agentText.textContent = agentText.dataset.typeText ?? '';
+      if (commandText) commandText.textContent = commandText.dataset.typeText ?? '';
+      await wait(420);
+      await typeWidgetText(userText, 24);
+      await wait(420);
+      revealElement(agentStep);
+      await typeWidgetText(agentText, 18);
+      await wait(480);
+      revealElement(terminalStep);
+      await typeWidgetText(commandText, 34);
+      await wait(220);
+      revealElement(process);
+      process?.classList.add('is-running');
+      await wait(1250);
+      process?.classList.remove('is-running');
+      revealElement(output);
+      await wait(500);
+      revealElement(review);
+      review?.classList.add('is-running');
+      await wait(1450);
+      review?.classList.remove('is-running');
+      if (review) review.textContent = '✓ diff reviewed · release notes next';
+      await wait(3600);
+      if (review) review.textContent = 'reviewing diff for risky changes...';
+    }
+  };
+
+  const runTerminalDemo = async () => {
+    if (!terminalDemo || reduceMotion.matches) return;
+    const commands = [...terminalDemo.querySelectorAll('[data-type-text]')];
+    const ready = terminalDemo.querySelector('[data-terminal-step="ready"]');
+    const context = terminalDemo.querySelector('[data-terminal-step="context"]');
+    const tests = terminalDemo.querySelector('[data-terminal-step="tests"]');
+    const result = terminalDemo.querySelector('[data-terminal-step="result"]');
+
+    while (terminalDemo.isConnected) {
+      if (!terminalDemoVisible) {
+        await wait(500);
+        continue;
+      }
+      [ready, context, tests, result].forEach(element => element?.classList.remove('is-visible', 'is-running'));
+      commands.forEach(element => { element.textContent = element.dataset.typeText ?? ''; });
+      await wait(620);
+      await typeWidgetText(commands[0], 65);
+      await wait(260);
+      revealElement(ready);
+      await wait(720);
+      await typeWidgetText(commands[1], 29);
+      await wait(360);
+      revealElement(context);
+      context?.classList.add('is-running');
+      await wait(1350);
+      context?.classList.remove('is-running');
+      revealElement(tests);
+      tests?.classList.add('is-running');
+      await wait(1500);
+      tests?.classList.remove('is-running');
+      revealElement(result);
+      await wait(3700);
+    }
+  };
+
+  const scrambleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789░▒▓<>/\\';
+
+  const scrambleElement = async (element, duration = 620) => {
+    const finalText = element.dataset.scrambleText ?? element.textContent ?? '';
+    element.dataset.scrambleText = finalText;
+    const startedAt = performance.now();
+
+    while (true) {
+      const elapsed = performance.now() - startedAt;
+      const progress = Math.min(elapsed / duration, 1);
+      const revealedCharacters = Math.floor(finalText.length * progress);
+      element.textContent = [...finalText].map((character, index) => {
+        if (/\s/.test(character) || index < revealedCharacters) return character;
+        return scrambleCharacters[Math.floor(Math.random() * scrambleCharacters.length)];
+      }).join('');
+      if (progress >= 1) break;
+      await wait(32);
+    }
+    element.textContent = finalText;
+  };
+
+  const decodeSchedule = async () => {
+    if (!scheduleCard || scheduleCard.classList.contains('is-decoded')) return;
+    const rows = [...scheduleCard.querySelectorAll('.schedule-row')];
+    for (const row of rows) {
+      row.classList.add('is-decoding');
+      await Promise.all([...row.querySelectorAll('[data-scramble]')].map(element => scrambleElement(element)));
+      row.classList.remove('is-decoding');
+      await wait(110);
+    }
+    scheduleCard.classList.add('is-decoded');
+  };
+
+  const runWorkflowDemo = async () => {
+    if (!workflowConsole || reduceMotion.matches) return;
+    const stages = ['understand', 'operate', 'delegate', 'deliver'];
+    while (!workflowManualSelection && workflowConsole.isConnected) {
+      if (!workflowVisible) {
+        await wait(500);
+        continue;
+      }
+      workflowConsole.classList.remove('is-complete');
+      workflowConsole.classList.add('is-running');
+      for (const stage of stages) {
+        if (workflowManualSelection || !workflowVisible) break;
+        selectWorkflowStage(stage, true);
+        await wait(stage === 'delegate' ? 1750 : 1450);
+      }
+      if (workflowManualSelection) break;
+      workflowLogs.forEach(log => log.classList.remove('is-executing'));
+      workflowConsole.classList.remove('is-running');
+      workflowConsole.classList.add('is-complete');
+      await wait(3300);
+    }
+  };
+
+  if (!reduceMotion.matches) {
+    root.classList.add('motion-ready');
+    desktopMock?.querySelectorAll('[data-type-text]').forEach(element => { element.textContent = ''; });
+    terminalDemo?.querySelectorAll('[data-type-text]').forEach(element => { element.textContent = ''; });
+    scheduleCard?.querySelectorAll('[data-scramble]').forEach(element => {
+      const finalText = element.textContent ?? '';
+      element.dataset.scrambleText = finalText;
+      element.textContent = [...finalText].map(character => {
+        if (/\s/.test(character)) return character;
+        return scrambleCharacters[Math.floor(Math.random() * scrambleCharacters.length)];
+      }).join('');
+    });
+
+    if (scheduleCard || workflowConsole || desktopMock || terminalDemo) {
+      const contentObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.target === scheduleCard && entry.isIntersecting) {
+            decodeSchedule();
+            contentObserver.unobserve(scheduleCard);
+          }
+          if (entry.target === workflowConsole) {
+            workflowVisible = entry.isIntersecting;
+          }
+          if (entry.target === desktopMock) {
+            desktopDemoVisible = entry.isIntersecting;
+          }
+          if (entry.target === terminalDemo) {
+            terminalDemoVisible = entry.isIntersecting;
+          }
+        });
+      }, { threshold: 0.28 });
+      if (scheduleCard) contentObserver.observe(scheduleCard);
+      if (workflowConsole) contentObserver.observe(workflowConsole);
+      if (desktopMock) contentObserver.observe(desktopMock);
+      if (terminalDemo) contentObserver.observe(terminalDemo);
+    }
+
+    runDesktopDemo();
+    runTerminalDemo();
+    runWorkflowDemo();
+  } else {
+    scheduleCard?.classList.add('is-decoded');
+    workflowConsole?.classList.add('is-complete');
   }
 
   try {

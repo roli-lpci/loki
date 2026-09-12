@@ -194,9 +194,14 @@
             </div>
             <div class="mock-main">
               <div class="mock-tabs"><span></span><span></span></div>
-              <div class="mock-message mock-message-user">Prepare the release and review the diff.</div>
-              <div class="mock-message mock-message-agent">I’ll inspect the worktree, run checks, and summarize anything risky.</div>
-              <div class="mock-terminal"><span>$ git diff --stat</span><span>14 files changed</span><span class="mock-cursor">█</span></div>
+              <div class="mock-message mock-message-user" data-desktop-step="user"><span data-type-text="Prepare the release and review the diff.">Prepare the release and review the diff.</span><span class="widget-caret" aria-hidden="true"></span></div>
+              <div class="mock-message mock-message-agent" data-desktop-step="agent"><span data-type-text="I’ll inspect the worktree, run checks, and summarize anything risky.">I’ll inspect the worktree, run checks, and summarize anything risky.</span><span class="widget-caret" aria-hidden="true"></span></div>
+              <div class="mock-terminal" data-desktop-step="terminal">
+                <span class="mock-terminal-command"><span class="terminal-prefix">$ </span><span data-type-text="git diff --stat">git diff --stat</span><span class="widget-caret" aria-hidden="true"></span></span>
+                <span class="mock-terminal-process" data-desktop-process>scanning changed files...</span>
+                <span class="mock-terminal-output" data-desktop-output>14 files changed</span>
+                <span class="mock-terminal-process" data-desktop-review>reviewing diff for risky changes...</span>
+              </div>
             </div>
           </div>
           <h3>Keep project work in one desktop workspace.</h3>
@@ -204,12 +209,14 @@
         </article>
         <article class="surface-card">
           <div class="surface-topline"><span>TERMINAL</span><span>02</span></div>
-          <div class="terminal-mock" aria-hidden="true">
-            <span class="terminal-prompt">$</span><span> loki</span><br>
-            <span class="terminal-muted">session ready · tools loaded</span><br><br>
-            <span>&gt; trace the failing test and fix it</span><br>
-            <span class="terminal-blue">→ reading project context...</span><br>
-            <span class="terminal-blue">→ running tests...</span>
+          <div class="terminal-mock" aria-hidden="true" data-terminal-demo>
+            <div class="terminal-demo-line terminal-demo-command"><span class="terminal-prompt">$ </span><span data-type-text="loki">loki</span><span class="widget-caret" aria-hidden="true"></span></div>
+            <div class="terminal-demo-line terminal-muted" data-terminal-step="ready">session ready · tools loaded</div>
+            <div class="terminal-demo-spacer" aria-hidden="true"></div>
+            <div class="terminal-demo-line terminal-demo-command"><span>&gt; </span><span data-type-text="trace the failing test and fix it">trace the failing test and fix it</span><span class="widget-caret" aria-hidden="true"></span></div>
+            <div class="terminal-demo-line terminal-blue terminal-demo-process" data-terminal-step="context">→ reading project context...</div>
+            <div class="terminal-demo-line terminal-blue terminal-demo-process" data-terminal-step="tests">→ running tests...</div>
+            <div class="terminal-demo-line terminal-demo-result" data-terminal-step="result">✓ failing test traced · patch ready</div>
           </div>
           <h3>Run Loki next to your code and scripts.</h3>
           <p>Use Loki from the terminal while you work with the repository, scripts, servers, and data already on that machine.</p>
@@ -273,19 +280,19 @@
         <div class="schedule-card" aria-label="Example scheduled automations">
           <div class="schedule-header"><span>ROUTINES</span><span>UTC</span></div>
           <div class="schedule-row">
-            <span class="schedule-time">08:00</span>
-            <div><strong>Morning briefing</strong><small>research → summarize → Telegram</small></div>
-            <span class="status-pill">daily</span>
+            <span class="schedule-time" data-scramble>08:00</span>
+            <div><strong data-scramble>Morning briefing</strong><small data-scramble>research → summarize → Telegram</small></div>
+            <span class="status-pill" data-scramble>daily</span>
           </div>
           <div class="schedule-row">
-            <span class="schedule-time">09:30</span>
-            <div><strong>PR review queue</strong><small>inspect → review → report</small></div>
-            <span class="status-pill">weekdays</span>
+            <span class="schedule-time" data-scramble>09:30</span>
+            <div><strong data-scramble>PR review queue</strong><small data-scramble>inspect → review → report</small></div>
+            <span class="status-pill" data-scramble>weekdays</span>
           </div>
           <div class="schedule-row">
-            <span class="schedule-time">18:00</span>
-            <div><strong>System health check</strong><small>probe → diagnose → alert</small></div>
-            <span class="status-pill">daily</span>
+            <span class="schedule-time" data-scramble>18:00</span>
+            <div><strong data-scramble>System health check</strong><small data-scramble>probe → diagnose → alert</small></div>
+            <span class="status-pill" data-scramble>daily</span>
           </div>
         </div>
       </div>
@@ -324,6 +331,17 @@
     </section>
 
     <section class="section section-final" aria-labelledby="final-title">
+      <div class="footer-node-grid" aria-hidden="true">
+        <span class="footer-node footer-node-1"></span>
+        <span class="footer-node footer-node-2"></span>
+        <span class="footer-node footer-node-3"></span>
+        <span class="footer-node footer-node-4"></span>
+        <span class="footer-node footer-node-5"></span>
+        <span class="footer-node footer-node-6"></span>
+        <span class="footer-node footer-node-7"></span>
+        <span class="footer-node footer-node-8"></span>
+        <span class="footer-node footer-node-9"></span>
+      </div>
       <div class="final-card">
         <div class="final-grid" aria-hidden="true"></div>
         <div class="final-copy">

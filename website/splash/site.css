@@ -1763,3 +1763,252 @@ body::before {
     transition: none;
   }
 }
+
+.widget-caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.05em;
+  margin-left: 2px;
+  background: currentColor;
+  vertical-align: -0.12em;
+  opacity: 0;
+}
+
+.motion-ready .widget-caret.is-active {
+  opacity: 1;
+  animation: widget-caret-blink 760ms steps(1, end) infinite;
+}
+
+@keyframes widget-caret-blink {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0; }
+}
+
+.motion-ready [data-desktop-step="agent"],
+.motion-ready [data-desktop-step="terminal"],
+.motion-ready [data-desktop-process],
+.motion-ready [data-desktop-output],
+.motion-ready [data-desktop-review],
+.motion-ready [data-terminal-step] {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.motion-ready [data-desktop-step].is-visible,
+.motion-ready [data-desktop-process].is-visible,
+.motion-ready [data-desktop-output].is-visible,
+.motion-ready [data-desktop-review].is-visible,
+.motion-ready [data-terminal-step].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.mock-terminal-process,
+.terminal-demo-process {
+  position: relative;
+  overflow: hidden;
+  color: #6484ad;
+}
+
+.mock-terminal-process.is-running,
+.terminal-demo-process.is-running,
+.console-lines p.is-executing {
+  color: #9ac7ff;
+}
+
+.mock-terminal-process.is-running::after,
+.terminal-demo-process.is-running::after,
+.console-lines p.is-executing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 15%, rgba(219, 234, 254, 0.28) 45%, transparent 72%);
+  transform: translateX(-120%);
+  animation: execution-shimmer 1.15s ease-in-out infinite;
+}
+
+@keyframes execution-shimmer {
+  to { transform: translateX(120%); }
+}
+
+.mock-terminal-output {
+  color: #8fa8c8;
+}
+
+.terminal-prefix {
+  color: var(--blue-3);
+}
+
+.terminal-demo-line {
+  min-height: 1.8em;
+}
+
+.terminal-demo-spacer {
+  height: 1.8em;
+}
+
+.terminal-demo-result {
+  color: #8eb9f3;
+}
+
+.console-result {
+  transition: opacity 220ms ease, transform 220ms ease, border-color 220ms ease;
+}
+
+.workflow-console.is-running .console-result {
+  opacity: 0.45;
+  transform: translateY(3px);
+}
+
+.workflow-console.is-complete .console-result {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: rgba(96, 165, 250, 0.34);
+}
+
+.schedule-row {
+  transition: opacity 240ms ease, transform 240ms ease, background 240ms ease;
+}
+
+.motion-ready .schedule-card:not(.is-decoded) .schedule-row {
+  opacity: 0.68;
+  transform: translateY(5px);
+}
+
+.motion-ready .schedule-card .schedule-row.is-decoding {
+  opacity: 1;
+  transform: translateY(0);
+  background: rgba(30, 64, 175, 0.08);
+}
+
+.motion-ready .schedule-card.is-decoded .schedule-row {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.footer-node-grid {
+  position: relative;
+  height: 172px;
+  margin: 0 0 -30px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  opacity: 0.78;
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 74%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 74%, transparent 100%);
+}
+
+.footer-node-grid::before,
+.footer-node-grid::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.footer-node-grid::before {
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 8%, rgba(96, 165, 250, 0.18) 24%, transparent 42%) 0 44px / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 44%, rgba(96, 165, 250, 0.16) 61%, transparent 80%) 0 88px / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 20%, rgba(96, 165, 250, 0.12) 50%, transparent 76%) 0 132px / 100% 1px no-repeat;
+  animation: footer-node-scan 8s ease-in-out infinite alternate;
+}
+
+.footer-node-grid::after {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  left: 10%;
+  background: linear-gradient(to bottom, transparent, rgba(147, 197, 253, 0.48), transparent);
+  box-shadow: 220px 0 rgba(96, 165, 250, 0.16), 484px 0 rgba(96, 165, 250, 0.12), 748px 0 rgba(96, 165, 250, 0.15), 968px 0 rgba(96, 165, 250, 0.1);
+  animation: footer-column-scan 9s linear infinite;
+}
+
+.footer-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(147, 197, 253, 0.78);
+  border-radius: 50%;
+  background: #06152d;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.06), 0 0 14px rgba(96, 165, 250, 0.22);
+  animation: footer-node-pulse 3.8s ease-in-out infinite;
+}
+
+.footer-node-1 { left: 10%; top: 42px; animation-delay: -0.4s; }
+.footer-node-2 { left: 24%; top: 86px; animation-delay: -2.1s; }
+.footer-node-3 { left: 37%; top: 42px; animation-delay: -1.2s; }
+.footer-node-4 { left: 49%; top: 130px; animation-delay: -2.8s; }
+.footer-node-5 { left: 58%; top: 86px; animation-delay: -0.9s; }
+.footer-node-6 { left: 68%; top: 42px; animation-delay: -3.1s; }
+.footer-node-7 { left: 78%; top: 130px; animation-delay: -1.6s; }
+.footer-node-8 { left: 88%; top: 86px; animation-delay: -2.4s; }
+.footer-node-9 { left: 94%; top: 42px; animation-delay: -0.2s; }
+
+@keyframes footer-node-pulse {
+  0%, 100% { opacity: 0.36; transform: scale(0.86); }
+  48% { opacity: 1; transform: scale(1.16); }
+}
+
+@keyframes footer-node-scan {
+  from { transform: translateX(-18px); opacity: 0.55; }
+  to { transform: translateX(18px); opacity: 1; }
+}
+
+@keyframes footer-column-scan {
+  from { transform: translateX(-90px); opacity: 0; }
+  20%, 80% { opacity: 0.7; }
+  to { transform: translateX(1080px); opacity: 0; }
+}
+
+.final-card::before {
+  content: none;
+}
+
+@media (max-width: 720px) {
+  .footer-node-grid {
+    height: 130px;
+    margin-bottom: -18px;
+    background-size: 36px 36px;
+  }
+
+  .footer-node-4,
+  .footer-node-7,
+  .footer-node-9 {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-caret,
+  .mock-terminal-process,
+  .terminal-demo-process,
+  .console-lines p,
+  .schedule-row,
+  .footer-node-grid::before,
+  .footer-node-grid::after,
+  .footer-node {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .motion-ready [data-desktop-step="agent"],
+  .motion-ready [data-desktop-step="terminal"],
+  .motion-ready [data-desktop-process],
+  .motion-ready [data-desktop-output],
+  .motion-ready [data-desktop-review],
+  .motion-ready [data-terminal-step] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .motion-ready .schedule-card:not(.is-decoded) .schedule-row {
+    opacity: 1;
+    transform: none;
+  }
+}
