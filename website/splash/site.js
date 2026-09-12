@@ -88,13 +88,42 @@
   });
 
   if (tagline && taglineAction && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const typeDelay = 58;
+    const eraseDelay = 30;
+    const holdDelay = 1800;
+    const restartDelay = 260;
     let taglineIndex = 0;
-    window.setInterval(() => {
-      taglineIndex = (taglineIndex + 1) % taglineActions.length;
-      const action = taglineActions[taglineIndex];
-      taglineAction.textContent = action;
+
+    const sleep = delay => new Promise(resolve => window.setTimeout(resolve, delay));
+
+    const typeAction = async action => {
+      taglineAction.textContent = '';
+      for (const character of action) {
+        taglineAction.textContent += character;
+        await sleep(typeDelay);
+      }
       tagline.setAttribute('aria-label', `The agent that ${action}`);
-    }, 3600);
+    };
+
+    const eraseAction = async () => {
+      while (taglineAction.textContent) {
+        taglineAction.textContent = taglineAction.textContent.slice(0, -1);
+        await sleep(eraseDelay);
+      }
+    };
+
+    const runTypewriter = async () => {
+      while (true) {
+        const action = taglineActions[taglineIndex];
+        await typeAction(action);
+        await sleep(holdDelay);
+        await eraseAction();
+        await sleep(restartDelay);
+        taglineIndex = (taglineIndex + 1) % taglineActions.length;
+      }
+    };
+
+    runTypewriter();
   }
 
   if (mesh && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

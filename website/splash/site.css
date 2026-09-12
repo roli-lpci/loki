@@ -47,6 +47,58 @@ button, a { border-radius: var(--radius); }
   animation: mesh-drift 18s ease-in-out infinite alternate;
 }
 
+.sponsor-banner {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+  background: rgba(2, 8, 20, 0.72);
+  backdrop-filter: blur(14px);
+}
+
+.sponsor-banner a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 36px;
+  max-width: calc(100% - 24px);
+  color: #91a6c7;
+  font-size: 10px;
+  line-height: 1.3;
+  text-decoration: none;
+}
+
+.sponsor-banner a:hover {
+  color: #dbeafe;
+}
+
+.sponsor-label {
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: #7185a6;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.sponsor-banner strong {
+  color: var(--blue-2);
+  font-weight: 900;
+}
+
+.sponsor-copy {
+  color: #8297b8;
+}
+
+.sponsor-arrow {
+  color: var(--blue-3);
+}
+
 body::before {
   content: "";
   position: fixed;
@@ -68,7 +120,7 @@ body::before {
 }
 
 .shell {
-  min-height: calc(100vh - 78px);
+  min-height: calc(100vh - 114px);
   display: grid;
   place-items: center;
   width: min(1180px, calc(100% - 40px));
@@ -148,6 +200,35 @@ body::before {
   color: #60a5fa;
 }
 
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .wordmark-block {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .wordmark-loki {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #dbeafe 0 1px,
+      #93c5fd 1px 2px,
+      #bfdbfe 2px 4px,
+      #6ea8f8 4px 5px
+    );
+  }
+
+  .wordmark-agent {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #93c5fd 0 1px,
+      #4f8df3 1px 2px,
+      #60a5fa 2px 4px,
+      #2f6fd6 4px 5px
+    );
+  }
+}
+
 .tagline {
   display: flex;
   justify-content: center;
@@ -170,6 +251,22 @@ body::before {
 .tagline-action {
   color: var(--blue-2);
   font-weight: 900;
+}
+
+.tagline-action::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.02em;
+  margin-left: 4px;
+  background: currentColor;
+  vertical-align: -0.10em;
+  animation: type-caret 900ms steps(1, end) infinite;
+}
+
+@keyframes type-caret {
+  0%, 46% { opacity: 1; }
+  47%, 100% { opacity: 0; }
 }
 
 .install-command-link {
@@ -271,7 +368,16 @@ body::before {
 }
 
 
-.discord-button {
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.discord-button,
+.repo-button {
   display: inline-flex;
   min-height: 46px;
   align-items: center;
@@ -288,18 +394,48 @@ body::before {
   text-decoration: none;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
+
+.discord-button {
+  border-color: rgba(147, 197, 253, 0.48);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(29, 78, 216, 0.86));
+  box-shadow: 0 10px 40px rgba(37, 99, 235, 0.20), inset 0 1px 0 rgba(219, 234, 254, 0.18);
+}
+
+.repo-button {
+  border-color: rgba(96, 165, 250, 0.30);
+  background: rgba(5, 18, 42, 0.72);
+  box-shadow: inset 0 1px 0 rgba(219, 234, 254, 0.08);
+}
+
+.github-mark {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
 .discord-symbol {
   display: inline-block;
   line-height: 1;
   transform: translateY(-0.02em);
 }
 
-.discord-button:hover {
+.discord-button:hover,
+.repo-button:hover {
   transform: translateY(-2px);
   border-color: rgba(219, 234, 254, 0.72);
+}
+
+.discord-button:hover {
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
+
+.repo-button:hover {
+  background: rgba(30, 64, 175, 0.32);
+}
+
 .discord-button:focus-visible,
+.repo-button:focus-visible,
+.sponsor-banner a:focus-visible,
 .footer a:focus-visible,
 .social-links a:focus-visible,
 .install-tab:focus-visible,
@@ -391,6 +527,10 @@ body::before {
   .shell { width: min(100% - 24px, 1180px); padding-top: 70px; }
   .wordmark-block { font-size: clamp(4px, 1.55vw, 8px); }
   .tagline { margin-top: 34px; }
+  .sponsor-banner a { gap: 6px; padding: 7px 0; text-align: center; }
+  .sponsor-copy { display: none; }
+  .hero-actions { width: 100%; }
+  .discord-button, .repo-button { flex: 1 1 190px; }
   .installer { width: 100%; }
   .footer { width: calc(100% - 24px); flex-direction: column; align-items: center; justify-content: center; padding: 20px 0; text-align: center; }
   .cookie-banner { left: 12px; right: 12px; bottom: 12px; width: calc(100% - 24px); align-items: flex-start; flex-direction: column; gap: 12px; }
@@ -399,5 +539,6 @@ body::before {
 
 @media (prefers-reduced-motion: reduce) {
   .mesh { animation: none; }
-  .discord-button { transition: none; }
+  .discord-button, .repo-button { transition: none; }
+  .tagline-action::after { animation: none; opacity: 1; }
 }

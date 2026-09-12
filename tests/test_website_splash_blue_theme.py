@@ -12,6 +12,7 @@ def test_splash_uses_blue_brand_theme_and_action_pitch():
 
     assert 'content="#030b1a"' in html
     assert 'The agent that&nbsp;</span><strong class="tagline-action"' in html
+    assert 'data-install="github">github</button>' in html
     assert '>evolves with you</strong>' in html
     assert "--blue-3: #60a5fa" in css
     assert "--green-" not in css
@@ -19,6 +20,10 @@ def test_splash_uses_blue_brand_theme_and_action_pitch():
     assert "'automates recurring work'" in javascript
     assert "'keeps context across sessions'" in javascript
     assert "'turns intent into action'" in javascript
+    assert 'const typeDelay = 58' in javascript
+    assert 'const eraseDelay = 30' in javascript
+    assert 'runTypewriter();' in javascript
+    assert 'repeating-linear-gradient' in css
 
 
 def test_github_install_tab_exposes_a_real_link():
@@ -30,3 +35,19 @@ def test_github_install_tab_exposes_a_real_link():
     assert 'target="_blank"' in html
     assert "github: { value: 'https://github.com/wundercorp/loki', link: true }" in javascript
     assert "installLink.hidden = !config.link" in javascript
+
+
+def test_splash_has_repo_cta_sponsor_and_agent_alignment_fix():
+    html = (SPLASH / "index.html").read_text()
+    css = (SPLASH / "site.css").read_text()
+
+    assert 'href="https://agentvm.sh"' in html
+    assert 'rel="sponsored noopener noreferrer"' in html
+    assert '>AgentVM</strong>' in html
+    assert 'Run your agent sandboxes in the cloud' in html
+    assert 'class="repo-button"' in html
+    assert '<span>View Repo</span>' in html
+    assert 'class="github-mark"' in html
+    assert '█████╗  ██████╗  ███████╗███╗   ██╗████████╗' in html
+    assert '.sponsor-banner {' in css
+    assert '.hero-actions {' in css
