@@ -2,7 +2,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 const root = new URL('../', import.meta.url).pathname;
-const forbidden = [/\bHermes\b(?!-parser)/i, /Nous\s*Research/i, /NousResearch/i, /nous-research/i, /BuilderStudio/i, /\bAurelius\b/i, /aurelius-agent/i, /aureliusagent\.dev/i, /@wundercorp\/aurelius/i, /\baure\b/i];
+const forbidden = [/\bHermes\b(?!(?:-parser|-estree))/i, /Nous\s*Research/i, /NousResearch/i, /nous-research/i, /BuilderStudio/i, /\bAurelius\b/i, /aurelius-agent/i, /aureliusagent\.dev/i, /@wundercorp\/aurelius/i, /\baure\b/i];
 const ignoredDirectories = new Set([
   '.git',
   '.loki-runtime',
