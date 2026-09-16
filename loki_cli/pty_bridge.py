@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover - dev env without ptyprocess
 __all__ = ["PTY_HOST_DASHBOARD", "PTY_HOST_ENV", "PtyBridge", "PtyUnavailableError"]
 
 # Set on the spawned TUI so Ink knows which emulator is hosting it. Mirrored in
-# ui-tui/packages/loki-ink/src/ink/termio/host.ts — keep the two in sync.
+# tui-ui/packages/loki-ink/src/ink/termio/host.ts — keep the two in sync.
 PTY_HOST_ENV = "LOKI_PTY_HOST"
 PTY_HOST_DASHBOARD = "dashboard"
 

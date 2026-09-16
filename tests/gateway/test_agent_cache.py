@@ -163,6 +163,9 @@ class TestExtractCacheBustingConfig:
                     "checkpoint_required": True,
                     "micro_compact": True,
                     "micro_compact_every_n_turns": 2,
+                    "micro_compact_cache_guard": False,
+                    "micro_compact_cache_min_ratio": 0.7,
+                    "micro_compact_cache_pressure_ratio": 0.9,
                     "micro_compact_defrag_threshold_tokens": 4000,
                     "target_ratio": 0.3,
                     "protect_last_n": 25,
@@ -180,6 +183,9 @@ class TestExtractCacheBustingConfig:
         assert out["compression.checkpoint_required"] is True
         assert out["compression.micro_compact"] is True
         assert out["compression.micro_compact_every_n_turns"] == 2
+        assert out["compression.micro_compact_cache_guard"] is False
+        assert out["compression.micro_compact_cache_min_ratio"] == 0.7
+        assert out["compression.micro_compact_cache_pressure_ratio"] == 0.9
         assert out["compression.micro_compact_defrag_threshold_tokens"] == 4000
         assert out["compression.target_ratio"] == 0.3
         assert out["compression.protect_last_n"] == 25

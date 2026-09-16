@@ -1,6 +1,8 @@
 # Loki Agent 𖤍
 <p align="center">
-  <a href="https://loki.computer/">Loki Agent</a> | <a href="https://loki.computer/">Loki Desktop</a>
+  <a href="https://www.npmjs.com/package/@wundercorp/loki"><img src="https://img.shields.io/npm/v/%40wundercorp%2Floki?style=for-the-badge&logo=npm&label=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@wundercorp/loki"><img src="https://img.shields.io/npm/dw/%40wundercorp%2Floki?style=for-the-badge&logo=npm&label=weekly%20downloads" alt="npm weekly downloads"></a>
+  <a href="https://www.npmjs.com/package/@wundercorp/loki"><img src="https://img.shields.io/npm/dt/%40wundercorp%2Floki?style=for-the-badge&logo=npm&label=total%20downloads" alt="npm total downloads"></a>
 </p>
 <p align="center">
   <a href="https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243"><img src="https://img.shields.io/badge/Docs-doku.sh-16A34A?style=for-the-badge" alt="Documentation"></a>
@@ -28,7 +30,7 @@ Use any model you want — OpenRouter, OpenAI, your own endpoint, and [many othe
 
 ---
 
-## Quick Install
+## ⚡ Quick Install
 
 ### Linux, macOS, WSL2, Termux
 
@@ -93,7 +95,7 @@ For more context, see the upstream Astral reports: [astral-sh/uv#13553](https://
 
 ---
 
-## Getting Started
+## 🧰 Getting Started
 
 ```bash
 loki              # Interactive CLI — start a conversation
@@ -112,7 +114,7 @@ loki doctor       # Diagnose any issues
 
 ---
 
-## CLI vs Messaging Quick Reference
+## 💬 CLI vs Messaging Quick Reference
 
 Run `loki` for the terminal UI, or start the gateway and talk to Loki Agent from Telegram, Discord, Slack, WhatsApp, Signal, or Email. Once you're in a conversation, many slash commands are shared across both interfaces.
 
@@ -132,7 +134,7 @@ For the full command lists, see the [CLI guide](https://doku.sh/#/i/cbe1e051e4be
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 All documentation lives at **[doku.sh](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243)**:
 
@@ -156,7 +158,7 @@ All documentation lives at **[doku.sh](https://doku.sh/#/i/cbe1e051e4be2bb725-26
 
 ---
 
-## Migrating from OpenClaw
+## 🔄 Migrating from OpenClaw
 
 If you're coming from OpenClaw, Loki can automatically import your settings, memories, skills, and API keys.
 
@@ -186,7 +188,7 @@ See `loki claw migrate --help` for all options, or use the `openclaw-migration` 
 
 ---
 
-## Contributing
+## 🛠️ Contributing
 
 We welcome contributions! See the [Contributing Guide](https://doku.sh/#/i/cbe1e051e4be2bb725-26f1d908878243) for development setup, code style, and PR process.
 
@@ -219,16 +221,34 @@ scripts/run_tests.sh
 
 ---
 
-## Community
+## 🧩 Tools & Ecosystem
 
-- 💬 [Discord](https://discord.gg/yEaT8dv5Xn)
-- 📚 [Skills Hub](https://agentskills.io)
-- 🐛 [Issues](https://github.com/wundercorp/loki/issues)
-- 🔌 [computer-use-linux](https://github.com/avifenesh/computer-use-linux) — Linux desktop-control MCP server for Loki and other MCP hosts, with AT-SPI accessibility trees, Wayland/X11 input, screenshots, and compositor window targeting.
+Loki can be paired with purpose-built tools for desktop control, browser automation, isolated execution, and mobile access. These integrations live here instead of under Community so project resources and community links stay clearly separated.
+
+### 🖥️ Computer & browser control
+
+- **[Computer Use Linux](https://github.com/agent-sh/computer-use-linux)** — Linux desktop-control MCP server with AT-SPI accessibility trees, Wayland/X11 input, screenshots, and compositor-aware window targeting.
+- **[Browser Use macOS](https://guardianbrowser.sh)** — Guardian Browser for agent-oriented browser and search workflows on macOS, including deterministic Agent Mode controls.
+
+### 🧱 Virtualization & sandboxes
+
+- **[AgentVM](https://agentvm.sh)** — disposable Linux servers and MCP sandboxes for workloads that should be isolated from the host filesystem, with bounded runtimes, SSH access, and lifecycle controls.
+
+### 📱 Mobile access
+
+- **[WaltonBot](https://walton.bot)** — mobile companion for Loki Agent on iPhone and iPad, useful for continuing agent workflows away from the terminal while Loki remains on its host machine.
 
 ---
 
-## License
+## 🤝 Community
+
+- 💬 **[Discord](https://discord.gg/yEaT8dv5Xn)** — discussion, support, and project updates.
+- 🧠 **[Skills Hub](https://agentskills.io)** — reusable agent skills compatible with Loki's skills system.
+- 🐞 **[Issues](https://github.com/wundercorp/loki/issues)** — bug reports, feature requests, and reproducible regressions.
+
+---
+
+## 📄 License
 
 MIT — see [LICENSE](LICENSE).
 

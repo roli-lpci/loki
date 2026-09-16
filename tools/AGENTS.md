@@ -79,7 +79,7 @@ fixed at the mount, not by adding a tool.
 Spawns a subagent with isolated context + terminal session; the parent waits for the summary unless
 `background=true`, which returns a delegation id and re-enters the result via the async-delegation
 completion queue. Shapes: single (`goal` + optional `context`, `toolsets`) or batch (`tasks: [...]`,
-concurrency capped by `delegation.max_concurrent_children`, default 3). A background batch returns as ONE
+concurrency capped by `delegation.max_concurrent_children`, default 4). A background batch returns as ONE
 completion by default; with `delegation.independent_completions` it is split into completion **units**
 (`delegate_tool_dispatch._units_of`): tasks sharing a `group` join and report together; each ungrouped
 task reports alone as it finishes. Units of one call share ONE pool slot (`slot_key` in
@@ -88,8 +88,9 @@ and the stall clock arms when the runner starts, so a queued unit is never judge
 no `delegate_task`, `clarify`, `memory`, `send_message`, `cronjob`; keeps `execute_code`) and
 `orchestrator` (keeps `delegate_task`; gated by `delegation.orchestrator_enabled`, bounded by
 `delegation.max_spawn_depth`, default 2). Config knobs under `delegation:`:
-`max_concurrent_children, independent_completions, max_spawn_depth, child_timeout_seconds, orchestrator_enabled,
-subagent_auto_approve, inherit_mcp_toolsets, max_iterations`. **Child processes:** a child's background
+`max_concurrent_children, max_input_tokens, compression_threshold_tokens, independent_completions,
+max_spawn_depth, child_timeout_seconds, orchestrator_enabled, worktree_isolation, subagent_auto_approve,
+inherit_mcp_toolsets, max_iterations`. **Child processes:** a child's background
 processes are killed at its teardown and their notices are suppressed in the parent; `process_manage(action="handoff")`
 (children only) flips `ProcessSession.owner_task_id` to the parent under the registry lock
 (`process_registry.transfer_ownership`) so the completion routes and reaps by the new owner; un-handed leftovers land on

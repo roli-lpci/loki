@@ -2,14 +2,14 @@
 
 Regression guard for the hosted-chat failure where the embedded dashboard
 Chat tab died with a 502 / "[session ended]". Root cause: the image installs
-only a subset of the npm monorepo workspaces (root/web/ui-tui, never apps/*),
+only a subset of the npm monorepo workspaces (root/web/tui-ui, never apps/*),
 so the actualized node_modules permanently disagrees with the canonical
 package-lock.json. Without LOKI_TUI_DIR set, ``_make_tui_argv`` falls
 through to ``_tui_need_npm_install`` (which returns True forever) and tries a
 runtime ``npm install`` that can never converge and races itself across
 concurrent /api/pty connections → ENOTEMPTY.
 
-The fix is ``ENV LOKI_TUI_DIR=/opt/loki/ui-tui`` in the Dockerfile, which
+The fix is ``ENV LOKI_TUI_DIR=/opt/loki/tui-ui`` in the Dockerfile, which
 makes the launcher take the prebuilt-bundle fast path (``node --expose-gc
 .../dist/entry.js``) and skip the install check entirely. These tests assert
 that invariant holds in the built image.
@@ -47,8 +47,8 @@ def test_loki_tui_dir_env_is_set(built_image: str) -> None:
         capture_output=True, text=True, timeout=60,
     )
     assert r.returncode == 0, r.stderr[-2000:]
-    assert r.stdout.strip() == "/opt/loki/ui-tui", (
-        f"LOKI_TUI_DIR={r.stdout.strip()!r} (expected /opt/loki/ui-tui)"
+    assert r.stdout.strip() == "/opt/loki/tui-ui", (
+        f"LOKI_TUI_DIR={r.stdout.strip()!r} (expected /opt/loki/tui-ui)"
     )
 
 
@@ -59,7 +59,7 @@ def test_prebuilt_bundle_present_and_no_runtime_install(built_image: str) -> Non
         "import json\n"
         "from pathlib import Path\n"
         "from loki_cli.main_tui_launch import _tui_need_npm_install, _find_bundled_tui, _make_tui_argv\n"
-        "ui = Path('/opt/loki/ui-tui')\n"
+        "ui = Path('/opt/loki/tui-ui')\n"
         "argv, cwd = _make_tui_argv(ui, tui_dev=False)\n"
         "out = {\n"
         "  'dist_entry_exists': (ui / 'dist' / 'entry.js').is_file(),\n"
@@ -70,7 +70,7 @@ def test_prebuilt_bundle_present_and_no_runtime_install(built_image: str) -> Non
         "print(json.dumps(out))\n"
     )
     out = json.loads(_exec_py(built_image, py))
-    assert out["dist_entry_exists"], "prebuilt ui-tui/dist/entry.js missing from image"
+    assert out["dist_entry_exists"], "prebuilt tui-ui/dist/entry.js missing from image"
     # With LOKI_TUI_DIR set, _make_tui_argv returns the prebuilt path BEFORE
     # ever reaching the install check — so the resolved argv is what matters.
     assert out["uses_prebuilt"], f"launcher did not take prebuilt path: argv={out['argv']!r}"

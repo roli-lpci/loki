@@ -6,7 +6,7 @@ description: "Run the Ink TUI and Electron desktop app from a git worktree witho
 
 # TUI & Desktop from Worktrees
 
-The Python core runs fine from any [git worktree](../user-guide/git-worktrees.md) — `cd` in and `loki` just works. The two TypeScript surfaces do not: `ui-tui/` and `apps/desktop/` each need a populated `node_modules`, and a fresh `npm ci` per worktree is slow and duplicates gigabytes across every branch you have checked out.
+The Python core runs fine from any [git worktree](../user-guide/git-worktrees.md) — `cd` in and `loki` just works. The two TypeScript surfaces do not: `tui-ui/` and `apps/desktop/` each need a populated `node_modules`, and a fresh `npm ci` per worktree is slow and duplicates gigabytes across every branch you have checked out.
 
 `htui` and `hgui` are two shell helpers that close that gap. Each launches its surface **from the current worktree** while borrowing `node_modules` from one canonical checkout — so a throwaway branch costs a symlink, not an install.
 
@@ -36,7 +36,7 @@ Neither is read by Loki itself — they're private to these helpers. The variabl
 
 ## `htui` — TUI from the worktree
 
-The Ink TUI has a dev path already: `loki --tui --dev` runs the TypeScript sources via `tsx` instead of the prebuilt bundle. `htui` is a one-liner over it that also points the run at the current worktree's `ui-tui/`:
+The Ink TUI has a dev path already: `loki --tui --dev` runs the TypeScript sources via `tsx` instead of the prebuilt bundle. `htui` is a one-liner over it that also points the run at the current worktree's `tui-ui/`:
 
 ```bash
 htui() {
@@ -47,7 +47,7 @@ htui() {
 }
 ```
 
-`--dev` compiles from source, so it links `ui-tui/node_modules` from `LOKI_MAIN_CHECKOUT` when the root lockfile matches and installs locally otherwise (see [`_loki_root` / linking helpers](#shared-helpers)).
+`--dev` compiles from source, so it links `tui-ui/node_modules` from `LOKI_MAIN_CHECKOUT` when the root lockfile matches and installs locally otherwise (see [`_loki_root` / linking helpers](#shared-helpers)).
 
 :::warning `--dev` and `LOKI_TUI_DIR` are mutually exclusive
 `LOKI_TUI_DIR` points Loki at a *prebuilt* bundle (Nix, system packages), which has no source to hot-reload. If it's set in your shell, `loki --tui --dev` exits with an error. Run `unset LOKI_TUI_DIR` before `htui`.
@@ -111,7 +111,7 @@ Both functions resolve the enclosing checkout and link deps the same way:
 _loki_root() {
   local root
   root="$(git rev-parse --show-toplevel 2>/dev/null)" || return 1
-  [[ -f "$root/loki_cli/main.py" && -d "$root/ui-tui" ]] && print -r "$root"
+  [[ -f "$root/loki_cli/main.py" && -d "$root/tui-ui" ]] && print -r "$root"
 }
 
 # Symlink node_modules from the deps checkout — never over an existing tree.

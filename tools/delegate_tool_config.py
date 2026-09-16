@@ -14,7 +14,7 @@ logger = logging.getLogger("tools.delegate_tool")  # log-record parity with the 
 # match loki_cli.runtime_provider.RUNTIME_PROVIDER_TYPE_CUSTOM.
 _RUNTIME_PROVIDER_CUSTOM = "custom"
 
-_DEFAULT_MAX_CONCURRENT_CHILDREN = 10
+_DEFAULT_MAX_CONCURRENT_CHILDREN = 4
 # One-shot guard: _get_max_concurrent_children() runs on every get_definitions()
 # schema rebuild, so the >10 cost advisory would otherwise log on every turn.
 _HIGH_CONCURRENCY_WARNED = False
@@ -83,7 +83,7 @@ def _warn_once(flag_name: str, message: str, *args: Any) -> None:
         logger.warning(message, *args)
 
 def _get_max_concurrent_children() -> int:
-    """delegation.max_concurrent_children > DELEGATION_MAX_CONCURRENT_CHILDREN env > 10.
+    """delegation.max_concurrent_children > DELEGATION_MAX_CONCURRENT_CHILDREN env > 4.
 
     Floor of 1 is the only bound enforced; there is no ceiling.
     """
@@ -98,6 +98,20 @@ def _get_max_concurrent_children() -> int:
             "independently. High values multiply cost linearly.", result,
         )
     return result
+
+
+_DEFAULT_MAX_INPUT_TOKENS = 300_000
+
+def _get_max_input_tokens() -> Optional[int]:
+    """Aggregate billed input-token ceiling for one delegated child; <= 0 disables."""
+    def _parse(value: Any) -> Optional[int]:
+        parsed = int(value)
+        return parsed if parsed > 0 else None
+
+    return _knob(
+        "max_input_tokens", "DELEGATION_MAX_INPUT_TOKENS", _parse, _DEFAULT_MAX_INPUT_TOKENS,
+        f"delegation.max_input_tokens=%r is not a valid integer; using default {_DEFAULT_MAX_INPUT_TOKENS}",
+    )
 
 def _get_independent_completions() -> bool:
     """delegation.independent_completions (bool, default False): split a background call into per-task / per-group

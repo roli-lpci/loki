@@ -685,19 +685,33 @@ def _write_precheck_error(paths: list[str], content_paths: list[str], task_id: s
             or _check_approval_required_write(paths, task_id))
 
 
+def _edit_conflicts(paths: list[str], path_to_resolved: dict, task_id: str) -> list[str]:
+    """Return stale-read conflicts that must block a write until the caller re-reads."""
+    conflicts: list[str] = []
+    for p in paths:
+        r = path_to_resolved.get(p)
+        conflict = (file_state.check_stale(task_id, r) if r else None) or _check_file_staleness(p, task_id)
+        if conflict:
+            conflicts.append(conflict)
+    return conflicts
+
+
 def _edit_warnings(paths: list[str], path_to_resolved: dict, task_id: str) -> list[str]:
-    """One pre-edit warning per path, in priority order: cross-agent registry
-    (names the sibling subagent) > per-task staleness > workspace divergence
-    (relative path resolving outside the terminal's cwd — the worktree-cwd bug)."""
+    """Return non-destructive workspace-resolution warnings for an otherwise safe edit."""
     warnings: list[str] = []
     for p in paths:
         r = path_to_resolved.get(p)
-        w = (file_state.check_stale(task_id, r) if r else None) or _check_file_staleness(p, task_id)
-        if not w and r:
-            w = _path_resolution_warning(p, Path(r), task_id)
-        if w:
-            warnings.append(w)
+        warning = _path_resolution_warning(p, Path(r), task_id) if r else None
+        if warning:
+            warnings.append(warning)
     return warnings
+
+
+def _stale_write_error(conflicts: list[str]) -> str:
+    return tool_error(
+        "STALE WRITE BLOCKED: " + " | ".join(conflicts)
+        + " Re-read the affected file(s), incorporate the newer content, then retry the edit."
+    )
 
 
 def _note_edited(task_id: str, paths: list[str], path_to_resolved: dict, session_id: str | None) -> None:
@@ -787,6 +801,9 @@ def write_file_tool(path: str, content: str, task_id: str = "default",
                 # Per-path lock serializes read→modify→write across concurrent
                 # subagents; different paths stay fully parallel.
                 _lock.enter_context(file_state.lock_path(_resolved))
+            conflicts = _edit_conflicts([path], path_to_resolved, task_id)
+            if conflicts:
+                return _stale_write_error(conflicts)
             warnings = _edit_warnings([path], path_to_resolved, task_id)
             rewrite_hint = _whole_file_rewrite_hint(task_id, _resolved, content)
             result_dict = _get_file_ops(task_id).write_file(_resolved or path, content).to_dict()
@@ -869,7 +886,10 @@ def patch_tool(mode: str = "replace", path: str = None, old_string: str = None,
         with ExitStack() as _locks:
             for _r in sorted({_r for _r in _path_to_resolved.values() if _r}):
                 _locks.enter_context(file_state.lock_path(_r))
-            stale_warnings = _edit_warnings(_paths_to_check, _path_to_resolved, task_id)
+            conflicts = _edit_conflicts(_paths_to_check, _path_to_resolved, task_id)
+            if conflicts:
+                return _stale_write_error(conflicts)
+            edit_warnings = _edit_warnings(_paths_to_check, _path_to_resolved, task_id)
             file_ops = _get_file_ops(task_id)
 
             # Hand the shell layer the RESOLVED targets so both layers agree on
@@ -889,8 +909,8 @@ def patch_tool(mode: str = "replace", path: str = None, old_string: str = None,
                 return tool_error(f"Unknown mode: {mode}")
 
             result_dict = result.to_dict()
-            if stale_warnings:
-                result_dict["_warning"] = " | ".join(stale_warnings)
+            if edit_warnings:
+                result_dict["_warning"] = " | ".join(edit_warnings)
             if not result_dict.get("error"):
                 # Report the ABSOLUTE path(s) actually patched so a wrong-cwd
                 # mismatch is visible instead of silently landing elsewhere.

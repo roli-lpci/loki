@@ -15,12 +15,15 @@ work is the same work; it just happens continuously, a piece at a time, instead
 of all at once in the middle of your session.
 
 It is not free and it is not a magic bullet, and it is **off by default** —
-`compression.micro_compact: true` turns it on. Each pass is a real call to the
-compression model, and it runs at the end of a turn — your answer has already
-streamed, but the turn does not close until the pass finishes. Each pass also
-rewrites already-sent history, which breaks the provider prompt-cache prefix
-every turn; read [Prompt caching](#prompt-caching--the-cost-you-are-opting-into)
-before enabling it, because for some setups that cost exceeds the benefit.
+`compression.micro_compact: true` turns it on. Each committed pass is a real call
+to the compression model, and it runs at the end of a turn — your answer has
+already streamed, but the turn does not close until the pass finishes. A
+committed pass rewrites already-sent history and invalidates the provider
+prompt-cache prefix from that point onward. Loki therefore includes a
+cache-aware guard that can defer a due pass while the cache is hot and context
+pressure is still low. Read
+[Prompt caching](#prompt-caching--the-cost-you-are-opting-into) before enabling
+it, because the tradeoff is provider- and workload-dependent.
 
 What the feature gives you is a **tuning option**: you choose how the
 compression cost is distributed, and which model pays it. See
@@ -174,23 +177,33 @@ Micro-compaction is **off by default**. Turn it on explicitly:
 
 ```yaml
 compression:
-  micro_compact: true             # default: false
-  micro_compact_every_n_turns: 1  # cadence — how often a pass runs
+  micro_compact: true                       # default: false
+  micro_compact_every_n_turns: 1            # pass eligibility cadence
+  micro_compact_cache_guard: true           # preserve a hot prompt cache
+  micro_compact_cache_min_ratio: 0.60   # defer when cached/read+written share is this high
+  micro_compact_cache_pressure_ratio: 0.80  # stop deferring at this pressure
   micro_compact_defrag_threshold_tokens: 2000
 ```
 
 With `micro_compact` unset or `false` Loki behaves exactly as it always has:
 batch-only compaction. Everything else about compression is unchanged.
 
-`micro_compact_every_n_turns` is the knob that matters most after the on/off
-switch, because it sets how often you pay the cache break described below. At
-`1` a pass runs after every completed turn: the most aggressive reclaim, and
-one broken prefix per turn. At `5` you get a fifth of the breaks and a fifth of
-the reclaim rate, which is the right direction if your sessions are long-lived
-and your provider's cache discount is deep. Values below `1` are clamped to `1`
-rather than silently disabling the feature. The counter advances per turn, not
-per committed pass, so a turn with nothing to absorb still moves the cadence
-along and cannot wedge it.
+`micro_compact_every_n_turns` controls when a pass becomes eligible. At `1`,
+every completed turn may compact; at `5`, only every fifth turn becomes due.
+Values below `1` are clamped to `1` rather than silently disabling the feature.
+When a due pass is deferred by the cache guard, it stays armed and is checked
+again on the next turn instead of waiting for another full cadence interval.
+
+The cache guard is enabled by default whenever micro-compaction is enabled. It
+uses the most recent provider-reported prompt, cache-read, and cache-write token
+counts. If at least `micro_compact_cache_min_ratio` of the prompt was served
+from or written to cache (default `0.60`) and prompt occupancy is below
+`micro_compact_cache_pressure_ratio` of the normal compression threshold
+(default `0.80`), Loki leaves the transcript unchanged and preserves the cached
+prefix. Once cache value falls, or context pressure reaches the configured
+ratio, the due pass proceeds. Providers that do not report cache-read or
+cache-write tokens simply follow the normal cadence. Set
+`micro_compact_cache_guard: false` to restore cadence-only behavior.
 
 `micro_compact_defrag_threshold_tokens` is when the rolling summary gets
 re-summarized instead of growing forever — see [Defrag](#defrag).
@@ -203,26 +216,33 @@ it should be a decision you make rather than one you inherit.
 
 Read this before enabling the feature. It is the strongest argument against it.
 
-A long-lived conversation reuses a cached prompt prefix every turn, and cached
-input tokens are billed at a fraction of uncached ones. That discount survives
-only as long as the prefix does not change. **A micro-compaction pass rewrites
-already-sent history**, which invalidates the prefix from the rewrite point
-onward — so with micro-compaction on, you break the cache *every turn* instead
-of once per batch compaction.
+A long-lived conversation can reuse a cached prompt prefix across turns, and many
+providers bill cached input more cheaply than uncached input. That benefit
+survives only while the reusable prefix remains stable. **A committed
+micro-compaction pass rewrites already-sent history**, which invalidates the
+prefix from the rewrite point onward. Without a guard, a cadence of `1` can
+therefore trade one cache break per turn for lower context occupancy.
+
+The cache-aware guard reduces that churn. It defers an eligible pass when the
+provider reports strong cache reuse or cache creation and the prompt still has
+comfortable runway before Loki's regular compression threshold. This makes
+cache preservation the default choice while it is cheap to wait, then favors
+compaction as pressure rises. The guard does not fabricate cache information:
+if the provider does not report cache-read or cache-write tokens, Loki falls
+back to the configured cadence.
 
 This is the same cost the proactive prune deliberately avoids. That path gates
 itself behind `compression.proactive_prune_min_reclaim_tokens` (4096 by
 default) precisely so its rewrites stay, in the words of the config comment,
 "one big episodic break instead of a tiny break every tool iteration."
 
-Micro-compaction has no equivalent *reclaim-size* gate — a pass commits
-whatever the one absorbed exchange happened to save, large or small. What it
-has instead is a *frequency* dial, `micro_compact_every_n_turns`. Raising it
-makes the breaks rarer and more episodic, which is the same end the prune's
-gate serves by a different route, though it gets there by absorbing less rather
-than by waiting for a bigger win. If you want the prune's exact semantics here,
-a reclaim threshold on micro-compaction is the obvious follow-up and does not
-exist yet.
+Micro-compaction still has no equivalent *reclaim-size* gate — once a pass
+commits, it accepts whatever the absorbed exchange happened to save. It now has
+two cheaper gates before that point: the cadence and the cache-aware deferral.
+Raising the cadence makes passes rarer; the cache guard additionally waits when
+provider telemetry says the existing prefix is delivering real value. A
+reclaim-size threshold remains a possible follow-up if measurements show many
+committed passes saving too little.
 
 So the honest framing is a trade of one cost for another, not a saving:
 
@@ -230,7 +250,7 @@ So the honest framing is a trade of one cost for another, not a saving:
 |---|---|---|
 | Compression stalls | One long stall at the threshold | Spread across turns |
 | Context occupancy | Sawtooths up to the threshold | Stays low and flat |
-| Cache prefix | Intact between compactions | Broken every turn |
+| Cache prefix | Intact between compactions | Preserved while cache is hot and pressure is low; invalidated when a pass commits |
 
 Which side wins depends on numbers specific to you: how much your provider
 discounts cached input, how large your prefix is, how long your sessions run,

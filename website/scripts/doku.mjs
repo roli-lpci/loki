@@ -4,6 +4,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFil
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sanitizeDokuApiFile } from "./doku-api-policy.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const websiteDir = resolve(scriptDir, "..");
@@ -46,7 +47,7 @@ function generate(output = join(websiteDir, "doku.docs.json")) {
   ensureDoku();
   run(dokuBinary, [
     "gen",
-    ".",
+    repoRoot,
     "--output",
     output,
     "--llms-output",
@@ -56,6 +57,8 @@ function generate(output = join(websiteDir, "doku.docs.json")) {
     "--base-url",
     "https://loki.computer",
   ]);
+  const sanitized = sanitizeDokuApiFile(output);
+  console.log(`[doku] public API policy kept ${sanitized.doku?.api?.endpointCount ?? 0} versioned endpoint(s)`);
 }
 
 function copySplashSite() {
@@ -175,9 +178,7 @@ function portal(force = false) {
   }
   ensureDoku();
   run(dokuBinary, [
-    "portal",
-    ".",
-    "--output",
+    "open",
     payloadPath,
     "--site",
     "https://doku.sh",

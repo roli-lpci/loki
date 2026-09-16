@@ -144,21 +144,38 @@ class TestUpdateCommandGatewayFlag:
         loki_home = tmp_path / "loki"
         loki_home.mkdir()
 
-        mock_popen = MagicMock()
         with patch("gateway.run._loki_home", loki_home), \
-             patch("gateway.run.__file__", fake_file), \
-             patch("shutil.which", side_effect=lambda x: f"/usr/bin/{x}"), \
-             patch("subprocess.Popen", mock_popen):
+             patch("gateway.slash_commands.__file__", fake_file), \
+             patch("gateway.run._resolve_loki_bin", return_value=["/usr/bin/loki"]), \
+             patch("gateway.slash_commands._spawn_detached_update") as spawn_update:
             result = await runner._handle_update_command(event)
 
-        # Check the bash command string contains --gateway and PYTHONUNBUFFERED
-        call_args = mock_popen.call_args[0][0]
-        cmd_string = call_args[-1] if isinstance(call_args, list) else str(call_args)
+        spawn_update.assert_called_once_with(
+            ["/usr/bin/loki"],
+            loki_home / ".update_output.txt",
+            loki_home / ".update_exit_code",
+        )
+        assert "stream progress" in result
+
+    def test_detached_spawn_contains_gateway_flag_and_unbuffered(self, tmp_path):
+        from gateway.slash_commands import _spawn_detached_update
+
+        output_path = tmp_path / "update-output.txt"
+        exit_code_path = tmp_path / "update-exit-code"
+        mock_popen = MagicMock()
+
+        with patch("gateway.slash_commands.sys.platform", "darwin"), \
+             patch("shutil.which", return_value="/usr/bin/setsid"), \
+             patch("subprocess.Popen", mock_popen):
+            _spawn_detached_update(["/usr/bin/loki"], output_path, exit_code_path)
+
+        argv = mock_popen.call_args.args[0]
+        cmd_string = argv[-1]
+        assert argv[:3] == ["/usr/bin/setsid", "bash", "-c"]
         assert "--gateway" in cmd_string
         assert "PYTHONUNBUFFERED" in cmd_string
         assert "rc=$?" in cmd_string
         assert "status=$?" not in cmd_string
-        assert "stream progress" in result
 
 
 # ---------------------------------------------------------------------------

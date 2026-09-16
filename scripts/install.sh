@@ -2630,7 +2630,7 @@ configure_browser_env_from_system_browser() {
 # Electron or a PTY addon (#38311, #38772). Desktop dependencies are
 # installed by install_desktop(), reachable only via --include-desktop.
 #
-# Naming ui-tui/web excludes the unnamed apps/* workspaces, and
+# Naming tui-ui/web excludes the unnamed apps/* workspaces, and
 # --include-workspace-root keeps the root's own devDependencies (the shared
 # ESLint flat config each workspace imports) from being pruned by the scoped
 # install — the same closure `loki update` installs
@@ -2640,7 +2640,7 @@ configure_browser_env_from_system_browser() {
 node_deps_workspace_args() {
     local install_dir="$1"
     NODE_DEPS_WORKSPACE_ARGS=()
-    [ -f "$install_dir/ui-tui/package.json" ] && NODE_DEPS_WORKSPACE_ARGS+=(--workspace ui-tui)
+    [ -f "$install_dir/tui-ui/package.json" ] && NODE_DEPS_WORKSPACE_ARGS+=(--workspace tui-ui)
     [ -f "$install_dir/web/package.json" ] && NODE_DEPS_WORKSPACE_ARGS+=(--workspace web)
     if [ "${#NODE_DEPS_WORKSPACE_ARGS[@]}" -eq 0 ]; then
         NODE_DEPS_WORKSPACE_ARGS=(--workspaces=false)
@@ -2789,9 +2789,9 @@ install_node_deps() {
     fi
 
     # Install TUI dependencies
-    if [ -f "$INSTALL_DIR/ui-tui/package.json" ]; then
+    if [ -f "$INSTALL_DIR/tui-ui/package.json" ]; then
         log_info "Installing TUI dependencies..."
-        cd "$INSTALL_DIR/ui-tui"
+        cd "$INSTALL_DIR/tui-ui"
         # Time-boxed: a stalled registry fetch would otherwise hang here (#39219).
         # Report success only on actual success, same as node-deps above
         # (#77003) — and fail the install outright (#85297).

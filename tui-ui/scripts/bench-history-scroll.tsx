@@ -2,7 +2,7 @@
 // APIs present before the performance candidate so the exact same script can
 // be copied/run on base and candidate checkouts.
 //
-// Run from ui-tui:
+// Run from tui-ui:
 //   npx tsx scripts/bench-history-scroll.tsx
 //   npx tsx scripts/bench-history-scroll.tsx --warmups=2 --samples=5 --items=100,1000,10000
 //

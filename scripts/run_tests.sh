@@ -38,66 +38,78 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Locate python ───────────────────────────────────────────────────────────
-# Probe local venvs first; fall back to the Nix devShell's editable venv
-# (LOKI_PYTHON is exported by the devShell hook and ships [dev] extras:
-# pytest, pytest-asyncio, pytest-timeout, ruff, ty).
-#
-# A candidate must have pytest INSTALLED, not merely exist. The release venv
-# at ~/.loki/loki-agent/venv has bin/activate but no pytest, so an
-# existence-only probe selected it in checkouts/worktrees without a local
-# .venv — every file then died with "No module named pytest" and the run
-# reported "0 tests passed" (which reads green at a glance even though the
-# exit code is 1). Skip such a venv and keep probing instead.
-VENV=""
-VENV_PYTHON=""
-SKIPPED_VENVS=""
-for candidate in "$REPO_ROOT/.venv" "$REPO_ROOT/venv" "$HOME/.loki/loki-agent/venv"; do
-  if [ -f "$candidate/bin/activate" ]; then
-    if "$candidate/bin/python" -c 'import pytest' 2>/dev/null; then
-      VENV="$candidate"
-      VENV_PYTHON="$candidate/bin/python"
-      break
-    fi
-    SKIPPED_VENVS="$SKIPPED_VENVS $candidate"
-  fi
-  # Native Windows venv layout: python.exe and activate live under
-  # Scripts/, and there is no bin/. Anyone running this script from
-  # Git Bash / MSYS with a `python -m venv`- or uv-created venv hits
-  # this branch — without it the canonical runner refuses to start.
-  if [ -f "$candidate/Scripts/activate" ]; then
-    if "$candidate/Scripts/python.exe" -c 'import pytest' 2>/dev/null; then
-      VENV="$candidate"
-      VENV_PYTHON="$candidate/Scripts/python.exe"
-      break
-    fi
-    SKIPPED_VENVS="$SKIPPED_VENVS $candidate"
-  fi
-done
+_python_has_pytest() {
+  local candidate="$1"
+  [ -x "$candidate" ] || return 1
+  env -i \
+    PATH="$PATH" \
+    HOME="$HOME" \
+    TZ=UTC \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PYTHONHASHSEED=0 \
+    PYTHONUTF8=1 \
+    "$candidate" -c 'import pytest' >/dev/null 2>&1
+}
 
-if [ -n "$SKIPPED_VENVS" ]; then
-  for skipped in $SKIPPED_VENVS; do
-    echo "▶ skipping venv without pytest: $skipped" >&2
+PYTHON=""
+SKIPPED_PYTHONS=""
+
+if [ -n "${LOKI_TEST_PYTHON:-}" ]; then
+  if _python_has_pytest "$LOKI_TEST_PYTHON"; then
+    PYTHON="$LOKI_TEST_PYTHON"
+    echo "▶ using explicitly selected test interpreter: $PYTHON"
+  else
+    echo "error: LOKI_TEST_PYTHON does not provide pytest in the hermetic test environment: $LOKI_TEST_PYTHON" >&2
+    exit 1
+  fi
+fi
+
+if [ -z "$PYTHON" ]; then
+  for candidate in \
+    "$REPO_ROOT/.venv/bin/python" \
+    "$REPO_ROOT/venv/bin/python" \
+    "$HOME/.loki/loki-agent/venv/bin/python" \
+    "$REPO_ROOT/.venv/Scripts/python.exe" \
+    "$REPO_ROOT/venv/Scripts/python.exe" \
+    "$HOME/.loki/loki-agent/venv/Scripts/python.exe"; do
+    if [ -e "$candidate" ]; then
+      if _python_has_pytest "$candidate"; then
+        PYTHON="$candidate"
+        break
+      fi
+      SKIPPED_PYTHONS="$SKIPPED_PYTHONS $candidate"
+    fi
   done
 fi
 
-if [ -n "$VENV" ]; then
-  PYTHON="$VENV_PYTHON"
-elif [ -n "${LOKI_PYTHON:-}" ] && [ -x "$LOKI_PYTHON" ] \
-    && "$LOKI_PYTHON" -c 'import pytest' 2>/dev/null; then
-  # Guard with an import check: LOKI_PYTHON may point at the RELEASE
-  # venv (no pytest) when inherited from a wrapped `loki` binary rather
-  # than the devShell hook.
+if [ -z "$PYTHON" ] && [ -n "${LOKI_PYTHON:-}" ] && _python_has_pytest "$LOKI_PYTHON"; then
   PYTHON="$LOKI_PYTHON"
-  echo "▶ no local venv — using Nix dev venv via LOKI_PYTHON: $PYTHON"
-else
-  echo "error: no virtualenv with pytest found in $REPO_ROOT/.venv or $REPO_ROOT/venv," >&2
-  echo "       and LOKI_PYTHON is not a python with pytest (enter the Nix devShell or create a venv)" >&2
-  if [ -n "$SKIPPED_VENVS" ]; then
-    echo "       (skipped for missing pytest:$SKIPPED_VENVS — install dev extras there, or create $REPO_ROOT/.venv)" >&2
-  fi
-  exit 1
+  echo "▶ using Nix/dev interpreter via LOKI_PYTHON: $PYTHON"
 fi
 
+if [ -z "$PYTHON" ]; then
+  for command_name in python3 python; do
+    candidate="$(command -v "$command_name" 2>/dev/null || true)"
+    if [ -n "$candidate" ] && _python_has_pytest "$candidate"; then
+      PYTHON="$candidate"
+      echo "▶ using pytest-capable PATH interpreter: $PYTHON"
+      break
+    fi
+  done
+fi
+
+if [ -n "$SKIPPED_PYTHONS" ]; then
+  for skipped in $SKIPPED_PYTHONS; do
+    echo "▶ skipping interpreter without hermetic pytest: $skipped" >&2
+  done
+fi
+
+if [ -z "$PYTHON" ]; then
+  echo "error: no Python interpreter with pytest is available in the hermetic test environment." >&2
+  echo "       Run 'uv sync --extra dev --extra acp --frozen' (dev includes gateway test transports such as aiohttp) or set LOKI_TEST_PYTHON to a fully provisioned test interpreter." >&2
+  exit 1
+fi
 
 # ── Live-gateway plugin (computed before we drop env) ───────────────────────
 EXTRA_PYTHONPATH=""
@@ -163,7 +175,11 @@ cd "$REPO_ROOT"
 # compiling on first import) avoids redundant work across ~2000 processes.
 # Uses git to list tracked .py files (skips venv, node_modules, etc).
 echo "▶ pre-compiling bytecode cache"
-"$PYTHON" -m compileall -q -j 0 -- $(git ls-files '*.py') >/dev/null 2>&1 || true
+if git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git -C "$REPO_ROOT" ls-files -z -- '*.py' | xargs -0 "$PYTHON" -m compileall -q -j 0 -- >/dev/null 2>&1 || true
+else
+  echo "  (git index unavailable; skipping bytecode precompile)"
+fi
 
 echo "▶ launching test runner"
 exec env -i \

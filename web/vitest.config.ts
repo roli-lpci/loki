@@ -14,11 +14,12 @@ export default defineConfig({
   plugins: [react(), babel({ presets: [compilerPreset()] })],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   test: {
     environment: "node",
+    setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
   },
 });

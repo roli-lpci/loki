@@ -4559,7 +4559,7 @@ class TestPtyWebSocket:
             captured["resume"] = resume
             captured["sidecar_url"] = sidecar_url
             captured["profile"] = profile
-            return (["node", "dist/entry.js"], "/tmp/ui-tui", {"NODE_ENV": "production"})
+            return (["node", "dist/entry.js"], "/tmp/tui-ui", {"NODE_ENV": "production"})
 
         async def fake_to_thread(fn, *args, **kwargs):
             captured["thread_fn"] = fn
@@ -4586,7 +4586,7 @@ class TestPtyWebSocket:
             "profile": "worker",
         }
         assert argv == ["node", "dist/entry.js"]
-        assert cwd == "/tmp/ui-tui"
+        assert cwd == "/tmp/tui-ui"
         assert env == {"NODE_ENV": "production"}
         assert captured["resume"] == "sess-42"
         assert captured["sidecar_url"] == "ws://127.0.0.1:9119/api/pub?channel=abc"

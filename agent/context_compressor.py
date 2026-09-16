@@ -2184,6 +2184,7 @@ class ContextCompressor(SummaryDispatchMixin, MicroCompactionMixin, ContextEngin
         # Old usage cannot price a new model. Clear it without arming the post-compaction
         # latch: the next response supplies usage or enables the usage-less fallback.
         self.last_prompt_tokens = self.last_completion_tokens = self.last_total_tokens = 0
+        self.last_cache_read_tokens = self.last_cache_write_tokens = 0
         self._reset_real_usage_pairing()
         # Strikes were judged against the previous threshold; void them durably too.
         self._record_ineffective_compression_verdict(0)
@@ -2338,6 +2339,9 @@ class ContextCompressor(SummaryDispatchMixin, MicroCompactionMixin, ContextEngin
         self._micro_compact_passes = self._micro_compact_tokens_saved_total = self._micro_compact_turns_since_pass = 0
         # Cadence dial: how often the cache-breaking pass is paid. 1 = every turn.
         self._micro_compact_every_n_turns: int = 1
+        self._micro_compact_cache_guard: bool = True
+        self._micro_compact_cache_min_ratio: float = 0.60
+        self._micro_compact_cache_pressure_ratio: float = 0.80
         # Deferred: get_model_context_length() may issue a sync HTTP probe that must not block construction.
         # Floor and cap are applied on first resolution (see _resolve_context_length / threshold_tokens).
         # The small-context threshold floor and the absolute threshold cap both need the resolved window, so
@@ -2358,6 +2362,7 @@ class ContextCompressor(SummaryDispatchMixin, MicroCompactionMixin, ContextEngin
         self._log_init_summary = not quiet_mode
         self._context_probed = False  # True after a step-down from context error
         self.last_prompt_tokens = self.last_completion_tokens = 0
+        self.last_cache_read_tokens = self.last_cache_write_tokens = 0
         self._reset_real_usage_pairing()
         self.summary_model = summary_model_override or ""
         self._session_db: Any = None
@@ -2373,6 +2378,8 @@ class ContextCompressor(SummaryDispatchMixin, MicroCompactionMixin, ContextEngin
         """Update tracked token usage from API response."""
         self.last_prompt_tokens = usage.get("prompt_tokens", 0)
         self.last_completion_tokens = usage.get("completion_tokens", 0)
+        self.last_cache_read_tokens = usage.get("cache_read_tokens", 0)
+        self.last_cache_write_tokens = usage.get("cache_write_tokens", 0)
         self.last_total_tokens = usage.get("total_tokens", self.last_prompt_tokens + self.last_completion_tokens)
         self._apply_real_prompt_verdict()
         # Consume the flag once real usage arrives even without prompt_tokens, so it can't stay armed.

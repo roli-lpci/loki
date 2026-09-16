@@ -28,7 +28,7 @@ def test_dockerfile_does_not_chown_install_trees_to_loki() -> None:
     text = _dockerfile_text()
     forbidden_patterns = (
         r"chown\s+-R\s+loki:loki\s+/opt/loki/\.venv",
-        r"chown\s+-R\s+loki:loki\s+/opt/loki/ui-tui",
+        r"chown\s+-R\s+loki:loki\s+/opt/loki/tui-ui",
         r"chown\s+-R\s+loki:loki\s+/opt/loki/gateway",
         r"chown\s+-R\s+loki:loki\s+/opt/loki/node_modules",
     )

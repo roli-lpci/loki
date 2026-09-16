@@ -2,7 +2,7 @@
 { lokiNpmLib, ... }:
 lokiNpmLib.buildNpmPackage {
   dirs = [
-    "ui-tui"
+    "tui-ui"
     "apps/shared"
   ];
 
@@ -11,18 +11,18 @@ lokiNpmLib.buildNpmPackage {
   buildPhase = ''
     # esbuild bundles everything — no need for tsc or vite.
     # Run from the workspace root where node_modules/ lives.
-    node ui-tui/scripts/build.mjs
+    node tui-ui/scripts/build.mjs
   '';
 
   installPhase = ''
     runHook preInstall
 
     mkdir -p $out/lib/loki-tui
-    # esbuild writes to ui-tui/dist/ from the source root (no cd).
-    cp -r ui-tui/dist $out/lib/loki-tui/dist
+    # esbuild writes to tui-ui/dist/ from the source root (no cd).
+    cp -r tui-ui/dist $out/lib/loki-tui/dist
 
     # package.json kept for "type": "module" resolution on `node dist/entry.js`.
-    cp ui-tui/package.json $out/lib/loki-tui/
+    cp tui-ui/package.json $out/lib/loki-tui/
 
     runHook postInstall
   '';

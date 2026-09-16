@@ -1,8 +1,8 @@
 """Micro-compaction mixin for ContextCompressor.
 
 Rolling per-exchange summarization that folds old user/assistant exchanges into a single
-summary marker between turns. OFF by default: every pass rewrites the prompt prefix and
-breaks the provider prompt cache.
+summary marker between turns. OFF by default: every committed pass rewrites the prompt
+prefix; a cache-aware guard can defer that rewrite while the provider cache is hot.
 """
 from __future__ import annotations
 
@@ -196,6 +196,25 @@ class MicroCompactionMixin:
         self._micro_compact_consecutive_failures = 0
         self._micro_compact_last_failure_cursor = -1
 
+    def _micro_compact_should_preserve_prompt_cache(self) -> bool:
+        if not bool(getattr(self, "_micro_compact_cache_guard", True)):
+            return False
+        try:
+            prompt_tokens = max(0, int(getattr(self, "last_prompt_tokens", 0) or 0))
+            cache_read_tokens = max(0, int(getattr(self, "last_cache_read_tokens", 0) or 0))
+            cache_write_tokens = max(0, int(getattr(self, "last_cache_write_tokens", 0) or 0))
+            cache_min_ratio = min(1.0, max(0.0, float(getattr(self, "_micro_compact_cache_min_ratio", 0.60))))
+            pressure_limit = min(1.0, max(0.0, float(getattr(self, "_micro_compact_cache_pressure_ratio", 0.80))))
+            threshold_tokens = int(getattr(self, "_threshold_tokens", 0) or 0)
+        except (TypeError, ValueError):
+            return False
+        cache_value_tokens = min(prompt_tokens, cache_read_tokens + cache_write_tokens)
+        if prompt_tokens <= 0 or cache_value_tokens <= 0 or threshold_tokens <= 0:
+            return False
+        cache_value_ratio = cache_value_tokens / prompt_tokens
+        pressure_ratio = prompt_tokens / threshold_tokens
+        return cache_value_ratio >= cache_min_ratio and pressure_ratio < pressure_limit
+
     def _micro_compact(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Run one round of micro-compaction (entry point from ``finalize_turn()``). Returns the
         (possibly modified) list and syncs the session DB via ``archive_and_compact`` (the
@@ -210,13 +229,27 @@ class MicroCompactionMixin:
             self._micro_compact_turns_since_pass += 1
             if self._micro_compact_turns_since_pass < every_n:
                 return messages
-            self._micro_compact_turns_since_pass = 0
 
         n_messages = len(messages)
         exchange = self._next_exchange(messages) if n_messages >= 4 else None
         if exchange is None:
             return messages
         exchange_start, exchange_end = exchange
+
+        if self._micro_compact_should_preserve_prompt_cache():
+            if every_n > 1:
+                self._micro_compact_turns_since_pass = every_n
+            logger.debug(
+                "Micro-compaction deferred to preserve prompt cache: read=%d write=%d prompt=%d threshold=%d",
+                int(getattr(self, "last_cache_read_tokens", 0) or 0),
+                int(getattr(self, "last_cache_write_tokens", 0) or 0),
+                int(getattr(self, "last_prompt_tokens", 0) or 0),
+                int(getattr(self, "_threshold_tokens", 0) or 0),
+            )
+            return messages
+
+        if every_n > 1:
+            self._micro_compact_turns_since_pass = 0
 
         # Telemetry baseline; taken only once an exchange exists so no-op turns don't pay.
         _started_at = time.monotonic()

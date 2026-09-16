@@ -5,16 +5,16 @@ serves (from NAS) to what the terminal actually renders, and from every typed
 refusal/error code to its exact user-facing copy and recovery action. The
 guarantee: no NAS billing state and no typed refusal falls through to a
 generic toast — every case below is an explicit branch in
-`ui-tui/src/app/slash/commands/topup.ts`, `ui-tui/src/components/billingOverlay.tsx`,
-or `ui-tui/src/components/subscriptionOverlay.tsx`. An **unknown** code still
+`tui-ui/src/app/slash/commands/topup.ts`, `tui-ui/src/components/billingOverlay.tsx`,
+or `tui-ui/src/components/subscriptionOverlay.tsx`. An **unknown** code still
 degrades gracefully: it hits the `default` branch (a generic-but-real message
 pulled from the server payload, never a blank toast) rather than crashing or
 silently dropping the refusal.
 
 ## 1. `billing.state` shapes → render
 
-Source: `ui-tui/src/components/billingOverlay.tsx` (`OverviewScreen`,
-`BuyScreen`, `AutoReloadScreen`), `ui-tui/src/app/slash/commands/topup.ts` (`/topup` run).
+Source: `tui-ui/src/components/billingOverlay.tsx` (`OverviewScreen`,
+`BuyScreen`, `AutoReloadScreen`), `tui-ui/src/app/slash/commands/topup.ts` (`/topup` run).
 
 | State shape | Render |
 |---|---|
@@ -39,7 +39,7 @@ step-up screen instead of a preflight check.
 
 ## 2. Refusal codes (`renderBillingError`, in code order)
 
-Source: `renderBillingError` in `ui-tui/src/app/slash/commands/topup.ts:37-149`.
+Source: `renderBillingError` in `tui-ui/src/app/slash/commands/topup.ts:37-149`.
 "Portal" row = `sys('Portal: {portal_url}')` is appended whenever `portal_url` is present, for every code (including default).
 
 | `error` code | Copy | Portal URL | `retry_after` |
@@ -62,7 +62,7 @@ Source: `renderBillingError` in `ui-tui/src/app/slash/commands/topup.ts:37-149`.
 
 ## 3. Charge settlement outcomes (`pollCharge` / `renderChargeFailed`)
 
-Source: `pollCharge` (`ui-tui/src/app/slash/commands/topup.ts:170-258`) and
+Source: `pollCharge` (`tui-ui/src/app/slash/commands/topup.ts:170-258`) and
 `renderChargeFailed` (`:260-290`). Poll cadence: 2s interval, 5-minute cap
 (`POLL_INTERVAL_MS=2000`, `POLL_CAP_MS=5*60*1000`), applied on **every**
 non-terminal path (pending *and* throttled), so a sustained 429/503 can't
@@ -85,7 +85,7 @@ keep the poll alive forever.
 ## 4. Subscription preview / pending-change / upgrade outcomes
 
 Source: `previewAndRoute`, `applyPendingAndRoute`, `upgradeResult`,
-`stepUpDenialResult` in `ui-tui/src/components/subscriptionOverlay.tsx`.
+`stepUpDenialResult` in `tui-ui/src/components/subscriptionOverlay.tsx`.
 
 **Preview `effect` values** (drive the Confirm screen):
 

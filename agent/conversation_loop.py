@@ -104,16 +104,19 @@ def _midturn_request_pressure_tokens(
     return approx_tokens + (_estimate_tools_tokens_rough(agent.tools) if agent.tools else 0)
 
 
-def _review_input_budget_exhausted(agent: Any) -> bool:
-    """True when a detached review fork has replayed its aggregate input budget.
-
-    Only forks with an explicit ``_review_input_token_budget`` are gated (#93057). Fires
-    at the top of the NEXT iteration, so the budget-crossing request completes first."""
-    budget = getattr(agent, "_review_input_token_budget", None)
+def _aggregate_input_budget_exhausted(agent: Any) -> bool:
+    """True when an auxiliary agent has consumed its aggregate input-token ceiling."""
+    budget = getattr(agent, "_aggregate_input_token_budget", None)
+    if budget is None:
+        budget = getattr(agent, "_review_input_token_budget", None)
     if not isinstance(budget, int) or isinstance(budget, bool) or budget <= 0:
         return False
     used = getattr(agent, "session_input_tokens", 0)
     return isinstance(used, int) and not isinstance(used, bool) and used >= budget
+
+
+def _review_input_budget_exhausted(agent: Any) -> bool:
+    return _aggregate_input_budget_exhausted(agent)
 
 
 def _maybe_inject_run_budget_wrapup(agent: Any, messages: List[Dict[str, Any]]) -> bool:

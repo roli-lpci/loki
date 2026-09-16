@@ -408,19 +408,24 @@ This re-reads `~/.loki/.env` into the running process's environment. Useful when
 
 ## REST API
 
+The canonical dashboard API is versioned under `/api/v1`. Existing `/api/*`
+paths remain compatibility aliases for the v1 lifecycle and return a successor-version
+header, but new integrations should use `/api/v1/*` so future API revisions can evolve
+without a flag-day client migration.
+
 The web dashboard exposes a REST API that the frontend consumes. You can also call these endpoints directly for automation:
 
 :::tip Profile-scoped endpoints
-The management endpoint families — `/api/config`, `/api/env`, `/api/skills`,
-`/api/tools/toolsets`, `/api/mcp`, and `/api/model/{info,options,auxiliary,set}` —
+The management endpoint families — `/api/v1/config`, `/api/v1/env`, `/api/v1/skills`,
+`/api/v1/tools/toolsets`, `/api/v1/mcp`, and `/api/v1/model/{info,options,auxiliary,set}` —
 accept an optional `?profile=<name>` query parameter (or `"profile"` in the
 JSON body for writes) that scopes the read/write to that profile's
 `LOKI_HOME`. Omitted = the dashboard's own profile. Unknown profile names
-return `404`. The `/api/pty` WebSocket accepts the same parameter to spawn
+return `404`. The `/api/v1/pty` WebSocket accepts the same parameter to spawn
 a chat under the selected profile.
 :::
 
-### GET /api/status
+### GET /api/v1/status
 
 Returns agent version, gateway status, platform states, and active session count.
 
@@ -445,148 +450,148 @@ The response also carries two advisory resource blocks (they never affect the
 
 Both collectors are fail-safe: any sampling error degrades the block to
 `{"pressure": "unknown"}` instead of failing the status endpoint. The numbers
-are coarse (whole MB, whole-percent) since `/api/status` is public.
+are coarse (whole MB, whole-percent) since `/api/v1/status` is public.
 
-### GET /api/sessions
+### GET /api/v1/sessions
 
 Returns the 20 most recent sessions with metadata (model, token counts, timestamps, preview).
 
-### GET /api/config
+### GET /api/v1/config
 
 Returns the current `config.yaml` contents as JSON.
 
-### GET /api/config/defaults
+### GET /api/v1/config/defaults
 
 Returns the default configuration values.
 
-### GET /api/config/schema
+### GET /api/v1/config/schema
 
 Returns a schema describing every config field — type, description, category, and select options where applicable. The frontend uses this to render the correct input widget for each field.
 
-### PUT /api/config
+### PUT /api/v1/config
 
 Saves a new configuration. Body: `{"config": {...}}`.
 
-### GET /api/env
+### GET /api/v1/env
 
 Returns all known environment variables with their set/unset status, redacted values, descriptions, and categories.
 
-### PUT /api/env
+### PUT /api/v1/env
 
 Sets an environment variable. Body: `{"key": "VAR_NAME", "value": "secret"}`.
 
-### DELETE /api/env
+### DELETE /api/v1/env
 
 Removes an environment variable. Body: `{"key": "VAR_NAME"}`.
 
-### GET /api/sessions/\{session_id\}
+### GET /api/v1/sessions/\{session_id\}
 
 Returns metadata for a single session.
 
-### GET /api/sessions/\{session_id\}/messages
+### GET /api/v1/sessions/\{session_id\}/messages
 
 Returns a bounded page of message history, including tool calls and timestamps. By default it returns the latest 500 messages in chronological order. Use `limit` (maximum 500), `offset`, and `order=oldest|latest` for explicit pagination.
 
-### GET /api/sessions/search
+### GET /api/v1/sessions/search
 
 Full-text search across message content. Query parameter: `q`. Returns matching session IDs with highlighted snippets.
 
-### DELETE /api/sessions/\{session_id\}
+### DELETE /api/v1/sessions/\{session_id\}
 
 Deletes a session and its message history.
 
-### GET /api/logs
+### GET /api/v1/logs
 
 Returns log lines. Query parameters: `file` (agent/errors/gateway), `lines` (count), `level`, `component`.
 
-### GET /api/analytics/usage
+### GET /api/v1/analytics/usage
 
 Returns token usage, cost, and session analytics. Query parameter: `days` (default 30). Response includes daily breakdowns and per-model aggregates.
 
-### GET /api/cron/jobs
+### GET /api/v1/cron/jobs
 
 Returns all configured cron jobs with their state, schedule, and run history.
 
-### POST /api/cron/jobs
+### POST /api/v1/cron/jobs
 
 Creates a new cron job. Body: `{"prompt": "...", "schedule": "0 9 * * *", "name": "...", "deliver": "local"}`.
 
-### POST /api/cron/jobs/\{job_id\}/pause
+### POST /api/v1/cron/jobs/\{job_id\}/pause
 
 Pauses a cron job.
 
-### POST /api/cron/jobs/\{job_id\}/resume
+### POST /api/v1/cron/jobs/\{job_id\}/resume
 
 Resumes a paused cron job.
 
-### POST /api/cron/jobs/\{job_id\}/trigger
+### POST /api/v1/cron/jobs/\{job_id\}/trigger
 
 Immediately triggers a cron job outside its schedule.
 
-### DELETE /api/cron/jobs/\{job_id\}
+### DELETE /api/v1/cron/jobs/\{job_id\}
 
 Deletes a cron job.
 
-### GET /api/skills
+### GET /api/v1/skills
 
 Returns all skills with their name, description, category, and enabled status.
 
-### PUT /api/skills/toggle
+### PUT /api/v1/skills/toggle
 
 Enables or disables a skill. Body: `{"name": "skill-name", "enabled": true}`.
 
-### GET /api/tools/toolsets
+### GET /api/v1/tools/toolsets
 
 Returns all toolsets with their label, description, tools list, and active/configured status.
 
 ### Admin endpoints
 
 These power the MCP, Channels, Webhooks, Pairing, and System pages. All sit behind the
-same auth gate as the rest of `/api/`.
+same auth gate as the rest of `/api/v1/*`.
 
 | Method & path | Purpose |
 |---------------|---------|
-| `GET /api/mcp/servers` | List configured MCP servers (env values redacted) |
-| `POST /api/mcp/servers` | Add a server. Body: `{name, url?, command?, args?, env?, auth?}` |
-| `POST /api/mcp/servers/{name}/test` | Connect, list tools, disconnect |
-| `PUT /api/mcp/servers/{name}/enabled` | Enable / disable a server |
-| `DELETE /api/mcp/servers/{name}` | Remove a server |
-| `GET /api/mcp/catalog` | Browse the WunderCorp-approved MCP catalog |
-| `POST /api/mcp/catalog/install` | Install a catalog entry (with required env) |
-| `GET /api/messaging/platforms` | List every messaging channel with status + per-platform setup fields |
-| `PUT /api/messaging/platforms/{id}` | Configure a channel. Body: `{enabled?, env?, clear_env?}` (env writes to `.env`, enabled to `config.yaml`) |
-| `POST /api/messaging/platforms/{id}/test` | Report whether a channel is configured, enabled, and connected |
-| `GET /api/pairing` | List pending + approved messaging users |
-| `POST /api/pairing/approve` | Approve a code. Body: `{platform, code}` |
-| `POST /api/pairing/revoke` | Revoke a user. Body: `{platform, user_id}` |
-| `POST /api/pairing/clear-pending` | Drop all pending codes |
-| `GET /api/webhooks` | List subscriptions + platform-enabled status |
-| `POST /api/webhooks` | Create a subscription (returns one-time secret) |
-| `DELETE /api/webhooks/{name}` | Remove a subscription |
-| `GET /api/credentials/pool` | List pooled rotation keys (redacted) |
-| `POST /api/credentials/pool` | Add a key. Body: `{provider, api_key, label?}` |
-| `DELETE /api/credentials/pool/{provider}/{index}` | Remove a key (1-based index) |
-| `GET /api/memory` | Active provider + available providers + built-in file sizes |
-| `PUT /api/memory/provider` | Select a provider (empty = built-in only) |
-| `POST /api/memory/reset` | Reset built-in memory. Body: `{target: all\|memory\|user}` |
-| `POST /api/gateway/start` · `/stop` · `/restart` | Gateway lifecycle (backgrounded) |
-| `POST /api/ops/doctor` · `/security-audit` · `/backup` · `/import` | Diagnostics & maintenance (backgrounded; tail via `/api/actions/{name}/status`) |
-| `GET /api/ops/hooks` | Configured shell hooks + allowlist status |
-| `GET /api/ops/checkpoints` · `POST .../prune` | Inspect / prune the `/rollback` store |
-| `POST /api/ops/hooks` · `DELETE /api/ops/hooks` | Create / remove a shell hook (consent-gated) |
-| `GET /api/system/stats` | Host stats — OS, CPU, memory, disk, uptime |
-| `GET /api/loki/update/check` | Report update availability (commits behind, install method) without applying. For git installs that are behind, also returns a `commits` list (`sha`, `summary`, `author`, `at`) of what's changed. `?force=1` busts the 6h cache |
-| `GET /api/curator` · `PUT .../paused` · `POST .../run` | Skill-curator status + pause/resume + run |
-| `GET /api/portal` | WunderCorp Portal auth + Tool Gateway routing (read-only) |
-| `POST /api/ops/prompt-size` · `/dump` · `/config-migrate` | Diagnostics (backgrounded) |
-| `PUT /api/webhooks/{name}/enabled` | Enable / disable a webhook route |
-| `POST /api/skills/hub/install` · `/uninstall` · `/update` | Skills hub actions (backgrounded) |
-| `GET /api/skills/hub/search` | Search the skill hub across all sources |
-| `GET /api/sessions/stats` | Session-store statistics |
-| `PATCH /api/sessions/{id}` | Rename / archive a session |
-| `GET /api/sessions/{id}/export` | Export a session (metadata + messages) as JSON |
-| `POST /api/sessions/prune` | Delete ended sessions older than N days |
-| `PUT /api/cron/jobs/{id}` | Edit a cron job's prompt / schedule / name / deliver |
+| `GET /api/v1/mcp/servers` | List configured MCP servers (env values redacted) |
+| `POST /api/v1/mcp/servers` | Add a server. Body: `{name, url?, command?, args?, env?, auth?}` |
+| `POST /api/v1/mcp/servers/{name}/test` | Connect, list tools, disconnect |
+| `PUT /api/v1/mcp/servers/{name}/enabled` | Enable / disable a server |
+| `DELETE /api/v1/mcp/servers/{name}` | Remove a server |
+| `GET /api/v1/mcp/catalog` | Browse the WunderCorp-approved MCP catalog |
+| `POST /api/v1/mcp/catalog/install` | Install a catalog entry (with required env) |
+| `GET /api/v1/messaging/platforms` | List every messaging channel with status + per-platform setup fields |
+| `PUT /api/v1/messaging/platforms/{id}` | Configure a channel. Body: `{enabled?, env?, clear_env?}` (env writes to `.env`, enabled to `config.yaml`) |
+| `POST /api/v1/messaging/platforms/{id}/test` | Report whether a channel is configured, enabled, and connected |
+| `GET /api/v1/pairing` | List pending + approved messaging users |
+| `POST /api/v1/pairing/approve` | Approve a code. Body: `{platform, code}` |
+| `POST /api/v1/pairing/revoke` | Revoke a user. Body: `{platform, user_id}` |
+| `POST /api/v1/pairing/clear-pending` | Drop all pending codes |
+| `GET /api/v1/webhooks` | List subscriptions + platform-enabled status |
+| `POST /api/v1/webhooks` | Create a subscription (returns one-time secret) |
+| `DELETE /api/v1/webhooks/{name}` | Remove a subscription |
+| `GET /api/v1/credentials/pool` | List pooled rotation keys (redacted) |
+| `POST /api/v1/credentials/pool` | Add a key. Body: `{provider, api_key, label?}` |
+| `DELETE /api/v1/credentials/pool/{provider}/{index}` | Remove a key (1-based index) |
+| `GET /api/v1/memory` | Active provider + available providers + built-in file sizes |
+| `PUT /api/v1/memory/provider` | Select a provider (empty = built-in only) |
+| `POST /api/v1/memory/reset` | Reset built-in memory. Body: `{target: all\|memory\|user}` |
+| `POST /api/v1/gateway/start` · `/stop` · `/restart` | Gateway lifecycle (backgrounded) |
+| `POST /api/v1/ops/doctor` · `/security-audit` · `/backup` · `/import` | Diagnostics & maintenance (backgrounded; tail via `/api/v1/actions/{name}/status`) |
+| `GET /api/v1/ops/hooks` | Configured shell hooks + allowlist status |
+| `GET /api/v1/ops/checkpoints` · `POST .../prune` | Inspect / prune the `/rollback` store |
+| `POST /api/v1/ops/hooks` · `DELETE /api/v1/ops/hooks` | Create / remove a shell hook (consent-gated) |
+| `GET /api/v1/system/stats` | Host stats — OS, CPU, memory, disk, uptime |
+| `GET /api/v1/loki/update/check` | Report update availability (commits behind, install method) without applying. For git installs that are behind, also returns a `commits` list (`sha`, `summary`, `author`, `at`) of what's changed. `?force=1` busts the 6h cache |
+| `GET /api/v1/curator` · `PUT .../paused` · `POST .../run` | Skill-curator status + pause/resume + run |
+| `GET /api/v1/portal` | WunderCorp Portal auth + Tool Gateway routing (read-only) |
+| `POST /api/v1/ops/prompt-size` · `/dump` · `/config-migrate` | Diagnostics (backgrounded) |
+| `PUT /api/v1/webhooks/{name}/enabled` | Enable / disable a webhook route |
+| `POST /api/v1/skills/hub/install` · `/uninstall` · `/update` | Skills hub actions (backgrounded) |
+| `GET /api/v1/skills/hub/search` | Search the skill hub across all sources |
+| `GET /api/v1/sessions/stats` | Session-store statistics |
+| `PATCH /api/v1/sessions/{id}` | Rename / archive a session |
+| `GET /api/v1/sessions/{id}/export` | Export a session (metadata + messages) as JSON |
+| `POST /api/v1/sessions/prune` | Delete ended sessions older than N days |
+| `PUT /api/v1/cron/jobs/{id}` | Edit a cron job's prompt / schedule / name / deliver |
 
 ## Authentication (gated mode)
 

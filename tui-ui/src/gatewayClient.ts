@@ -767,7 +767,7 @@ export class GatewayClient extends EventEmitter {
     // `subscribed` until that microtask runs.
     //
     // `drain()` is called from the consumer's mount-time subscribe effect
-    // (ui-tui/src/app/useMainApp.ts). In *attach* mode the gateway is already
+    // (tui-ui/src/app/useMainApp.ts). In *attach* mode the gateway is already
     // running, so it replays `gateway.ready` / `session.info` the instant the
     // socket connects — those land in `bufferedEvents` *before* the consumer
     // subscribes. If we emitted them synchrowundercorply here, the `gateway.ready`

@@ -1,29 +1,29 @@
 {
   "name": "@wundercorp/loki",
   "version": "0.21.8",
-  "description": "Loki Agent — a self-improving AI agent by WunderCorp, Inc.",
+  "description": "Loki Agent \u2014 a self-improving AI agent by WunderCorp, Inc.",
   "private": false,
   "workspaces": [
     "apps/*",
-    "ui-tui",
-    "ui-tui/packages/*",
+    "tui-ui",
+    "tui-ui/packages/*",
     "web",
     "tests-js",
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "echo '✅ Node dependencies installed. Run: loki --help (or loki --help)'",
+    "postinstall": "echo '\u2705 Node dependencies installed. Run: loki --help (or loki --help)'",
     "install:root": "npm install --workspaces=false",
     "install:web": "npm install --workspace web",
-    "install:tui": "npm install --workspace ui-tui",
+    "install:tui": "npm install --workspace tui-ui",
     "install:desktop": "npm install --workspace apps/desktop",
     "audit:root": "npm audit --workspaces=false",
     "audit:web": "npm audit --workspace web",
-    "audit:tui": "npm audit --workspace ui-tui",
+    "audit:tui": "npm audit --workspace tui-ui",
     "audit:fix:root": "npm audit fix --workspaces=false",
     "audit:fix:web": "npm audit fix --workspace web",
-    "audit:fix:tui": "npm audit fix --workspace ui-tui",
-    "check": "npm run --ws check",
+    "audit:fix:tui": "npm audit fix --workspace tui-ui",
+    "check": "npm run check:docs && npm run --ws --if-present check",
     "fix": "npm run --ws fix",
     "verify:brand": "node scripts/verify-rebrand.mjs",
     "release:check": "npm run verify:version && npm run verify:lock && npm run verify:brand && npm run verify:package",
@@ -36,7 +36,9 @@
     "site:generate": "npm --prefix website run generate",
     "verify:lock": "node scripts/verify-package-lock.mjs",
     "verify:version": "python3 scripts/sync_version.py verify",
-    "verify:package": "node scripts/verify-package-contents.mjs"
+    "verify:package": "node scripts/verify-package-contents.mjs",
+    "check:docs": "npm --prefix website test",
+    "check:quick": "npm run typecheck --workspace apps/shared && npm run typecheck --workspace apps/desktop && npm run typecheck --workspace tui-ui && npm run typecheck --workspace web && npm run test --workspace tests-js && npm run test --workspace web -- src/components/OAuthLoginModal.test.tsx src/pages/SessionsPage.test.tsx && npm run lint --workspace apps/shared && npm run lint --workspace apps/desktop"
   },
   "repository": {
     "type": "git",
@@ -53,7 +55,8 @@
     "eslint-plugin-perfectionist": "5.10.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-unused-imports": "4.4.1",
-    "globals": "17.7.0"
+    "globals": "17.7.0",
+    "hermes-parser": "0.25.1"
   },
   "overrides": {
     "lodash": "4.18.1",
@@ -80,10 +83,10 @@
     "esbuild@0.28.1": true,
     "node-pty@1.1.0": true,
     "electron-winstaller@5.4.0": true,
-    "electron@40.10.2": true,
     "fsevents@2.3.2": true,
     "fsevents@2.3.3": true,
-    "get-windows@9.3.0": true
+    "get-windows@9.3.0": true,
+    "electron@41.10.7": true
   },
   "bin": {
     "loki": "loki"

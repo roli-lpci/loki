@@ -508,6 +508,9 @@ class QQAdapter(BasePlatformAdapter):
         try:
             return asyncio.get_running_loop().create_task(coro)
         except RuntimeError:
+            close = getattr(coro, "close", None)
+            if callable(close):
+                close()
             return None
 
     def _close_ws_soon(self) -> None:

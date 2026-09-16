@@ -220,8 +220,8 @@ def _update_read_timestamp(filepath: str, task_id: str) -> None:
 
 
 def _check_file_staleness(filepath: str, task_id: str) -> str | None:
-    """Warn (don't block) when the file's mtime changed since this task last read it.
-    ``None`` when never read, fresh, or unstattable (a deleted file is the write's problem)."""
+    """Describe a stale read when the file changed since this task last read it.
+    The write path treats this as a hard conflict and requires a fresh read before retrying."""
     resolved = _resolved_or_none(filepath, task_id)
     if resolved is None:
         return None
@@ -236,9 +236,8 @@ def _check_file_staleness(filepath: str, task_id: str) -> str | None:
         return None
     if current_mtime != read_mtime:
         return (
-            f"Warning: {filepath} was modified since you last read it "
-            "(external edit or concurrent agent). The content you read may be "
-            "stale. Consider re-reading the file to verify before writing.")
+            f"{filepath} was modified since you last read it "
+            "(external edit or concurrent agent). The previous read is stale.")
     return None
 
 

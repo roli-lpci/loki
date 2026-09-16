@@ -13,7 +13,8 @@
     "clean": "node scripts/doku.mjs clean",
     "lint:diagrams": "ascii-guard lint --exclude-code-blocks docs",
     "portal:force": "node scripts/doku.mjs portal --force",
-    "deploy": "bash ../scripts/deploy-site.sh"
+    "deploy": "bash ../scripts/deploy-site.sh",
+    "test": "node --test scripts/doku-api-policy.test.mjs"
   },
   "dependencies": {
     "@wundercorp/doku": "0.2.4"

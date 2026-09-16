@@ -469,8 +469,11 @@ def _build_result_entry(
     # "(empty)" is run_agent's give-up sentinel after repeated empty LLM
     # responses (usually a transport bug) — a failure, not a success.
     usable_summary = bool(summary) and summary.strip() != "(empty)"
+    turn_exit_reason = str(result.get("turn_exit_reason") or "")
     if result.get("interrupted", False):
         status, exit_reason = "interrupted", "interrupted"
+    elif turn_exit_reason == "delegation_input_budget_exhausted":
+        status, exit_reason = "failed", "input_token_budget"
     elif result.get("failed") or result.get("error"):
         # The loop returns the error text as final_response, which would otherwise read as "completed". Never report a
         # provider rejection as "max_iterations" — that is only truthful for real budget exhaustion.
@@ -512,7 +515,12 @@ def _build_result_entry(
     entry["cost_usd"] = round(entry["_child_cost_usd"], 6)
     entry["cost_status"] = _cost_status if isinstance(_cost_status, str) and _cost_status else "unknown"
     if status == "failed":
-        if schema.valid is False and usable_summary:
+        if exit_reason == "input_token_budget":
+            entry["error"] = (
+                "Subagent input-token safety budget exhausted before task completion. "
+                "Narrow the task or raise delegation.max_input_tokens."
+            )
+        elif schema.valid is False and usable_summary:
             # The child DID respond; name the contract violation instead of the generic "no response" error.
             entry["error"] = (
                 "Final answer does not satisfy the declared output_schema" + (" (after 1 retry)." if schema.retries else ".")

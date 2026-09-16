@@ -29,7 +29,8 @@ from tools.delegate_tool_child_run import (  # noqa: F401
 )
 from tools.delegate_tool_config import (  # noqa: F401
     _DEFAULT_MAX_CONCURRENT_CHILDREN, _get_child_timeout, _get_max_async_children, _get_max_concurrent_children,
-    _get_max_spawn_depth, _get_orchestrator_enabled, _get_subagent_approval_callback, _get_worktree_isolation,
+    _get_max_input_tokens, _get_max_spawn_depth, _get_orchestrator_enabled, _get_subagent_approval_callback,
+    _get_worktree_isolation,
     _inherit_parent_capabilities, _load_config, _merge_request_overrides, _resolve_child_credential_pool,
     _resolve_child_runtime, _resolve_delegation_credentials,
     _subagent_auto_approve, _subagent_auto_deny,
@@ -66,7 +67,7 @@ def _normalize_role(r: Optional[str]) -> str:
         return "leaf"
     return r_norm
 
-DEFAULT_MAX_ITERATIONS = 250
+DEFAULT_MAX_ITERATIONS = 80
 _HEARTBEAT_INTERVAL = 30  # seconds between parent activity heartbeats during delegation
 # Stale-heartbeat thresholds (cycles of _HEARTBEAT_INTERVAL with no progress). Progress = iteration, current_tool OR
 # last_activity_ts advancing; an in-flight model wait refreshes last_activity_ts, so slow models are not "idle". Idle
@@ -112,6 +113,7 @@ def _apply_child_cache_ttl(child) -> None:
         child._cache_ttl = "5m"
 
 _CHILD_CAP_MIN = 16_000  # below this a child compresses on every call; treat as a config error
+_DEFAULT_CHILD_COMPRESSION_CAP_TOKENS = 128_000
 
 
 def _child_compression_cap_tokens(raw) -> "int | None":
@@ -133,16 +135,19 @@ def _child_compression_cap_tokens(raw) -> "int | None":
 
 
 def _apply_child_compression_cap(child, delegation_cfg: dict) -> None:
-    """Optional absolute cap on the child's compaction trigger, ``delegation.compression_threshold_tokens``
-    (lower of it and any global ``compression.threshold_tokens``). Off by default: a 1M-window child
-    compacts at 500K like its parent. The compressor applies the cap on first window resolution, which
-    happens after construction, so setting it here is exactly equivalent to config."""
+    """Absolute cap on a delegated child's compaction trigger.
+
+    Children default to 128K to bound repeated large-context input. An explicit ``0``/``false``/``null``
+    disables the child-specific cap and restores the normal ratio trigger. The lower of this cap and any
+    global ``compression.threshold_tokens`` wins.
+    """
     from agent.context_compressor import ContextCompressor
 
     cc = getattr(child, "context_compressor", None)
     if not isinstance(cc, ContextCompressor):
         return
-    cap = _child_compression_cap_tokens((delegation_cfg or {}).get("compression_threshold_tokens"))
+    raw_cap = (delegation_cfg or {}).get("compression_threshold_tokens", _DEFAULT_CHILD_COMPRESSION_CAP_TOKENS)
+    cap = _child_compression_cap_tokens(raw_cap)
     if cap is None:
         return
     existing = cc.threshold_tokens_cap
@@ -252,6 +257,8 @@ def _build_child_agent(
                     release_or_close(child_session_db)
             raise
     child._print_fn = getattr(parent_agent, "_print_fn", None)
+    child._aggregate_input_token_budget = _get_max_input_tokens()
+    child._aggregate_input_budget_reason = "delegation_input_budget_exhausted"
     _apply_child_cache_ttl(child)
     if child_session_db is not None:
         child._owns_session_db = True  # released by the child's close(), never by the parent

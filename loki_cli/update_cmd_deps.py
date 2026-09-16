@@ -541,7 +541,7 @@ def _repair_node_deps_on_current_checkout(
 
 
 def _update_node_dependencies() -> list[str]:
-    """Refresh Node deps for ui-tui and web. Returns labels whose npm install failed (empty on
+    """Refresh Node deps for tui-ui and web. Returns labels whose npm install failed (empty on
     success) so the caller reports a partial update instead of ``Update complete!``.
 
     See #30271.
@@ -570,8 +570,8 @@ def _update_node_dependencies() -> list[str]:
             print("    Install Node.js inside the WSL distro (nvm, or your distro's")
             print("    package manager), then re-run `loki update`.")
             has_workspace = any(
-                (_m().PROJECT_ROOT / ws / "package.json").exists() for ws in ("ui-tui", "web"))
-            return ["ui-tui, web workspaces"] if has_workspace else []
+                (_m().PROJECT_ROOT / ws / "package.json").exists() for ws in ("tui-ui", "web"))
+            return ["tui-ui, web workspaces"] if has_workspace else []
         return []
 
     from loki_constants import get_default_loki_root
@@ -597,7 +597,7 @@ def _update_node_dependencies() -> list[str]:
     print("→ Updating Node.js dependencies...")
     install_args = [
         "--no-fund", "--no-audit", "--prefer-offline", "--progress=false",
-        "--workspace", "ui-tui", "--workspace", "web",
+        "--workspace", "tui-ui", "--workspace", "web",
         # Root devDependencies (shared ESLint config) would otherwise be pruned by the
         # scoped install; apps/desktop stays excluded since it is never named above.
         "--include-workspace-root"]
@@ -613,7 +613,7 @@ def _update_node_dependencies() -> list[str]:
         npm, _m().PROJECT_ROOT, extra_args=tuple(install_args), capture_output=False, env=nixos_env)
     if result.returncode == 0:
         _record_npm_lockfile_hash(shared_loki_root)
-        print("  ✓ ui-tui, web workspaces installed (desktop skipped)")
+        print("  ✓ tui-ui, web workspaces installed (desktop skipped)")
         return []
     print("  ⚠ npm install failed")
     stderr = (result.stderr or "").strip()
@@ -623,7 +623,7 @@ def _update_node_dependencies() -> list[str]:
     print("  ⚠ Node.js dependency refresh did not complete cleanly; the")
     print("    installation may be in a mixed state (updated code, stale Node")
     print("    deps). Fix npm and re-run `loki update`.")
-    return ["ui-tui, web workspaces"]
+    return ["tui-ui, web workspaces"]
 
 
 def _venv_core_imports_healthy() -> tuple[bool, str]:

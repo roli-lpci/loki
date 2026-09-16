@@ -9,7 +9,9 @@ a per-path lock; every method is a no-op under ``LOKI_DISABLE_FILE_STATE_GUARD=1
 """
 from __future__ import annotations
 
+import hashlib
 import os
+import tempfile
 import threading
 import time
 from collections import defaultdict
@@ -25,6 +27,55 @@ ReadStamp = Tuple[float, float, bool]
 # Bounded so long sessions don't accumulate unbounded state.
 _MAX_PATHS_PER_AGENT = 4096
 _MAX_GLOBAL_WRITERS = 4096
+
+
+
+
+def _process_lock_path(resolved: str) -> str:
+    uid = getattr(os, "getuid", lambda: "user")()
+    lock_dir = Path(tempfile.gettempdir()) / f"loki-file-state-{uid}"
+    lock_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    digest = hashlib.sha256(os.path.normcase(os.path.abspath(resolved)).encode("utf-8", errors="surrogatepass")).hexdigest()
+    return str(lock_dir / f"{digest}.lock")
+
+
+@contextmanager
+def _process_path_lock(resolved: str):
+    """Best-effort cross-process advisory lock for Loki file mutations."""
+    lock_file = None
+    try:
+        lock_path = _process_lock_path(resolved)
+        lock_file = open(lock_path, "a+b")
+        if os.name == "posix":
+            import fcntl
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        elif os.name == "nt":
+            import msvcrt
+            if os.path.getsize(lock_path) == 0:
+                lock_file.write(b"0")
+                lock_file.flush()
+            lock_file.seek(0)
+            msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
+    except (OSError, ImportError):
+        if lock_file is not None:
+            lock_file.close()
+        lock_file = None
+
+    try:
+        yield
+    finally:
+        if lock_file is not None:
+            try:
+                if os.name == "posix":
+                    import fcntl
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                elif os.name == "nt":
+                    import msvcrt
+                    lock_file.seek(0)
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+            except (OSError, ImportError):
+                pass
+            lock_file.close()
 
 
 def _disabled() -> bool:
@@ -70,14 +121,15 @@ class FileStateRegistry:
 
     @contextmanager
     def lock_path(self, resolved: str):
-        """Per-path lock: threads on the same path serialize, different paths proceed.
-        The lock entry is dropped once the last holder/waiter exits."""
+        """Per-path lock across threads and Loki processes; different paths proceed.
+        The in-process lock entry is dropped once the last holder/waiter exits."""
         with self._meta_lock:
             lock = self._path_locks.setdefault(resolved, threading.Lock())
             self._path_lock_users[resolved] = self._path_lock_users.get(resolved, 0) + 1
         lock.acquire()
         try:
-            yield
+            with _process_path_lock(resolved):
+                yield
         finally:
             lock.release()
             with self._meta_lock:

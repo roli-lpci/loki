@@ -223,7 +223,7 @@ def _report_surfaces() -> None:
 
     surfaces = {
         "CLI (cli.py)": [root / "cli.py"],
-        "TUI (ui-tui)": sorted((root / "ui-tui" / "src").rglob("*.ts")),
+        "TUI (tui-ui)": sorted((root / "tui-ui" / "src").rglob("*.ts")),
         "Desktop (apps/desktop)": sorted((root / "apps" / "desktop" / "src").rglob("*.ts")),
     }
 

@@ -1071,7 +1071,7 @@ class TestNodeRuntimeNpmResolution:
             "tools.browser_tool_install.warm_agent_browser_npx_cache", return_value=True
         ):
             failed = update_cmd._update_node_dependencies()
-        assert failed == ["ui-tui, web workspaces"]
+        assert failed == ["tui-ui, web workspaces"]
         out = capsys.readouterr().out
         assert "mixed state" in out
 
@@ -1258,7 +1258,7 @@ class TestUpdateNodeDependencies:
     resolves at runtime via npx (tools/browser_tool.py), and @streamdown/math
     moved to apps/desktop/package.json since it's a desktop-only import.
     With nothing root-only left to protect, a single workspace-scoped
-    install (ui-tui, web) is safe — apps/desktop is simply never named, so
+    install (tui-ui, web) is safe — apps/desktop is simply never named, so
     its ~200 MB Electron devDependency is never resolved. Skipping is
     governed by _npm_lockfile_changed (content hash over the lockfile +
     every workspace package.json), tested separately in
@@ -1311,7 +1311,7 @@ class TestUpdateNodeDependencies:
     @patch("subprocess.Popen")
     @patch("shutil.which", return_value="/usr/bin/npm")
     def test_install_names_ui_tui_and_web_workspaces(self, _which, mock_popen, tmp_path, monkeypatch):
-        """Regression for #43564: install ui-tui + web directly. apps/desktop
+        """Regression for #43564: install tui-ui + web directly. apps/desktop
         must never appear, so its Electron postinstall is never triggered.
         """
         from loki_cli import main as hm
@@ -1328,8 +1328,8 @@ class TestUpdateNodeDependencies:
         calls = self._popen_npm_calls(popen_calls)
         assert len(calls) == 1, f"expected exactly 1 npm call, got: {calls}"
         joined = " ".join(str(a) for a in calls[0])
-        assert "--workspace ui-tui" in joined and "--workspace web" in joined, (
-            f"expected ui-tui + web workspace selectors; actual: {calls[0]}"
+        assert "--workspace tui-ui" in joined and "--workspace web" in joined, (
+            f"expected tui-ui + web workspace selectors; actual: {calls[0]}"
         )
         assert "desktop" not in joined, (
             f"apps/desktop must not appear (avoids ~200 MB Electron download); actual: {calls[0]}"
@@ -1347,7 +1347,7 @@ class TestUpdateNodeDependencies:
         flat config every workspace's own eslint.config.mjs imports) even
         though agent-browser and @streamdown/math were removed from root
         `dependencies` (#43564). --include-workspace-root keeps them from
-        being pruned by this scoped install, while --workspace ui-tui
+        being pruned by this scoped install, while --workspace tui-ui
         --workspace web still excludes the unnamed apps/desktop workspace
         (confirmed empirically against npm 10.9.8 and 11.9.0 in PR #44772
         review)."""
@@ -1452,7 +1452,7 @@ class TestUpdateNodeDependencies:
         self, _which, mock_popen, tmp_path, monkeypatch
     ):
         """The npx warm-up must fire even when the workspace install fails —
-        it's independent of ui-tui/web dependency state (#43564)."""
+        it's independent of tui-ui/web dependency state (#43564)."""
         from loki_cli import main as hm
 
         (tmp_path / "package.json").write_text("{}")

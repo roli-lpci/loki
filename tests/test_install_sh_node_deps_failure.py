@@ -23,7 +23,7 @@ def _run_node_deps_stage(
     fail_directory: str | None,
 ) -> tuple[subprocess.CompletedProcess[str], Path, list[str]]:
     install_dir = tmp_path / "install"
-    tui_dir = install_dir / "ui-tui"
+    tui_dir = install_dir / "tui-ui"
     bin_dir = tmp_path / "bin"
     loki_home = tmp_path / "home"
     managed_bin = loki_home / "bin"
@@ -115,7 +115,7 @@ def test_root_node_dependency_failure_is_fatal(tmp_path: Path) -> None:
 
 def test_tui_node_dependency_failure_is_fatal(tmp_path: Path) -> None:
     install_dir = tmp_path / "install"
-    tui_dir = install_dir / "ui-tui"
+    tui_dir = install_dir / "tui-ui"
     proc, _, calls = _run_node_deps_stage(
         tmp_path,
         fail_directory=str(tui_dir),
@@ -140,6 +140,6 @@ def test_node_dependency_success_remains_successful(tmp_path: Path) -> None:
         "stage": "node-deps",
         "skipped": False,
     }
-    assert calls == [str(install_dir), str(install_dir / "ui-tui")]
+    assert calls == [str(install_dir), str(install_dir / "tui-ui")]
     assert "Node.js dependencies installed" in proc.stdout
     assert "TUI dependencies installed" in proc.stdout

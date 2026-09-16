@@ -13,7 +13,7 @@
  *          ▼                                                              .
  *     FastAPI pty_ws  (loki_cli/web_server.py)                          .
  *          ▼                                                              .
- *     POSIX PTY → `node ui-tui/dist/entry.js` → tui_gateway + AIAgent     .
+ *     POSIX PTY → `node tui-ui/dist/entry.js` → tui_gateway + AIAgent     .
  */
 
 import { FitAddon } from "@xterm/addon-fit";

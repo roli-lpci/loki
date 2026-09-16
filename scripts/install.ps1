@@ -3717,7 +3717,7 @@ function Install-NodeDeps {
     }
 
     # TUI
-    $tuiDir = "$InstallDir\ui-tui"
+    $tuiDir = "$InstallDir\tui-ui"
     if (Test-Path "$tuiDir\package.json") {
         Write-Info "Installing TUI dependencies..."
         $tuiLog = "$env:TEMP\loki-npm-tui-$(Get-Random).log"

@@ -9,7 +9,7 @@ from .method_ctx import bind_module
 # stays informative): unbounded output fed a render-tree blowup that OOM-killed the TUI parent.
 # Full output stays in the agent context and the SQLite session, untouched.
 # Tool Args/Result text shipped to the TUI for the verbose trail line. The TUI renders only a small
-# persisted preview (ui-tui VERBOSE_TRAIL_MAX_CHARS), kept all session and expanded by default — so shipping
+# persisted preview (tui-ui VERBOSE_TRAIL_MAX_CHARS), kept all session and expanded by default — so shipping
 # more than that is pure pipe waste AND feeds the Ink render-tree blowup that silently OOM-killed the TUI
 # parent (#34095).
 _TUI_VERBOSE_TEXT_MAX_CHARS = 1_000

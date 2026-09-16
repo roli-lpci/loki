@@ -20,7 +20,7 @@ Debug Node.js via --inspect + Chrome DevTools Protocol CLI.
 | Author | Loki Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
-| Tags | `debugging`, `nodejs`, `node-inspect`, `cdp`, `breakpoints`, `ui-tui` |
+| Tags | `debugging`, `nodejs`, `node-inspect`, `cdp`, `breakpoints`, `tui-ui` |
 | Related skills | [`systematic-debugging`](/user-guide/skills/bundled/software-development/software-development-systematic-debugging), [`python-debugpy`](/user-guide/skills/bundled/software-development/software-development-python-debugpy) |
 
 ## Reference: full SKILL.md
@@ -45,7 +45,7 @@ Two tools, pick one:
 ## When to Use
 
 - A Node test fails and you need to see intermediate state
-- ui-tui crashes or behaves wrong and you want to inspect React/Ink state pre-render
+- tui-ui crashes or behaves wrong and you want to inspect React/Ink state pre-render
 - tui_gateway child processes (`_SlashWorker`, PTY bridge workers) misbehave
 - You need to inspect a value in a closure that `console.log` can't reach without patching
 - Perf: attach to a running process to capture a CPU profile or heap snapshot
@@ -185,23 +185,23 @@ Run it:
 node /tmp/cdp-debug.js
 ```
 
-Loki-specific note: `chrome-remote-interface` is NOT in `ui-tui/package.json`. Install it to a throwaway location if you don't want to dirty the project:
+Loki-specific note: `chrome-remote-interface` is NOT in `tui-ui/package.json`. Install it to a throwaway location if you don't want to dirty the project:
 
 ```bash
 mkdir -p /tmp/cdp-tools && cd /tmp/cdp-tools && npm i chrome-remote-interface
 NODE_PATH=/tmp/cdp-tools/node_modules node /tmp/cdp-debug.js
 ```
 
-## Debugging Loki ui-tui
+## Debugging Loki tui-ui
 
 The TUI is built Ink + tsx. Two common scenarios:
 
 ### Debugging a single Ink component under dev
 
-`ui-tui/package.json` has `npm run dev` (tsx --watch). Add `--inspect-brk` by running tsx directly:
+`tui-ui/package.json` has `npm run dev` (tsx --watch). Add `--inspect-brk` by running tsx directly:
 
 ```bash
-cd <loki-agent-repo>/ui-tui
+cd <loki-agent-repo>/tui-ui
 npm run build    # produce dist/ once so transpile isn't needed on first load
 node --inspect-brk dist/entry.js
 # In another terminal:
@@ -224,7 +224,7 @@ The TUI spawns Node from the Python CLI. Easiest path:
 ```bash
 # 1. Launch TUI
 loki --tui &
-TUI_PID=$(pgrep -f 'ui-tui/dist/entry' | head -1)
+TUI_PID=$(pgrep -f 'tui-ui/dist/entry' | head -1)
 
 # 2. Enable inspector on that Node PID
 kill -SIGUSR1 "$TUI_PID"
@@ -240,12 +240,12 @@ Interacting with the TUI (typing in its window) continues to advance execution; 
 
 ### Debugging `_SlashWorker` / PTY child processes
 
-Those are Python, not Node — use the `python-debugpy` skill for them. Only Node portions (Ink UI, tui_gateway client, tsx-run tests under `ui-tui/`) use this skill.
+Those are Python, not Node — use the `python-debugpy` skill for them. Only Node portions (Ink UI, tui_gateway client, tsx-run tests under `tui-ui/`) use this skill.
 
 ## Running Vitest Tests Under the Debugger
 
 ```bash
-cd <loki-agent-repo>/ui-tui
+cd <loki-agent-repo>/tui-ui
 # Run a single test file paused on entry
 node --inspect-brk ./node_modules/vitest/vitest.mjs run --no-file-parallelism src/app/foo.test.tsx
 ```

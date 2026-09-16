@@ -5,7 +5,7 @@
  * (Kimi Coding's flagship is literally `k3`) that users still search for by
  * the familiar `kimi-…` naming of sibling models.
  *
- * Keep in sync with ui-tui/src/lib/model-search-text.ts,
+ * Keep in sync with tui-ui/src/lib/model-search-text.ts,
  * web/src/lib/model-search-text.ts, and loki_cli/model_search.py.
  */
 const MODEL_SEARCH_ALIASES: Record<string, readonly string[]> = {

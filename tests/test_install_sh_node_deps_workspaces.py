@@ -42,7 +42,7 @@ def workspace_args(install_dir: Path) -> list[str]:
 
 def make_checkout(root: Path, workspaces: tuple[str, ...]) -> Path:
     """Lay out a checkout with a root package and the given workspace dirs."""
-    (root / "package.json").write_text('{"workspaces": ["apps/*", "ui-tui", "web"]}')
+    (root / "package.json").write_text('{"workspaces": ["apps/*", "tui-ui", "web"]}')
     for workspace in ("apps/desktop", *workspaces):
         directory = root / workspace
         directory.mkdir(parents=True)
@@ -56,7 +56,7 @@ def selected_workspaces(args: list[str]) -> list[str]:
 
 @pytest.mark.parametrize(
     "workspaces",
-    [("ui-tui", "web"), ("ui-tui",), ("web",), ()],
+    [("tui-ui", "web"), ("tui-ui",), ("web",), ()],
     ids=["full", "tui-only", "web-only", "bare"],
 )
 def test_desktop_workspace_is_never_selected(tmp_path, workspaces):
@@ -71,20 +71,20 @@ def test_desktop_workspace_is_never_selected(tmp_path, workspaces):
 
 
 def test_present_workspaces_are_installed_alongside_the_root(tmp_path):
-    """ui-tui and web are what a CLI install needs; the root owns shared
+    """tui-ui and web are what a CLI install needs; the root owns shared
     devDependencies that a scoped install would otherwise prune."""
-    args = workspace_args(make_checkout(tmp_path, ("ui-tui", "web")))
+    args = workspace_args(make_checkout(tmp_path, ("tui-ui", "web")))
 
-    assert selected_workspaces(args) == ["ui-tui", "web"]
+    assert selected_workspaces(args) == ["tui-ui", "web"]
     assert "--include-workspace-root" in args
 
 
 def test_absent_workspace_is_not_named(tmp_path):
     """npm fails hard on a workspace it cannot find, so a partial checkout
     must only name the workspaces that exist."""
-    args = workspace_args(make_checkout(tmp_path, ("ui-tui",)))
+    args = workspace_args(make_checkout(tmp_path, ("tui-ui",)))
 
-    assert selected_workspaces(args) == ["ui-tui"]
+    assert selected_workspaces(args) == ["tui-ui"]
 
 
 def test_bare_checkout_installs_the_root_only(tmp_path):

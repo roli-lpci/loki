@@ -1108,10 +1108,10 @@ json.dump(sorted(leaf_paths(DEFAULT_CONFIG)), sys.stdout, indent=2)
         bundled-tui = pkgs.runCommand "loki-bundled-tui" { } ''
           set -e
           echo "=== Checking bundled TUI ==="
-          test -d ${loki-agent}/ui-tui || (echo "FAIL: ui-tui directory missing"; exit 1)
-          echo "PASS: ui-tui directory exists"
+          test -d ${loki-agent}/tui-ui || (echo "FAIL: tui-ui directory missing"; exit 1)
+          echo "PASS: tui-ui directory exists"
 
-          test -f ${loki-agent}/ui-tui/dist/entry.js || (echo "FAIL: compiled entry.js missing"; exit 1)
+          test -f ${loki-agent}/tui-ui/dist/entry.js || (echo "FAIL: compiled entry.js missing"; exit 1)
           echo "PASS: compiled entry.js present"
 
           # self-contained bundle; no runtime node_modules expected

@@ -7,7 +7,7 @@ Usage:
 Defaults: picks the session with the most messages, holds PageUp for 8s at
 ~30 Hz (matching xterm key-repeat), summarizes ~/.loki/perf.log on exit.
 
-The --tui build must exist (run `npm run build` in ui-tui first). This script
+The --tui build must exist (run `npm run build` in tui-ui first). This script
 launches `node dist/entry.js` directly with LOKI_TUI_RESUME set so it
 bypasses the loki_cli wrapper — we want repeatable timing, not the CLI's
 session-picker flow.
@@ -15,7 +15,7 @@ session-picker flow.
 Environment overrides:
   LOKI_PERF_LOG     (default ~/.loki/perf.log)
   LOKI_PERF_NODE    (default node from $PATH)
-  LOKI_TUI_DIR      (default: <repo>/ui-tui relative to this script)
+  LOKI_TUI_DIR      (default: <repo>/tui-ui relative to this script)
 
 Exit code is 0 if the harness ran and parsed results, 2 if the TUI crashed
 or produced no perf data (suggests LOKI_DEV_PERF wiring is broken).
@@ -46,7 +46,7 @@ except ImportError:
 
 DEFAULT_TUI_DIR = Path(
     os.environ.get("LOKI_TUI_DIR")
-    or str(Path(__file__).resolve().parent.parent / "ui-tui")
+    or str(Path(__file__).resolve().parent.parent / "tui-ui")
 )
 DEFAULT_LOG = Path(os.environ.get("LOKI_PERF_LOG", str(get_loki_home() / "perf.log")))
 DEFAULT_STATE_DB = get_loki_home() / "state.db"

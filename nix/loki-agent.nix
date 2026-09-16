@@ -179,7 +179,7 @@ stdenv.mkDerivation (finalAttrs: {
     ln -s ${bundledLocales} $out/share/loki-agent/locales
     ln -s ${bundledOptionalMcps} $out/share/loki-agent/optional-mcps
     ln -s ${lokiWeb} $out/share/loki-agent/web_dist
-    ln -s ${lokiTui}/lib/loki-tui $out/ui-tui
+    ln -s ${lokiTui}/lib/loki-tui $out/tui-ui
 
     ${lib.concatMapStringsSep "\n"
       (name: ''
@@ -191,7 +191,7 @@ stdenv.mkDerivation (finalAttrs: {
           --set LOKI_BUNDLED_LOCALES $out/share/loki-agent/locales \
           --set LOKI_OPTIONAL_MCPS $out/share/loki-agent/optional-mcps \
           --set LOKI_WEB_DIST $out/share/loki-agent/web_dist \
-          --set LOKI_TUI_DIR $out/ui-tui \
+          --set LOKI_TUI_DIR $out/tui-ui \
           --set-default LOKI_BIN $out/bin/loki \
           --set LOKI_PYTHON ${lokiVenv}/bin/python3 \
           --set LOKI_NODE ${lib.getExe lokiNpmLib.nodejs}${

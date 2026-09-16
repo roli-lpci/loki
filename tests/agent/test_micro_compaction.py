@@ -116,6 +116,70 @@ class TestMicroCompaction:
         # Each turn absorbed something, so the transcript kept shrinking.
         assert len(second) < len(first)
 
+    def test_high_prompt_cache_hit_defers_micro_compaction_below_pressure_guard(self):
+        cc = _compressor()
+        calls = []
+        cc._micro_summarize_one = lambda text: calls.append(text) or "ROLLING SUMMARY"
+        cc._threshold_tokens = 10_000
+        cc.last_prompt_tokens = 5_000
+        cc.last_cache_read_tokens = 4_000
+        messages = _conversation(exchanges=8)
+
+        result = cc._micro_compact(list(messages))
+
+        assert result == messages
+        assert calls == []
+        assert _summary_markers(result) == []
+
+    def test_newly_written_prompt_cache_is_preserved_before_first_reuse(self):
+        cc = _compressor()
+        calls = []
+        cc._micro_summarize_one = lambda text: calls.append(text) or "ROLLING SUMMARY"
+        cc._threshold_tokens = 10_000
+        cc.update_from_response({
+            "prompt_tokens": 5_000,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 4_000,
+        })
+        messages = _conversation(exchanges=8)
+
+        result = cc._micro_compact(list(messages))
+
+        assert result == messages
+        assert calls == []
+        assert _summary_markers(result) == []
+
+    def test_cache_guard_releases_when_context_pressure_is_high(self):
+        cc = _compressor()
+        cc._threshold_tokens = 10_000
+        cc.last_prompt_tokens = 8_500
+        cc.last_cache_read_tokens = 7_000
+        messages = _conversation(exchanges=8)
+
+        result = cc._micro_compact(list(messages))
+
+        assert len(_summary_markers(result)) == 1
+        assert not any("answer 0" in str(message.get("content")) for message in result)
+
+    def test_cache_guard_keeps_due_cadence_armed_until_cache_hit_drops(self):
+        cc = _compressor()
+        cc._micro_compact_every_n_turns = 3
+        cc._threshold_tokens = 10_000
+        cc.last_prompt_tokens = 5_000
+        cc.last_cache_read_tokens = 4_000
+        messages = _conversation(exchanges=8)
+
+        assert cc._micro_compact(list(messages)) == messages
+        assert cc._micro_compact(list(messages)) == messages
+        assert cc._micro_compact(list(messages)) == messages
+        assert cc._micro_compact_turns_since_pass == 3
+
+        cc.last_cache_read_tokens = 0
+        result = cc._micro_compact(list(messages))
+
+        assert len(_summary_markers(result)) == 1
+        assert cc._micro_compact_turns_since_pass == 0
+
     def test_cadence_skips_turns_until_a_pass_is_due(self):
         cc = _compressor()
         cc._micro_compact_every_n_turns = 3

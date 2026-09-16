@@ -3,7 +3,7 @@
 Tests for file staleness detection in write_file and patch.
 
 When a file is modified externally between the agent's read and write,
-the write should include a warning so the agent can re-read and verify.
+the stale write is blocked so the agent must re-read and merge newer content.
 
 Run with:  python -m pytest tests/tools/test_file_staleness.py -v
 """
@@ -135,8 +135,9 @@ class TestStalenessCheck(unittest.TestCase):
         finally:
             terminal_tool.clear_session_cwd("live_task")
 
-        self.assertIn("_warning", result)
-        self.assertIn("modified since you last read", result["_warning"])
+        self.assertIn("error", result)
+        self.assertIn("STALE WRITE BLOCKED", result["error"])
+        self.assertIn("modified since you last read", result["error"])
 
 
 # ---------------------------------------------------------------------------
@@ -163,8 +164,8 @@ class TestPatchStaleness(unittest.TestCase):
             pass
 
     @patch("tools.file_tools._get_file_ops")
-    def test_patch_warns_on_stale_file(self, mock_ops):
-        """Patch should warn if the target file changed since last read."""
+    def test_patch_blocks_stale_file(self, mock_ops):
+        """Patch should fail closed if the target file changed since last read."""
         mock_ops.return_value = _make_fake_ops("original line\n", 15)
         read_file_tool(self._tmpfile, task_id="p1")
 
@@ -177,8 +178,9 @@ class TestPatchStaleness(unittest.TestCase):
             old_string="original", new_string="patched",
             task_id="p1",
         ))
-        self.assertIn("_warning", result)
-        self.assertIn("modified since you last read", result["_warning"])
+        self.assertIn("error", result)
+        self.assertIn("STALE WRITE BLOCKED", result["error"])
+        self.assertIn("modified since you last read", result["error"])
 
     @patch("tools.file_tools._get_file_ops")
     def test_patch_no_warning_when_fresh(self, mock_ops):

@@ -301,7 +301,7 @@ def _resolve_chat_argv(
     """Resolve the argv + cwd + env for the chat PTY (what ``loki --tui`` runs).
 
     Tests monkeypatch this with a tiny fake command.  Env contract: resume goes
-    through ``LOKI_TUI_RESUME`` (``ui-tui`` does not parse argv), resolved to
+    through ``LOKI_TUI_RESUME`` (``tui-ui`` does not parse argv), resolved to
     the newest descendant; ``LOKI_TUI_GATEWAY_URL`` attaches to this process's
     in-memory gateway but is SKIPPED for profile-scoped chats (that gateway runs
     under the dashboard's own profile, so a scoped chat spawns its own);
@@ -318,7 +318,7 @@ def _resolve_chat_argv(
     if requested and requested.lower() != "current":
         profile_dir = _resolve_profile_dir(requested)
 
-    argv, cwd = _make_tui_argv(PROJECT_ROOT / "ui-tui", tui_dev=False)
+    argv, cwd = _make_tui_argv(PROJECT_ROOT / "tui-ui", tui_dev=False)
     # Secrets kept — the spawned agent needs provider creds.  An explicit profile
     # scope overrides LOKI_HOME before config is bridged into the env.
     from tools.environments.local import build_subprocess_env

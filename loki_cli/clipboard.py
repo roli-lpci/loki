@@ -71,7 +71,7 @@ def has_clipboard_image() -> bool:
     return any(enabled and has() for enabled, has, _ in _linux_backends())
 
 
-# ── Text write (native tools, mirrors ui-tui/src/lib/clipboard.ts) ──────
+# ── Text write (native tools, mirrors tui-ui/src/lib/clipboard.ts) ──────
 
 def _write_clipboard_commands(data: bytes) -> list:
     """(argv, run_kwargs) candidates for writing *data*, in platform fallback order."""
@@ -94,7 +94,7 @@ def _write_clipboard_commands(data: bytes) -> list:
 
 
 def is_remote_shell_session(env=None) -> bool:
-    """True inside an SSH session (mirrors ui-tui/src/lib/terminalSetup.ts). Over SSH, native
+    """True inside an SSH session (mirrors tui-ui/src/lib/terminalSetup.ts). Over SSH, native
     clipboard tools write the REMOTE machine's clipboard (or an X-forwarded one), which is almost
     never what the user wants — OSC 52 reaches the LOCAL terminal instead."""
     e = os.environ if env is None else env

@@ -54,7 +54,7 @@ def _lanes(python=False, frontend=False, site=False, scan=False, deps=False, uv_
     #
     # docker and nix are derived: both build the product, so both ride on
     # python_prod and frontend. The image ships the built web assets, and the
-    # flake bundles the compiled ui-tui. Pass either explicitly to override.
+    # flake bundles the compiled tui-ui. Pass either explicitly to override.
     _python_prod = python if python_prod is None else python_prod
     _product = _python_prod or frontend
     return {
@@ -85,7 +85,7 @@ CASES = {
     "dep manifest → python": (["pyproject.toml"], _lanes(python=True, scan=True, deps=True, uv_lock=True, desktop_updater=True)),
     "uv.lock → python": (["uv.lock"], _lanes(python=True, uv_lock=True)),
     "ts package → frontend": (["apps/desktop/src/app.tsx"], _lanes(frontend=True)),
-    "ui-tui → frontend": (["ui-tui/src/entry.ts"], _lanes(frontend=True)),
+    "tui-ui → frontend": (["tui-ui/src/entry.ts"], _lanes(frontend=True)),
     # Lockfile bump shifts every TS package's tree, but not the Python suite.
     "root lockfile → frontend, not python": (["package-lock.json"], _lanes(frontend=True, npm_lock=True)),
     "nested lockfile → npm_lock": (["website/package-lock.json"], _lanes(site=True, npm_lock=True)),
@@ -234,8 +234,8 @@ CASES = {
         ["eslint.config.shared.mjs"],
         _lanes(python=True, ci_review=True),
     ),
-    "ui-tui eslint config → ci_review": (
-        ["ui-tui/eslint.config.mjs"],
+    "tui-ui eslint config → ci_review": (
+        ["tui-ui/eslint.config.mjs"],
         _lanes(frontend=True, ci_review=True),
     ),
     "web eslint config → ci_review": (

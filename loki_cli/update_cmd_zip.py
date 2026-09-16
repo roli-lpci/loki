@@ -46,7 +46,7 @@ def _atomic_replace_dir(src: str, dst: str) -> None:
     The naive ``rmtree(dst); copytree(src, dst)`` has a destructive window: if the copy fails partway
     (common on the Windows ZIP-update path, which only runs because file I/O is already flaky on that
     machine), the old directory is already gone and nothing replaced it — the install is left with a deleted
-    tree (issue #49145, where ``ui-tui/`` vanished and broke the TUI).
+    tree (issue #49145, where ``tui-ui/`` vanished and broke the TUI).
     Now a thin single-entry alias over the two-phase helpers below, which generalise the same
     stage-then-swap discipline across every entry the ZIP update touches (#76104).
     """

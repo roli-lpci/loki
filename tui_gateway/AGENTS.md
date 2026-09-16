@@ -1,4 +1,4 @@
-# tui_gateway/ + ui-tui/ — the TUI and its JSON-RPC backend
+# tui_gateway/ + tui-ui/ — the TUI and its JSON-RPC backend
 
 Applies on top of the root `AGENTS.md`. The TUI fully replaces the classic prompt_toolkit CLI;
 activate with `loki --tui` or `LOKI_TUI=1`. `tui_gateway` is ALSO the backend the Desktop app
@@ -81,7 +81,7 @@ themselves come from `loki_cli/commands.py` (`loki_cli/AGENTS.md`).
 ## Dev commands
 
 ```bash
-cd ui-tui
+cd tui-ui
 npm install       # first time
 npm run dev       # watch mode (rebuilds loki-ink + tsx --watch)
 npm start         # production
@@ -92,7 +92,7 @@ npm run fmt       # prettier
 npm test          # vitest
 ```
 
-Python tests: `tests/tui_gateway/` via `scripts/run_tests.sh`. TS tests: vitest in `ui-tui`. A
+Python tests: `tests/tui_gateway/` via `scripts/run_tests.sh`. TS tests: vitest in `tui-ui`. A
 Python test that asserts about `package.json` / `.ts` sources will not run on a JS-only PR — keep
 JS-side assertions in vitest (root testing rules). Root TypeScript style rules apply.
 

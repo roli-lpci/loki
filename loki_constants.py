@@ -17,7 +17,7 @@ _UNSET = object()
 _LOKI_HOME_OVERRIDE: ContextVar[str | object] = ContextVar("_LOKI_HOME_OVERRIDE", default=_UNSET)
 
 # TUI busy-indicator styles (CLI /indicator, TUI gateway config, /help registry).
-# Keep in sync with INDICATOR_STYLES / DEFAULT_INDICATOR_STYLE in ui-tui/src/app/interfaces.ts.
+# Keep in sync with INDICATOR_STYLES / DEFAULT_INDICATOR_STYLE in tui-ui/src/app/interfaces.ts.
 INDICATOR_STYLES: tuple[str, ...] = ("ascii", "emoji", "kaomoji", "unicode")
 DEFAULT_INDICATOR_STYLE: str = "kaomoji"
 

@@ -305,7 +305,7 @@ def begin_iteration(
     dedup, then the interrupt / review-budget / iteration-budget exits. ``api_call_count`` is
     incremented here (the grace call consumes its flag instead of the budget)."""
     from agent.conversation_loop import (
-        _apply_active_turn_redirect, _review_input_budget_exhausted
+        _aggregate_input_budget_exhausted, _apply_active_turn_redirect
     )
 
     def _verdict(action: str) -> IterationStart:
@@ -334,15 +334,16 @@ def begin_iteration(
             agent._safe_print("\n⚡ Breaking out of tool loop due to interrupt...")
         return _verdict("break")
 
-    # Aggregate input budget for detached auxiliary forks bounds the whole review, not
-    # each request; checked between iterations so the crossing request's writes landed.
-    if _review_input_budget_exhausted(agent):
-        _turn_exit_reason = "review_input_budget_exhausted"
+    if _aggregate_input_budget_exhausted(agent):
+        _turn_exit_reason = str(
+            getattr(agent, "_aggregate_input_budget_reason", None)
+            or "review_input_budget_exhausted"
+        )
         if not agent.quiet_mode:
             agent._safe_print(
-                f"\n⏹️  Review input budget exhausted "
+                f"\n⏹️  Input token budget exhausted "
                 f"({int(agent.session_input_tokens):,} tokens) — stopping "
-                f"the review tool loop before the next provider call."
+                f"before the next provider call."
             )
         return _verdict("break")
 

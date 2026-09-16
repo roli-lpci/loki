@@ -81,7 +81,7 @@ Click anywhere on a section header (or its chevron) to toggle it. The Tools list
 - **Node.js** ≥ 20 — the TUI runs as a subprocess launched from the Python CLI. `loki doctor` verifies this.
 - **TTY** — like the classic CLI, piping stdin or running in non-interactive environments falls back to single-query mode.
 
-On first launch Loki installs the TUI's Node dependencies into `ui-tui/node_modules` (one-time, a few seconds). Subsequent launches are fast. If you pull a new Loki version, the TUI bundle is rebuilt automatically when sources are newer than the dist.
+On first launch Loki installs the TUI's Node dependencies into `tui-ui/node_modules` (one-time, a few seconds). Subsequent launches are fast. If you pull a new Loki version, the TUI bundle is rebuilt automatically when sources are newer than the dist.
 
 :::tip Working across git worktrees?
 Contributors who run `loki --tui --dev` from many worktrees can share one `node_modules` instead of installing per checkout — see [TUI & Desktop from Worktrees](../developer-guide/worktree-ui-dev.md).
@@ -92,7 +92,7 @@ Contributors who run `loki --tui --dev` from many worktrees can share one `node_
 Distributions that ship a prebuilt bundle (Nix, system packages) can point Loki at it:
 
 ```bash
-export LOKI_TUI_DIR=/path/to/prebuilt/ui-tui
+export LOKI_TUI_DIR=/path/to/prebuilt/tui-ui
 loki --tui
 ```
 

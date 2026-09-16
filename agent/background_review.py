@@ -911,6 +911,8 @@ def build_cache_parity_fork(
     # Compaction bounds a single request; this bounds the WHOLE review (checked in
     # conversation_loop via _review_input_budget_exhausted).
     review_agent._review_input_token_budget = _review_input_token_budget(task_cfg)
+    review_agent._aggregate_input_token_budget = review_agent._review_input_token_budget
+    review_agent._aggregate_input_budget_reason = "review_input_budget_exhausted"
     return review_agent, _rt, _routed
 
 

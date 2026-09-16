@@ -434,9 +434,9 @@ def _web_npm_install_context(web_dir: Path) -> tuple[Path, tuple[str, ...]]:
 
     ``--workspace web`` keeps desktop (Electron + node-pty) out of a web build; no
     args when ``web/`` has its own lockfile. From the root this must name the SAME
-    closure as ``loki update``'s ``_update_node_dependencies()`` (ui-tui + web +
+    closure as ``loki update``'s ``_update_node_dependencies()`` (tui-ui + web +
     root): ``npm ci`` wipes node_modules first, so a narrower closure silently
-    prunes what update just installed. ui-tui is named only when present.
+    prunes what update just installed. tui-ui is named only when present.
     """
     from loki_cli.main import _is_termux_startup_environment
     if _is_termux_startup_environment():
@@ -447,16 +447,16 @@ def _web_npm_install_context(web_dir: Path) -> tuple[Path, tuple[str, ...]]:
     # apps/* glob would pull in desktop on every web build. See #38772. When web/ has its own
     # package-lock.json, _workspace_root() returns web_dir itself and --workspace would fail. See #42973.
     # When running from the workspace root, this must name the SAME closure as `loki update`'s
-    # _update_node_dependencies() (ui-tui + web + --include-workspace-root): the helper prefers `npm ci`,
+    # _update_node_dependencies() (tui-ui + web + --include-workspace-root): the helper prefers `npm ci`,
     # which deletes node_modules before reifying the requested tree, so a narrower closure here silently
-    # prunes everything the update step just installed (root devDependencies and the ui-tui workspace) while
+    # prunes everything the update step just installed (root devDependencies and the tui-ui workspace) while
     # still exiting 0 — and since the manifests digest was already recorded, later no-op updates skip the
     # repair. See #43564/#64354.
     if npm_cwd == web_dir:
         return npm_cwd, ()
     args: tuple[str, ...] = ("--workspace", "web", "--include-workspace-root")
-    if (npm_cwd / "ui-tui" / "package.json").exists():
-        args = ("--workspace", "ui-tui", *args)
+    if (npm_cwd / "tui-ui" / "package.json").exists():
+        args = ("--workspace", "tui-ui", *args)
     return npm_cwd, args
 
 

@@ -5,7 +5,8 @@ Covers the three layers added for safe concurrent subagent file edits:
 
   1. Cross-agent staleness detection via ``check_stale``
   2. Per-path serialization via ``lock_path``
-  3. Delegate-completion reminder via ``writes_since``
+  3. Fail-closed stale-write protection through the file tools
+  4. Delegate-completion reminder via ``writes_since``
 
 Plus integration through the real ``read_file_tool`` / ``write_file_tool``
 / ``patch_tool`` handlers so the full hook wiring is exercised.
@@ -18,10 +19,13 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import threading
 import time
 import unittest
+from pathlib import Path
 
 from tools import file_state
 from tools.file_tools import (
@@ -173,6 +177,35 @@ class FileStateRegistryUnitTests(unittest.TestCase):
         self.assertNotIn(task_id, rt._patch_failure_tracker)
 
 
+    @unittest.skipUnless(os.name == "posix", "cross-process advisory lock timing test uses POSIX flock")
+    def test_lock_path_serializes_separate_loki_processes(self):
+        p = self._mk()
+        ready = p + ".ready"
+        code = (
+            "import pathlib,time; "
+            "from tools import file_state; "
+            f"p={p!r}; ready={ready!r}; "
+            "ctx=file_state.lock_path(p); ctx.__enter__(); "
+            "pathlib.Path(ready).write_text('ready'); "
+            "time.sleep(0.6); ctx.__exit__(None,None,None)"
+        )
+        proc = subprocess.Popen([sys.executable, "-c", code], cwd=str(Path(__file__).resolve().parents[2]))
+        try:
+            deadline = time.monotonic() + 5
+            while not os.path.exists(ready) and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(os.path.exists(ready), "child never acquired the file lock")
+            started = time.monotonic()
+            with file_state.lock_path(p):
+                waited = time.monotonic() - started
+            self.assertGreaterEqual(waited, 0.35)
+        finally:
+            proc.wait(timeout=5)
+            try:
+                os.unlink(ready)
+            except OSError:
+                pass
+
     def test_kill_switch_env_var(self):
         p = self._mk()
         os.environ["LOKI_DISABLE_FILE_STATE_GUARD"] = "1"
@@ -211,7 +244,7 @@ class FileToolsIntegrationTests(unittest.TestCase):
             f.write(content)
         return p
 
-    def test_sibling_agent_write_surfaces_warning_through_handler(self):
+    def test_sibling_agent_write_is_blocked_until_reread(self):
         p = self._write_seed("shared.txt")
         r = json.loads(read_file_tool(path=p, task_id="agentA"))
         self.assertNotIn("error", r)
@@ -220,11 +253,16 @@ class FileToolsIntegrationTests(unittest.TestCase):
         self.assertNotIn("error", w_b)
 
         w_a = json.loads(write_file_tool(path=p, content="A stale\n", task_id="agentA"))
-        warn = w_a.get("_warning", "")
-        self.assertTrue(warn, f"expected warning, got: {w_a}")
-        # The cross-agent message names the sibling task_id.
-        self.assertIn("agentB", warn)
-        self.assertIn("sibling", warn.lower())
+        error = w_a.get("error", "")
+        self.assertTrue(error, f"expected stale-write block, got: {w_a}")
+        self.assertIn("STALE WRITE BLOCKED", error)
+        self.assertIn("agentB", error)
+        self.assertIn("sibling", error.lower())
+
+        current = json.loads(read_file_tool(path=p, task_id="agentA"))
+        self.assertNotIn("error", current)
+        retry = json.loads(write_file_tool(path=p, content="A merged after reread\n", task_id="agentA"))
+        self.assertNotIn("error", retry)
 
 
     def test_net_new_file_no_warning(self):

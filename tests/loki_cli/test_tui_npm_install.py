@@ -51,13 +51,13 @@ def test_make_tui_argv_uses_bundled_tui_when_workspace_missing(
 ) -> None:
     """Prebuilt-install regression (#56665): a prebuilt install (Docker
     image, Nix build, or prior `npm run build`) ships
-    loki_cli/tui_dist/entry.js but never ships ui-tui/ (that directory only
+    loki_cli/tui_dist/entry.js but never ships tui-ui/ (that directory only
     exists in a git checkout). _make_tui_argv must try the bundled entry.js
     BEFORE _ensure_tui_workspace() — requiring the workspace first hard-exits
     every prebuilt dashboard Chat tab connection with `sys.exit(1)` (surfaced
     to the user as the unhelpful "Chat unavailable: 1") despite a perfectly
     runnable bundled TUI on disk. The bundled shortcut must succeed without
-    ever touching the (missing) ui-tui workspace or git.
+    ever touching the (missing) tui-ui workspace or git.
     """
     _touch_ink(tmp_path)
     (tmp_path / "package-lock.json").write_text(
@@ -107,44 +107,44 @@ def test_no_install_without_lockfile_when_ink_present(tmp_path: Path, main_mod) 
 
 # ── workspace-scoped comparison (#66978) ────────────────────────────
 #
-# In a shared workspace checkout the launch install is scoped to the ui-tui
+# In a shared workspace checkout the launch install is scoped to the tui-ui
 # workspace, so only its dependency closure lands in the hidden lock while the
 # root lock lists every other workspace's deps too. The comparison must ignore
 # those unrelated packages instead of reinstalling on every launch.
 
 
 def _write_ws(root: Path, ws_lock: str, hidden_lock: str) -> Path:
-    """Lay out a workspace root + ui-tui member and return the ui-tui dir.
+    """Lay out a workspace root + tui-ui member and return the tui-ui dir.
 
     ``@wundercorp/loki-ink`` and the marker live at the workspace root (hoisted);
-    ``ui-tui/`` has no lockfile of its own so ``_workspace_root`` treats the
-    parent as the workspace root and the launch scopes to ``--workspace ui-tui``.
+    ``tui-ui/`` has no lockfile of its own so ``_workspace_root`` treats the
+    parent as the workspace root and the launch scopes to ``--workspace tui-ui``.
     """
     (root / "package-lock.json").write_text(ws_lock)
     _touch_ink(root)
     (root / "node_modules" / ".package-lock.json").write_text(hidden_lock)
-    tui_dir = root / "ui-tui"
+    tui_dir = root / "tui-ui"
     tui_dir.mkdir(parents=True, exist_ok=True)
     # package.json (and no own lockfile) is what makes _workspace_root treat the
-    # parent as the workspace root and the launch scope to --workspace ui-tui.
+    # parent as the workspace root and the launch scope to --workspace tui-ui.
     (tui_dir / "package.json").write_text('{"name":"loki-tui"}')
     return tui_dir
 
 
 def test_no_install_when_only_other_workspace_deps_missing(tmp_path: Path, main_mod) -> None:
-    """Deps that belong to apps/desktop / web (never installed by the ui-tui
+    """Deps that belong to apps/desktop / web (never installed by the tui-ui
     scoped install) must not trigger a reinstall on every launch (#66978)."""
     tui_dir = _write_ws(
         tmp_path,
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"1.0.0"}},'
         '"node_modules/foo":{"version":"1.0.0"},'
         '"apps/desktop":{"dependencies":{"desktop-only":"1.0.0"}},'
         '"node_modules/desktop-only":{"version":"1.0.0"},'
         '"apps/desktop/node_modules/nested":{"version":"1.0.0"}'
         "}}",
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"1.0.0"}},'
         '"node_modules/foo":{"version":"1.0.0"}'
         "}}",
     )
@@ -152,16 +152,16 @@ def test_no_install_when_only_other_workspace_deps_missing(tmp_path: Path, main_
 
 
 def test_need_install_when_ui_tui_dep_missing_in_workspace_layout(tmp_path: Path, main_mod) -> None:
-    """A genuinely missing ui-tui dependency is still caught after scoping."""
+    """A genuinely missing tui-ui dependency is still caught after scoping."""
     tui_dir = _write_ws(
         tmp_path,
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"1.0.0","bar":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"1.0.0","bar":"1.0.0"}},'
         '"node_modules/foo":{"version":"1.0.0"},'
         '"node_modules/bar":{"version":"1.0.0"}'
         "}}",
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"1.0.0","bar":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"1.0.0","bar":"1.0.0"}},'
         '"node_modules/foo":{"version":"1.0.0"}'
         "}}",
     )
@@ -169,20 +169,20 @@ def test_need_install_when_ui_tui_dep_missing_in_workspace_layout(tmp_path: Path
 
 
 def test_need_install_when_linked_workspace_dep_missing(tmp_path: Path, main_mod) -> None:
-    """The closure follows workspace symlinks (@wundercorp/loki-ink → ui-tui/packages/…)
+    """The closure follows workspace symlinks (@wundercorp/loki-ink → tui-ui/packages/…)
     so a linked workspace's own missing dep triggers a reinstall."""
     tui_dir = _write_ws(
         tmp_path,
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
-        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"ui-tui/packages/loki-ink"},'
-        '"ui-tui/packages/loki-ink":{"dependencies":{"inkdep":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
+        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"tui-ui/packages/loki-ink"},'
+        '"tui-ui/packages/loki-ink":{"dependencies":{"inkdep":"1.0.0"}},'
         '"node_modules/inkdep":{"version":"1.0.0"}'
         "}}",
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
-        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"ui-tui/packages/loki-ink"},'
-        '"ui-tui/packages/loki-ink":{"dependencies":{"inkdep":"1.0.0"}}'
+        '"tui-ui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
+        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"tui-ui/packages/loki-ink"},'
+        '"tui-ui/packages/loki-ink":{"dependencies":{"inkdep":"1.0.0"}}'
         "}}",
     )
     assert main_tui_launch._tui_need_npm_install(tui_dir) is True
@@ -193,11 +193,11 @@ def test_need_install_when_closure_package_version_drifts(tmp_path: Path, main_m
     tui_dir = _write_ws(
         tmp_path,
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"2.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"2.0.0"}},'
         '"node_modules/foo":{"version":"2.0.0"}'
         "}}",
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"foo":"2.0.0"}},'
+        '"tui-ui":{"dependencies":{"foo":"2.0.0"}},'
         '"node_modules/foo":{"version":"1.0.0"}'
         "}}",
     )
@@ -205,10 +205,10 @@ def test_need_install_when_closure_package_version_drifts(tmp_path: Path, main_m
 
 
 def test_workspace_closure_includes_dev_deps_of_scoped_workspace(main_mod) -> None:
-    """ui-tui's devDependencies (esbuild/typescript build toolchain) are part of
+    """tui-ui's devDependencies (esbuild/typescript build toolchain) are part of
     the closure; a transitive package's devDependencies are not."""
     packages = {
-        "ui-tui": {
+        "tui-ui": {
             "dependencies": {"foo": "1"},
             "devDependencies": {"esbuild": "1"},
         },
@@ -216,35 +216,35 @@ def test_workspace_closure_includes_dev_deps_of_scoped_workspace(main_mod) -> No
         "node_modules/esbuild": {},
         "node_modules/foo-dev-only": {},
     }
-    closure = main_tui_launch._npm_lock_workspace_closure(packages, "ui-tui")
+    closure = main_tui_launch._npm_lock_workspace_closure(packages, "tui-ui")
     assert "node_modules/esbuild" in closure
     assert "node_modules/foo-dev-only" not in closure
 
 
 def test_workspace_closure_returns_none_when_start_absent(main_mod) -> None:
     """Missing workspace key → None so the caller falls back to full compare."""
-    assert main_tui_launch._npm_lock_workspace_closure({"node_modules/foo": {}}, "ui-tui") is None
+    assert main_tui_launch._npm_lock_workspace_closure({"node_modules/foo": {}}, "tui-ui") is None
 
 
 def test_workspace_closure_includes_dev_deps_of_selected_child_workspace(main_mod) -> None:
-    """On Termux the install also scopes to ui-tui's child packages/* workspaces,
+    """On Termux the install also scopes to tui-ui's child packages/* workspaces,
     so each selected child's devDependencies join the closure — a dev dep unique
     to a child is NOT dropped (regression for the child-scope false-negative)."""
     packages = {
-        "ui-tui": {"dependencies": {"@wundercorp/loki-ink": "*"}},
+        "tui-ui": {"dependencies": {"@wundercorp/loki-ink": "*"}},
         "node_modules/@wundercorp/loki-ink": {
             "link": True,
-            "resolved": "ui-tui/packages/loki-ink",
+            "resolved": "tui-ui/packages/loki-ink",
         },
-        "ui-tui/packages/loki-ink": {"devDependencies": {"child-dev-only": "1"}},
+        "tui-ui/packages/loki-ink": {"devDependencies": {"child-dev-only": "1"}},
         "node_modules/child-dev-only": {},
     }
-    # Only ui-tui selected (desktop): the child's dev dep is not installed.
-    desktop = main_tui_launch._npm_lock_workspace_closure(packages, {"ui-tui"})
+    # Only tui-ui selected (desktop): the child's dev dep is not installed.
+    desktop = main_tui_launch._npm_lock_workspace_closure(packages, {"tui-ui"})
     assert "node_modules/child-dev-only" not in desktop
-    # ui-tui + child selected (Termux): the child's dev dep is in the closure.
+    # tui-ui + child selected (Termux): the child's dev dep is in the closure.
     termux = main_tui_launch._npm_lock_workspace_closure(
-        packages, {"ui-tui", "ui-tui/packages/loki-ink"}
+        packages, {"tui-ui", "tui-ui/packages/loki-ink"}
     )
     assert "node_modules/child-dev-only" in termux
 
@@ -252,22 +252,22 @@ def test_workspace_closure_includes_dev_deps_of_selected_child_workspace(main_mo
 def test_termux_install_catches_missing_child_workspace_dev_dep(
     tmp_path: Path, main_mod, monkeypatch
 ) -> None:
-    """On Termux the launch install selects ui-tui/packages/* too, installing
+    """On Termux the launch install selects tui-ui/packages/* too, installing
     each child's devDependencies.  A child dev dep missing from the hidden lock
     must trigger a reinstall — off Termux (child not selected) it must not."""
     ws_lock = (
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
-        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"ui-tui/packages/loki-ink"},'
-        '"ui-tui/packages/loki-ink":{"devDependencies":{"child-dev-only":"1.0.0"}},'
+        '"tui-ui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
+        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"tui-ui/packages/loki-ink"},'
+        '"tui-ui/packages/loki-ink":{"devDependencies":{"child-dev-only":"1.0.0"}},'
         '"node_modules/child-dev-only":{"version":"1.0.0"}'
         "}}"
     )
     hidden_lock = (
         '{"packages":{'
-        '"ui-tui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
-        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"ui-tui/packages/loki-ink"},'
-        '"ui-tui/packages/loki-ink":{"devDependencies":{"child-dev-only":"1.0.0"}}'
+        '"tui-ui":{"dependencies":{"@wundercorp/loki-ink":"*"}},'
+        '"node_modules/@wundercorp/loki-ink":{"link":true,"resolved":"tui-ui/packages/loki-ink"},'
+        '"tui-ui/packages/loki-ink":{"devDependencies":{"child-dev-only":"1.0.0"}}'
         "}}"
     )
     tui_dir = _write_ws(tmp_path, ws_lock, hidden_lock)
@@ -360,7 +360,7 @@ def test_make_tui_argv_skips_install_on_termux_when_bundle_fresh(
 def test_make_tui_argv_scopes_npm_install_on_termux_workspace(
     tmp_path: Path, main_mod, monkeypatch
 ) -> None:
-    tui_dir = tmp_path / "ui-tui"
+    tui_dir = tmp_path / "tui-ui"
     tui_dir.mkdir()
     (tui_dir / "package.json").write_text("{}")
     ink_dir = tui_dir / "packages" / "loki-ink"
@@ -387,9 +387,9 @@ def test_make_tui_argv_scopes_npm_install_on_termux_workspace(
         "/bin/npm",
         "install",
         "--workspace",
-        "ui-tui",
+        "tui-ui",
         "--workspace",
-        "ui-tui/packages/loki-ink",
+        "tui-ui/packages/loki-ink",
         "--include-workspace-root=false",
     ]
     assert calls[0][1]["cwd"] == str(tmp_path)
@@ -400,7 +400,7 @@ def test_make_tui_argv_scopes_npm_install_on_termux_workspace(
 def test_make_tui_argv_keeps_desktop_workspace_install_behaviour(
     tmp_path: Path, main_mod, monkeypatch
 ) -> None:
-    tui_dir = tmp_path / "ui-tui"
+    tui_dir = tmp_path / "tui-ui"
     tui_dir.mkdir()
     (tui_dir / "package.json").write_text("{}")
     (tmp_path / "package-lock.json").write_text("{}")
@@ -423,7 +423,7 @@ def test_make_tui_argv_keeps_desktop_workspace_install_behaviour(
         "/bin/npm",
         "install",
         "--workspace",
-        "ui-tui",
+        "tui-ui",
         "--include=dev",
         "--silent",
         "--no-fund",
@@ -438,12 +438,12 @@ def test_make_tui_argv_keeps_desktop_workspace_install_behaviour(
 def test_make_tui_argv_npm_install_forces_include_dev(
     tmp_path: Path, main_mod, monkeypatch
 ) -> None:
-    """The TUI-launch npm install must force --include=dev: ui-tui's build
+    """The TUI-launch npm install must force --include=dev: tui-ui's build
     toolchain (esbuild, typescript) lives in devDependencies, and an inherited
     NODE_ENV=production (container shells; a parent TUI sets it on its own
     subprocess env) or an npm `omit=dev` config would silently skip them,
     breaking the TUI build with `tsc`/`esbuild: command not found."""
-    tui_dir = tmp_path / "ui-tui"
+    tui_dir = tmp_path / "tui-ui"
     tui_dir.mkdir()
     (tui_dir / "package.json").write_text("{}")
     (tmp_path / "package-lock.json").write_text("{}")
@@ -523,7 +523,7 @@ def test_make_tui_argv_decodes_dev_prebuild_with_utf8_replace(
 def test_make_tui_argv_exits_with_recovery_hint_when_workspace_unrecoverable(
     tmp_path: Path, main_mod, monkeypatch, capsys
 ) -> None:
-    """Missing ui-tui + no git checkout → clean error, never touches node/npm."""
+    """Missing tui-ui + no git checkout → clean error, never touches node/npm."""
     monkeypatch.delenv("LOKI_TUI_DIR", raising=False)
     monkeypatch.setattr(main_tui_launch, "_ensure_tui_node", lambda: None)
 
@@ -544,9 +544,9 @@ def test_make_tui_argv_exits_with_recovery_hint_when_workspace_unrecoverable(
 
     monkeypatch.setattr(main_mod.subprocess, "run", fail_run)
 
-    # ui-tui/ deliberately does not exist under tmp_path, and there is no
+    # tui-ui/ deliberately does not exist under tmp_path, and there is no
     # .git either — this mirrors a prebuilt (Docker/Nix) install exactly.
-    tui_dir = tmp_path / "ui-tui"
+    tui_dir = tmp_path / "tui-ui"
     assert not tui_dir.exists()
 
     argv, cwd = main_tui_launch._make_tui_argv(tui_dir, tui_dev=False)
@@ -575,7 +575,7 @@ def test_need_npm_install_false_with_reduced_npm11_hidden_lockfile(
     and it never materializes workspace `"link": true` entries. A fresh
     install therefore used to look perpetually stale and re-ran `npm install`
     on every TUI launch (#84617). After the fix it must be stable."""
-    ws = tmp_path / "ui-tui"
+    ws = tmp_path / "tui-ui"
     ws.mkdir()
     (ws / "package.json").write_text("{}")
     _touch_ink(tmp_path)
@@ -620,7 +620,7 @@ def test_need_npm_install_true_when_resolved_drifts(tmp_path: Path, main_mod) ->
     """A genuinely stale install (lockfile bumped the resolved URL/integrity
     while node_modules is behind) must still be detected — the reduced-lockfile
     fix must not paper over real skew (#84617)."""
-    ws = tmp_path / "ui-tui"
+    ws = tmp_path / "tui-ui"
     ws.mkdir()
     (ws / "package.json").write_text("{}")
     _touch_ink(tmp_path)
@@ -659,7 +659,7 @@ def test_need_npm_install_true_when_regular_pkg_missing(tmp_path: Path, main_mod
     """A real non-link node_modules/ package missing from the install must
     still trigger a reinstall — only workspace links and optional/peer skips
     are exempt (#84617)."""
-    ws = tmp_path / "ui-tui"
+    ws = tmp_path / "tui-ui"
     ws.mkdir()
     (ws / "package.json").write_text("{}")
     _touch_ink(tmp_path)
@@ -711,17 +711,17 @@ def test_no_stray_lockfiles_in_workspace_subdirs(main_mod) -> None:
     """
     root = main_mod.PROJECT_ROOT
     # Workspace members that live one level below the root and should
-    # NOT have their own lockfile.  (ui-tui/packages/* members are
+    # NOT have their own lockfile.  (tui-ui/packages/* members are
     # two levels deep and even less likely to get accidental lockfiles,
     # but we check them too for completeness.)
     subdirs = [
-        root / "ui-tui",
+        root / "tui-ui",
         root / "web",
         root / "apps" / "desktop",
         root / "apps" / "shared",
     ]
-    # Also sweep ui-tui/packages/* (loki-ink etc.)
-    tui_pkgs = root / "ui-tui" / "packages"
+    # Also sweep tui-ui/packages/* (loki-ink etc.)
+    tui_pkgs = root / "tui-ui" / "packages"
     if tui_pkgs.is_dir():
         subdirs.extend(d for d in tui_pkgs.iterdir() if d.is_dir())
 
@@ -736,14 +736,14 @@ def test_no_stray_lockfiles_in_workspace_subdirs(main_mod) -> None:
 def test_make_tui_argv_omits_workspace_and_scrubs_esbuild_override(
     tmp_path: Path, main_mod, monkeypatch
 ) -> None:
-    """When ui-tui/ has its own package-lock.json, _workspace_root returns
-    tui_dir itself.  npm install --workspace ui-tui would fail in that case
-    because npm cannot find a workspace named "ui-tui" inside ui-tui/.
+    """When tui-ui/ has its own package-lock.json, _workspace_root returns
+    tui_dir itself.  npm install --workspace tui-ui would fail in that case
+    because npm cannot find a workspace named "tui-ui" inside tui-ui/.
     The fix omits --workspace and runs plain npm install from tui_dir.
     See #42973. The npm child must also ignore an inherited esbuild binary
     override: a version mismatch makes esbuild's postinstall abort (#87405).
     """
-    tui_dir = tmp_path / "ui-tui"
+    tui_dir = tmp_path / "tui-ui"
     tui_dir.mkdir()
     (tui_dir / "package.json").write_text("{}")
     # Simulate curl-install layout: tui_dir has its own lockfile

@@ -96,7 +96,7 @@ One or two paragraphs: what and why.
 ## <Topic sections specific to the skill>
 - Quick-reference tables are common
 - Code blocks with exact commands
-- Loki-specific recipes (tests via scripts/run_tests.sh, ui-tui paths, etc.)
+- Loki-specific recipes (tests via scripts/run_tests.sh, tui-ui paths, etc.)
 
 ## Common Pitfalls
 Numbered list of mistakes and their fixes.

@@ -3,7 +3,10 @@
   "version": "0.18.2",
   "private": true,
   "type": "module",
-  "peerDependencies": { "react": ">=18", "react-dom": ">=18" },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
   "exports": {
     "./hooks/use-below-breakpoint": "./hooks/use-below-breakpoint.js",
     "./hooks/use-confirm-delete": "./hooks/use-confirm-delete.js",
@@ -30,5 +33,9 @@
     "./ui/components/toast": "./ui/components/toast.js",
     "./ui/components/typography/h2": "./ui/components/typography/h2.js",
     "./ui/components/typography/index": "./ui/components/typography/index.js"
+  },
+  "scripts": {
+    "check": "node --check ui/components/_base.js",
+    "lint": "node --check ui/components/_base.js"
   }
 }

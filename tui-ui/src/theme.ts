@@ -150,7 +150,7 @@ function circularDistance(a: number, b: number): number {
 }
 
 // Mirrors @wundercorp/loki-ink's colorize.ts. Keep local: app code compiles from
-// ui-tui/src, while @wundercorp/loki-ink is bundled separately from packages/.
+// tui-ui/src, while @wundercorp/loki-ink is bundled separately from packages/.
 function richEightBitColorNumber(red: number, green: number, blue: number): number {
   const [, saturation, lightness] = rgbToHsl(red, green, blue)
 

@@ -1,4 +1,4 @@
-"""TUI (ui-tui) launcher: node/npm bootstrap, workspace/rebuild checks, argv/env assembly.
+"""TUI (tui-ui) launcher: node/npm bootstrap, workspace/rebuild checks, argv/env assembly.
 
 Split out of ``loki_cli/main.py``. Names that still live in main (``PROJECT_ROOT``, ...)
 are imported lazily inside the functions that use them (avoids an import cycle).
@@ -50,9 +50,8 @@ def _print_tui_exit_summary(session_id: Optional[str], active_session_file: Opti
         message_count = int(session.get("message_count") or 0)
         if message_count == 0:
             return  # No real conversation — don't show resume info
-        tokens = {
-            k: int(session.get(f"{k}_tokens") or 0)
-            for k in ("input", "output", "cache_read", "cache_write", "reasoning")}
+        from loki_cli.session_epilogue import SessionTokenUsage
+        token_usage = SessionTokenUsage.from_session_row(session)
     except Exception:
         return
     finally:
@@ -66,11 +65,15 @@ def _print_tui_exit_summary(session_id: Optional[str], active_session_file: Opti
     if title:
         print(f"Title:          {title}")
     print(f"Messages:       {message_count}")
-    print(
-        "Tokens:         "
-        f"{sum(tokens.values())} (in {tokens['input']}, out {tokens['output']}, "
-        f"cache {tokens['cache_read'] + tokens['cache_write']}, reasoning {tokens['reasoning']})"
-    )
+    if token_usage.total_tokens:
+        print(token_usage.render())
+    try:
+        from loki_cli.skin_engine import get_active_goodbye
+        goodbye = get_active_goodbye("Farewell! 𓆩✧𓆪")
+    except Exception:
+        goodbye = "Farewell! 𓆩✧𓆪"
+    print()
+    print(goodbye)
 
 
 _NPM_LOCK_RUNTIME_KEYS = frozenset({"ideallyInert", "peer", "dev", "extraneous", "hasInstallScript", "optional"})
@@ -138,9 +141,9 @@ def _npm_lock_workspace_closure(packages: dict, starts) -> Optional[set]:
     reinstall on every launch. Names resolve by walking up ``node_modules``
     ancestors; ``link: true`` entries are followed to their real package.
 
-    The launch install is scoped with ``npm install --workspace ui-tui`` (see ``_make_tui_argv``), so only
-    the ui-tui workspace's dependency closure is written to the hidden ``.package-lock.json``. On Termux it
-    additionally selects ui-tui's child ``packages/*`` workspaces, so their devDependencies join the closure
+    The launch install is scoped with ``npm install --workspace tui-ui`` (see ``_make_tui_argv``), so only
+    the tui-ui workspace's dependency closure is written to the hidden ``.package-lock.json``. On Termux it
+    additionally selects tui-ui's child ``packages/*`` workspaces, so their devDependencies join the closure
     too. See #66978.
     """
     start_set = {starts} if isinstance(starts, str) else {s for s in starts if s}
@@ -186,8 +189,8 @@ def _npm_lock_workspace_closure(packages: dict, starts) -> Optional[set]:
 
 
 def _tui_selected_workspace_keys(tui_dir: Path, ws_root: Path) -> set:
-    """Lock-map keys the launch install scopes to: ui-tui, plus its child ``packages/*`` on Termux
-    (each a dev-included closure root). Empty when ui-tui isn't under *ws_root*."""
+    """Lock-map keys the launch install scopes to: tui-ui, plus its child ``packages/*`` on Termux
+    (each a dev-included closure root). Empty when tui-ui isn't under *ws_root*."""
     from loki_cli.main import _is_termux_startup_environment
     try:
         keys = {tui_dir.relative_to(ws_root).as_posix()}
@@ -238,7 +241,7 @@ def _tui_need_npm_install(root: Path) -> bool:
         b = {k: v for k, v in installed_pkg.items() if k not in _NPM_LOCK_RUNTIME_KEYS}
         return any(a[k] is not None and b[k] is not None and a[k] != b[k] for k in a.keys() & b.keys())
 
-    # Shared workspace checkout: the launch install is scoped to ui-tui (+ child
+    # Shared workspace checkout: the launch install is scoped to tui-ui (+ child
     # packages on Termux), so limit the comparison to that closure. Standalone /
     # own-lockfile layouts do a full install and keep the full comparison.
     # Limit the comparison to the same selected-workspace closure so unrelated workspace deps (apps/desktop,
@@ -254,9 +257,9 @@ def _tui_need_npm_install(root: Path) -> bool:
             continue
         if name not in installed:
             # Workspace link entries are never materialized by a partial
-            # `npm install --workspace ui-tui`; don't force a reinstall for them.
+            # `npm install --workspace tui-ui`; don't force a reinstall for them.
             # Workspace link entries (`"link": true`, paths outside node_modules/ like `apps/desktop`,
-            # `node_modules/web`) are never materialized by a partial `npm install --workspace ui-tui` —
+            # `node_modules/web`) are never materialized by a partial `npm install --workspace tui-ui` —
             # they're deliberately skipped (see #38772) and would otherwise force a reinstall on every
             # launch.
             if pkg.get("optional") or pkg.get("peer") or pkg.get("link"):
@@ -288,7 +291,7 @@ _TUI_BUILD_INPUT_SUFFIXES = frozenset({".cjs", ".js", ".jsx", ".json", ".mjs", "
 
 
 def _iter_tui_build_inputs(root: Path):
-    """Yield source/config files that affect ``ui-tui/dist/entry.js``."""
+    """Yield source/config files that affect ``tui-ui/dist/entry.js``."""
     for rel in _TUI_BUILD_INPUT_FILES:
         path = root / rel
         if path.is_file():
@@ -369,10 +372,10 @@ def _find_bundled_tui(loki_cli_dir: Path | None = None) -> Path | None:
 
 
 def _restore_tui_workspace(tui_dir: Path) -> bool:
-    """Best-effort ``git restore`` of a missing ``ui-tui/`` (Windows AV/NTFS filters can delete
+    """Best-effort ``git restore`` of a missing ``tui-ui/`` (Windows AV/NTFS filters can delete
     tracked files after ``loki update``); True when the directory exists afterwards.
 
-    On Windows an antivirus / NTFS filter driver can leave tracked ``ui-tui/`` files deleted in the working
+    On Windows an antivirus / NTFS filter driver can leave tracked ``tui-ui/`` files deleted in the working
     tree after ``loki update`` (HEAD stays intact; the files just vanish — see issue #49145). Those files
     are tracked, so ``git restore`` puts them back deterministically. Best-effort: returns False (rather
     than raising) when git is unavailable, this isn't a checkout, or the restore leaves the directory still
@@ -391,10 +394,10 @@ def _restore_tui_workspace(tui_dir: Path) -> bool:
 
 
 def _ensure_tui_workspace(tui_dir: Path) -> None:
-    """Ensure ``ui-tui/`` exists before it is used as a subprocess cwd (else ``NotADirectoryError``
+    """Ensure ``tui-ui/`` exists before it is used as a subprocess cwd (else ``NotADirectoryError``
     / ``WinError 267`` with no usable message): git-restore first, then abort with recovery steps.
 
-    Without this, a missing workspace falls through to ``subprocess.run(..., cwd=<missing ui-tui>)``, which
+    Without this, a missing workspace falls through to ``subprocess.run(..., cwd=<missing tui-ui>)``, which
     crashes with ``NotADirectoryError`` (``WinError 267`` on Windows) instead of a usable message (#49145).
     We first try to self-heal via ``git restore``; only if that can't recover the directory do we abort with
     concrete manual-recovery steps.
@@ -410,9 +413,9 @@ def _ensure_tui_workspace(tui_dir: Path) -> None:
     print(
         "Error: the TUI workspace is missing from this Loki checkout.\n"
         f"Expected directory: {tui_dir}\n"
-        "This usually means `loki update` left tracked ui-tui files deleted.\n"
+        "This usually means `loki update` left tracked tui-ui files deleted.\n"
         "Recovery:\n"
-        "  1. From the Loki checkout, run `git restore -- ui-tui`\n"
+        "  1. From the Loki checkout, run `git restore -- tui-ui`\n"
         "  2. Run `npm install --silent --no-fund --no-audit --progress=false`\n"
         "  3. Retry `loki --tui`\n"
         "If the checkout is still inconsistent, run `loki update --force`.",
@@ -482,8 +485,8 @@ def _run_tui_npm_build(npm: str, cwd: Path, failure_message: str) -> None:
 def _install_tui_dependencies(tui_dir: Path, *, termux_startup: bool) -> None:
     """``npm install`` for the TUI workspace, with one EBADENGINE repair retry. Exits on failure.
 
-    ``--workspace ui-tui`` avoids resolving apps/desktop (Electron + node-pty) and
-    is omitted when ui-tui/ has its own lockfile. ``--include=dev``: the build
+    ``--workspace tui-ui`` avoids resolving apps/desktop (Electron + node-pty) and
+    is omitted when tui-ui/ has its own lockfile. ``--include=dev``: the build
     toolchain is in devDependencies and an inherited ``NODE_ENV=production`` /
     ``omit=dev`` would silently skip it.
     """
@@ -491,11 +494,11 @@ def _install_tui_dependencies(tui_dir: Path, *, termux_startup: bool) -> None:
     if not os.environ.get("LOKI_QUIET"):
         print("Installing TUI dependencies…")
     npm_cwd = _workspace_root(tui_dir)
-    # --workspace ui-tui avoids resolving apps/desktop (Electron + node-pty). See #38772. When ui-tui/ has
+    # --workspace tui-ui avoids resolving apps/desktop (Electron + node-pty). See #38772. When tui-ui/ has
     # its own package-lock.json (e.g. curl install), _workspace_root() returns tui_dir itself. Passing
-    # --workspace in that case fails because npm cannot find a workspace named "ui-tui" inside ui-tui/. See
+    # --workspace in that case fails because npm cannot find a workspace named "tui-ui" inside tui-ui/. See
     # #42973.
-    npm_workspace_args: tuple[str, ...] = () if npm_cwd == tui_dir else ("--workspace", "ui-tui")
+    npm_workspace_args: tuple[str, ...] = () if npm_cwd == tui_dir else ("--workspace", "tui-ui")
     if termux_startup:
         npm_cwd, npm_workspace_args = _termux_workspace_install_context(tui_dir, include_child_workspaces=True)
     npm_install_cmd = [
@@ -542,9 +545,9 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool) -> tuple[list[str], Path]:
 
     # 1. Prebuilt bundle (nix / packaged release / Docker image): just run it.
     # Must run BEFORE _ensure_tui_workspace(): a prebuilt install ships
-    # loki_cli/tui_dist/entry.js but never ui-tui/ (git checkouts only).
+    # loki_cli/tui_dist/entry.js but never tui-ui/ (git checkouts only).
     # 1. A prebuilt install (Docker image, Nix build, or prior `npm run build`) ships
-    #   loki_cli/tui_dist/entry.js but never ships ui-tui/ at all (that directory only exists in a git
+    #   loki_cli/tui_dist/entry.js but never ships tui-ui/ at all (that directory only exists in a git
     #   checkout) — so requiring the workspace to exist first made every prebuilt dashboard Chat tab
     #   connection hard-exit before it ever got a chance to try the bundled entry.js it already has. See
     #   #56665.
@@ -727,7 +730,7 @@ def _launch_tui(
     pass_session_id: bool = False, max_turns: Optional[int] = None, accept_hooks: bool = False):
     """Replace current process with the TUI."""
     from loki_cli.main import PROJECT_ROOT
-    tui_dir = PROJECT_ROOT / "ui-tui"
+    tui_dir = PROJECT_ROOT / "tui-ui"
 
     import tempfile
     # TUI child is a loki process: propagate the profile-home contract via

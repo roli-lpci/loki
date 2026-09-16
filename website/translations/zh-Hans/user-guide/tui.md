@@ -68,14 +68,14 @@ TUI 启动 banner 将运行时信息分为四个可折叠区块，每个区块�
 - **Node.js** ≥ 20 — TUI 作为从 Python CLI 启动的子进程运行。`loki doctor` 会验证此项。
 - **TTY** — 与 classic CLI 一样，通过管道传入 stdin 或在非交互式环境中运行时，将回退到单次查询模式。
 
-首次启动时，Loki 会将 TUI 的 Node 依赖安装到 `ui-tui/node_modules`（一次性操作，耗时数秒）。后续启动速度很快。拉取新版 Loki 后，若源文件比 dist 更新，TUI bundle 将自动重新构建。
+首次启动时，Loki 会将 TUI 的 Node 依赖安装到 `tui-ui/node_modules`（一次性操作，耗时数秒）。后续启动速度很快。拉取新版 Loki 后，若源文件比 dist 更新，TUI bundle 将自动重新构建。
 
 ### 外部预构建
 
 发行版若附带预构建 bundle（如 Nix、系统包），可将 Loki 指向该 bundle：
 
 ```bash
-export LOKI_TUI_DIR=/path/to/prebuilt/ui-tui
+export LOKI_TUI_DIR=/path/to/prebuilt/tui-ui
 loki --tui
 ```
 

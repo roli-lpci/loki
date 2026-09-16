@@ -771,7 +771,19 @@ def _make_stdio_glyph_safe() -> None:
                 pass
 
 
+def _require_pytest() -> None:
+    try:
+        __import__("pytest")
+    except ImportError as exc:
+        raise SystemExit(
+            f"error: {sys.executable} cannot import pytest. "
+            "Install the development dependencies or run through scripts/run_tests.sh "
+            "with LOKI_TEST_PYTHON set to a pytest-capable interpreter."
+        ) from exc
+
+
 def main() -> int:
+    _require_pytest()
     _make_stdio_glyph_safe()
     parser = argparse.ArgumentParser(
         description=__doc__,

@@ -153,18 +153,18 @@ class TestBuildWebUISkipsWhenFresh:
 
     def test_workspace_root_install_names_update_closure(self, tmp_path, monkeypatch):
         """From the workspace root, _build_web_ui must install the SAME
-        closure as `loki update` (ui-tui + web + --include-workspace-root).
+        closure as `loki update` (tui-ui + web + --include-workspace-root).
 
         The install helper prefers `npm ci`, which deletes node_modules before
         reifying the requested tree — a narrower `--workspace web`-only pass
         right after the update step silently pruned root devDependencies and
-        the ui-tui workspace while exiting 0. See #43564/#64354.
+        the tui-ui workspace while exiting 0. See #43564/#64354.
         """
         web_dir, _ = _make_web_dir(tmp_path)
         # Root lockfile only => _workspace_root(web_dir) == tmp_path.
         (tmp_path / "package-lock.json").write_text("{}", encoding="utf-8")
-        (tmp_path / "ui-tui").mkdir()
-        (tmp_path / "ui-tui" / "package.json").write_text("{}", encoding="utf-8")
+        (tmp_path / "tui-ui").mkdir()
+        (tmp_path / "tui-ui" / "package.json").write_text("{}", encoding="utf-8")
         monkeypatch.delenv("TERMUX_VERSION", raising=False)
         monkeypatch.setenv("PREFIX", "/usr")
 
@@ -180,11 +180,11 @@ class TestBuildWebUISkipsWhenFresh:
         cmd = args[0]
         assert "--include-workspace-root" in cmd
         assert cmd.count("--workspace") == 2
-        assert "ui-tui" in cmd and "web" in cmd
+        assert "tui-ui" in cmd and "web" in cmd
         assert kwargs["cwd"] == tmp_path
 
     def test_workspace_root_install_skips_missing_ui_tui(self, tmp_path, monkeypatch):
-        """A checkout without the ui-tui workspace must not name it — npm
+        """A checkout without the tui-ui workspace must not name it — npm
         fails hard on a --workspace that doesn't exist."""
         web_dir, _ = _make_web_dir(tmp_path)
         (tmp_path / "package-lock.json").write_text("{}", encoding="utf-8")
@@ -200,7 +200,7 @@ class TestBuildWebUISkipsWhenFresh:
 
         assert result is True
         cmd = mock_run.call_args[0][0]
-        assert "ui-tui" not in cmd
+        assert "tui-ui" not in cmd
         assert "--include-workspace-root" in cmd
         assert "web" in cmd
 

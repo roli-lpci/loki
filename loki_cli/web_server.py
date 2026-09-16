@@ -728,10 +728,15 @@ async def _dashboard_health_middleware(request: Request, call_next):
     return response
 
 
+from loki_cli.api import install_api_versioning
+
+install_api_versioning(app)
+
+
 # Authenticated-route self-test: one in-process request per minute against a
 # cheap DB-touching route, catching "liveness fine but every authed request 500s".
 _DASHBOARD_SELFTEST_INTERVAL_SECONDS = 60.0
-_DASHBOARD_SELFTEST_ROUTE = "/api/sessions?limit=1"
+_DASHBOARD_SELFTEST_ROUTE = "/api/v1/sessions?limit=1"
 
 
 async def _dashboard_selftest_once() -> None:
@@ -918,60 +923,12 @@ def _get_dashboard_plugins(force_rescan: bool = False) -> list:
     return _dashboard_plugins_cache
 
 
-# Router mounting. ORDER IS ROUTE-MATCHING ORDER: literal paths must land before
-# templated siblings (e.g. /api/sessions/bulk-delete before /api/sessions/{id}).
-from loki_cli.web_routers import (  # noqa: E402
-    files as _files_routes,
-    git as _git_routes,
-    local_models as _local_models_routes,
-    status as _status_routes,
-    actions as _actions_routes,
-    audio as _audio_routes,
-    sessions as _sessions_routes,
-    profiles as _profiles_routes,
-    memory_providers as _memory_providers_routes,
-    config_env as _config_env_routes,
-    models as _models_routes,
-    messaging as _messaging_routes,
-    oauth as _oauth_routes,
-    cron as _cron_routes,
-    mcp as _mcp_routes,
-    ops as _ops_routes,
-    skills as _skills_routes,
-    tools as _tools_routes,
-    analytics as _analytics_routes,
-    chat_ws as _chat_ws_routes,
-    dashboard_ui as _dashboard_ui_routes,
-)
+# API route assembly lives under loki_cli.api.v1. The implementation modules in
+# web_routers remain compatibility-oriented handlers while the API package owns the
+# public version boundary and route-mount order. Route order is semantically important.
+from loki_cli.api.v1.router import mount_api_routes  # noqa: E402
 
-app.include_router(_files_routes.router)
-app.include_router(_git_routes.router)
-app.include_router(_local_models_routes.router)
-app.include_router(_status_routes.router)
-app.include_router(_actions_routes.router)
-app.include_router(_audio_routes.router)
-app.include_router(_actions_routes.status_router)
-app.include_router(_sessions_routes.list_router)
-app.include_router(_profiles_routes.sessions_router)
-app.include_router(_sessions_routes.search_router)
-app.include_router(_memory_providers_routes.router)
-app.include_router(_config_env_routes.config_router)
-app.include_router(_models_routes.router)
-app.include_router(_config_env_routes.router)
-app.include_router(_messaging_routes.router)
-app.include_router(_oauth_routes.router)
-app.include_router(_sessions_routes.manage_router)
-app.include_router(_status_routes.logs_router)
-app.include_router(_cron_routes.router)
-app.include_router(_mcp_routes.router)
-app.include_router(_ops_routes.router)
-app.include_router(_skills_routes.hub_router)
-app.include_router(_profiles_routes.router)
-app.include_router(_skills_routes.router)
-app.include_router(_tools_routes.router)
-app.include_router(_analytics_routes.router)
-app.include_router(_chat_ws_routes.router)
-app.include_router(_dashboard_ui_routes.router)
+mount_api_routes(app)
 
 # Plugin API routes and the dashboard auth routes (/login, /auth/*, /api/auth/*)
 # mount before the SPA catch-all so /{full_path:path} doesn't swallow them. Auth

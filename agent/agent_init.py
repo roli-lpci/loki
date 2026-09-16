@@ -1507,11 +1507,18 @@ def _parse_compression_config(agent, _agent_cfg) -> CompressionSettings:
         # In-place compaction: no session-id rotation. default=True MUST match DEFAULT_CONFIG
         # (a False default flipped agents into rotation mode when the key was omitted).
         in_place=is_truthy_value(cfg.get("in_place"), default=True),
-        # Opt-in: micro-compaction rewrites sent history per turn (breaks the cache prefix).
+        # Opt-in: committed micro-compaction passes rewrite sent history and break the cache prefix.
         micro_compact=is_truthy_value(cfg.get("micro_compact"), default=False),
-        # Pass cadence in completed turns; each pass costs one prompt-cache break (>= 1).
+        # Pass eligibility cadence in completed turns; the cache guard may defer a due pass (>= 1).
         micro_compact_every_n_turns=max(
             1, _parse_config_int(cfg.get("micro_compact_every_n_turns", 1), 1)
+        ),
+        micro_compact_cache_guard=_cfg_flag(cfg, "micro_compact_cache_guard", True),
+        micro_compact_cache_min_ratio=max(
+            0.0, min(1.0, float(cfg.get("micro_compact_cache_min_ratio", 0.60)))
+        ),
+        micro_compact_cache_pressure_ratio=max(
+            0.0, min(1.0, float(cfg.get("micro_compact_cache_pressure_ratio", 0.80)))
         ),
         # Rolling-summary defrag threshold, in tokens.
         micro_compact_defrag_tokens=max(
@@ -1891,6 +1898,9 @@ def _build_context_engine(agent, _agent_cfg, cs, _custom_providers, _effective_c
     for _attr, _value in (
         ("_micro_compact_enabled", cs.micro_compact),
         ("_micro_compact_every_n_turns", cs.micro_compact_every_n_turns),
+        ("_micro_compact_cache_guard", cs.micro_compact_cache_guard),
+        ("_micro_compact_cache_min_ratio", cs.micro_compact_cache_min_ratio),
+        ("_micro_compact_cache_pressure_ratio", cs.micro_compact_cache_pressure_ratio),
         ("_micro_compact_defrag_threshold_tokens", cs.micro_compact_defrag_tokens),
     ):
         if hasattr(_cc, _attr):

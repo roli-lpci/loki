@@ -21,7 +21,7 @@ Interpreter resolution order is: `LOKI_PYTHON` → `PYTHON` → `$VIRTUAL_ENV/bi
 The transport is newline-delimited JSON-RPC over stdio:
 
 ```text
-ui-tui/src                  tui_gateway/
+tui-ui/src                  tui_gateway/
 -----------                 -------------
 entry.tsx                   entry.py
   -> GatewayClient            -> request loop
@@ -41,10 +41,10 @@ From the repo root, the normal path is:
 loki --tui
 ```
 
-The CLI expects `ui-tui/dist/entry.js` to exist, or the whole source code available in which to run `npm install` and `npm run dev`.
+The CLI expects `tui-ui/dist/entry.js` to exist, or the whole source code available in which to run `npm install` and `npm run dev`.
 
 ```bash
-cd ui-tui
+cd tui-ui
 npm install
 ```
 
@@ -348,7 +348,7 @@ Current color overrides:
 ## File map
 
 ```text
-ui-tui/
+tui-ui/
   packages/loki-ink/   forked Ink renderer (local dep)
   src/
     entry.tsx            TTY gate + render()

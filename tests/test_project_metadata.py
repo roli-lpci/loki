@@ -289,3 +289,9 @@ def test_huggingface_hub_lazy_pin_inside_transformers_window():
         "range (>=1.5.0,<2). The lazy refresh would downgrade the shared "
         "package and break Hindsight local embeddings (#60783)."
     )
+
+
+def test_dev_extra_includes_aiohttp_for_gateway_transport_tests():
+    optional_dependencies = _load_optional_dependencies()
+    dev_extra = optional_dependencies["dev"]
+    assert "aiohttp==3.14.3" in dev_extra

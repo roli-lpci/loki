@@ -55,6 +55,14 @@ _EXIT_REASON_EXPLANATIONS: Dict[str, str] = {
         "the per-turn iteration/cost budget was exhausted before a "
         "final answer. Send `continue` to keep going."
     ),
+    "delegation_input_budget_exhausted": (
+        "the delegated agent reached its aggregate input-token safety budget before "
+        "finishing. Narrow the delegated task or raise `delegation.max_input_tokens`."
+    ),
+    "review_input_budget_exhausted": (
+        "the background review reached its aggregate input-token safety budget before "
+        "finishing."
+    ),
     "ollama_runtime_context_too_small": (
         "the local model's context window was too small to finish. "
         "Increase the context size or use a larger model."

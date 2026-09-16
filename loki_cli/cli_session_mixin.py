@@ -1310,7 +1310,10 @@ class CLISessionMixin:
             duration_str = f"{minutes}m {duration_str}"
 
         session_title = None
+        session_meta = None
         if self._session_db:
+            with contextlib.suppress(Exception):
+                session_meta = self._session_db.get_session(self.session_id)
             with contextlib.suppress(Exception):
                 session_title = self._session_db.get_session_title(self.session_id)
 
@@ -1332,6 +1335,10 @@ class CLISessionMixin:
             print(f"Title:          {session_title}")
         print(f"Duration:       {duration_str}")
         print(f"Messages:       {msg_count} ({user_msgs} user, {tool_calls} tool calls)")
+        from loki_cli.session_epilogue import resolve_session_token_usage
+        token_usage = resolve_session_token_usage(session=session_meta, agent=getattr(self, "agent", None))
+        if token_usage.total_tokens:
+            print(token_usage.render())
         try:
             from loki_cli.skin_engine import get_active_goodbye
             goodbye = get_active_goodbye("Farewell! 𓆩✧𓆪")
