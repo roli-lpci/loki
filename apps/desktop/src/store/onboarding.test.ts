@@ -11,6 +11,7 @@ import {
   type OnboardingContext,
   refreshOnboarding,
   requestDesktopOnboarding,
+  saveOnboardingApiKey,
   saveOnboardingLocalEndpoint,
   submitOnboardingCode
 } from './onboarding'
@@ -171,6 +172,38 @@ describe('refreshOnboarding', () => {
     window.localStorage.clear()
     $desktopOnboarding.set(baseState())
     vi.restoreAllMocks()
+  })
+
+  it('saves TypeSafe Jev as a companion key without running inference-provider setup', async () => {
+    const api = vi.fn(async ({ path }: { path: string }) => {
+      if (path === '/api/env') {
+        return { ok: true }
+      }
+
+      throw new Error(`unexpected api path: ${path}`)
+    })
+    const notify = vi.spyOn(notifications, 'notify')
+    installApiMock(api)
+    $desktopOnboarding.set(
+      baseState({ mode: 'apikey', providers: [makeOAuthProvider('minimax-oauth', 'MiniMax')] })
+    )
+    const ctx = onboardingContext(async method => {
+      throw new Error(`unexpected gateway method: ${method}`)
+    })
+
+    const result = await saveOnboardingApiKey('TYPESAFE_API_KEY', ' ts-test-key ', 'TypeSafe Jev', ctx)
+
+    expect(result).toEqual({ ok: true })
+    expect(api).toHaveBeenCalledTimes(1)
+    expect(api.mock.calls[0]?.[0]).toMatchObject({
+      path: '/api/env',
+      method: 'PUT',
+      body: { key: 'TYPESAFE_API_KEY', value: 'ts-test-key' }
+    })
+    expect($desktopOnboarding.get().mode).toBe('oauth')
+    expect(notify).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'TypeSafe Jev connected', kind: 'success' })
+    )
   })
 
   it('refreshes OAuth providers again when onboarding was explicitly requested', async () => {

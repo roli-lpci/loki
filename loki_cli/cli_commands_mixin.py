@@ -11,6 +11,7 @@ import atexit
 import importlib
 import io
 import json
+import logging
 import os
 import shlex
 import subprocess
@@ -34,6 +35,8 @@ from loki_cli.browser_connect import (
     DEFAULT_BROWSER_CDP_URL, discover_local_cdp_url, find_free_debug_port, is_browser_debug_ready,
     launch_chrome_debug, local_port_in_use, manual_chrome_debug_command)
 
+
+logger = logging.getLogger(__name__)
 
 # Output helpers. Slash-command text is user-visible: every literal below is load-bearing.
 def _cp(*lines: str) -> None:
@@ -420,27 +423,82 @@ def _print_lightpanda_engine_status() -> None:
           else f"   ⚠ lightpanda binary not found — {LIGHTPANDA_INSTALL_HINT}")
 
 
+def _refresh_cli_toolsets(cli) -> None:
+    """Reload the CLI toolset policy into both the shell and an already-built agent.
+
+    Tool definitions are snapshotted when :class:`AIAgent` is constructed.  Merely
+    changing ``platform_toolsets.cli`` and starting a new conversation therefore
+    leaves ``agent.tools`` (and tool_search) stale unless we explicitly rebuild the
+    snapshot.  Keep this helper next to the slash commands that mutate tool config so
+    every in-session change has identical semantics.
+    """
+    from agent.skill_utils import parse_config_string_list
+    from loki_cli.config import load_config
+    from loki_cli.tools_config import _get_platform_tools
+
+    config = load_config()
+    enabled = _get_platform_tools(config, "cli")
+    disabled = parse_config_string_list((config.get("agent") or {}).get("disabled_toolsets"))
+    cli.enabled_toolsets = enabled
+    cli.disabled_toolsets = disabled
+
+    agent = getattr(cli, "agent", None)
+    if agent is None:
+        return
+    agent.enabled_toolsets = enabled
+    agent.disabled_toolsets = disabled
+    # _load_tools is the canonical constructor path for refreshing schemas,
+    # valid_tool_names and registry-generation bookkeeping.
+    from agent.agent_init import _load_tools
+    _load_tools(agent, enabled, disabled)
+    # tool_search memoizes its scoped inventory on the agent.  The cache key usually
+    # changes with enabled/disabled toolsets, but clearing it makes the boundary
+    # explicit and covers custom toolset mutations too.
+    if hasattr(agent, "_tool_search_scope_cache"):
+        agent._tool_search_scope_cache = None
+    if hasattr(agent, "_invalidate_system_prompt"):
+        agent._invalidate_system_prompt()
+
+
 def _browser_use(cli, arg: str) -> None:
-    """/browser use [off] — toggle Browser Use mode (browser.backend); resets the session."""
+    """/browser use [off] — choose Browser Use or built-in browser tools.
+
+    Backend selection and toolset authority used to be independent, which let the UI
+    claim Browser Use was enabled while the ``browser`` toolset remained disabled.
+    Selecting either browser backend now also enables browser automation for the CLI.
+    """
     from loki_cli.config import load_config, save_config
+    from loki_cli.tools_config import _get_platform_tools
     from tools.registry import invalidate_check_fn_cache
     if arg not in {"on", "off"}:
         return _say_block(
             "Usage: /browser use [off]",
-            "   /browser use       — switch to Browser Use mode (browser_exec via CLI 3.0)",
-            "   /browser use off   — revert to the built-in browser tools")
+            "   /browser use       — enable Browser Use mode (browser_exec via CLI 3.0)",
+            "   /browser use off   — use the built-in browser tools")
+
+    # Choosing a browser backend implies consent to expose the browser toolset.  Reuse
+    # the normal /tools mutation path so Blank Slate's agent.disabled_toolsets is also
+    # reconciled correctly.
     config = load_config()
+    if "browser" not in _get_platform_tools(config, "cli", include_default_mcp_servers=False):
+        cli._run_tools_config(tools_action="enable", names=["browser"], platform="cli")
+        config = load_config()
+
     if arg == "on":
         config.setdefault("browser", {})["backend"] = "browser-use"
         headline = "🌐 Browser Use mode enabled — browser_exec via the Browser Use CLI 3.0"
     else:
         from tools.browser_use_cli import BACKEND_DISABLED
         config.setdefault("browser", {})["backend"] = BACKEND_DISABLED
-        headline = "🌐 Browser Use mode disabled — built-in browser tools restored"
+        headline = "🌐 Built-in browser tools enabled"
     save_config(config)
     invalidate_check_fn_cache()
+
+    # Rotate first so the old conversation closes with its original tool contract,
+    # then rebuild the live agent's tool snapshot for the new session.
     cli.new_session()
-    _say_block(headline, "   Session reset. New tool configuration is active.")
+    _refresh_cli_toolsets(cli)
+    _say_block(headline, "   Browser toolset enabled. Session reset with the new browser tools active.")
 
 
 def _normalize_cdp_url(cdp_url: str):
@@ -569,9 +627,19 @@ _LOCAL_ENGINE_LINES = {
     "auto": ("🌐 Browser: local headless Chromium (agent-browser)",)}
 
 
-def _browser_status() -> None:
+def _browser_status(cli=None) -> None:
     current = os.environ.get("BROWSER_CDP_URL", "").strip()
     print()
+    try:
+        from loki_cli.config import load_config
+        from loki_cli.tools_config import _get_platform_tools
+        browser_authorized = "browser" in _get_platform_tools(
+            load_config(), "cli", include_default_mcp_servers=False)
+    except Exception:
+        browser_authorized = None
+    if browser_authorized is False:
+        _pr("   ⚠ Browser backend is configured, but Browser Automation is disabled for CLI.",
+            "   Run /browser on (or /tools enable browser) to expose browser tools to the agent.")
     if _probe("tools.browser_use_cli", "is_browser_use_cli_mode", False):
         _pr("🌐 Browser: Browser Use mode (browser_exec via the Browser Use CLI 3.0)",
             "   Local Chrome via CDP, or Browser Use cloud browsers")
@@ -1053,6 +1121,171 @@ class CLICommandsMixin:
             tip = f'Tip: type your next message, or run loki chat -q --image {example} "What do you see?"'
             _cp(_dim_line(tip))
 
+    # ---- /settings, /ads ------------------------------------------------------------------
+    def _handle_settings_command(self, cmd: str) -> None:
+        """Open the in-session settings hub.
+
+        Slash commands run on the CLI worker thread, where invoking the standalone ``loki setup``
+        wizard would compete with prompt_toolkit for stdin.  The settings hub therefore uses the
+        native modal palette and delegates every choice to an existing non-blocking slash flow.
+        An optional argument pre-filters the hub (for example ``/settings tools``).
+        """
+        initial_filter = _command_arg(cmd)
+        parts = initial_filter.split()
+        if parts and parts[0].lower() == "jev":
+            action = parts[1].lower() if len(parts) > 1 else "status"
+            return self._handle_settings_jev(action)
+        if getattr(self, "_app", None) is not None:
+            self._open_settings_palette(initial_filter)
+            return
+
+        rows = self._build_settings_palette_entries()
+        if initial_filter:
+            q = initial_filter.lower()
+            rows = [row for row in rows if q in " ".join(str(part).lower() for part in row)]
+        _cp(_accent_line("Settings"))
+        if not rows:
+            _cp(_dim_line(f"No settings match '{initial_filter}'. Try /settings without a filter."))
+            return
+        for command, _category, description in rows:
+            _cp(f"  {command:<20} {description}")
+        _cp(_dim_line("In the interactive TUI, /settings opens a selectable settings panel."))
+
+    def _handle_settings_jev(self, action: str) -> None:
+        """Backward-compatible bridge from ``/settings jev`` to the dedicated ``/jev`` command."""
+        action = (action or "status").strip().lower()
+        aliases = {"on": "enable", "off": "disable"}
+        action = aliases.get(action, action)
+        return self._handle_jev_command(f"/jev {action}")
+
+    def _handle_jev_command(self, cmd: str) -> None:
+        """Configure Loki Autorouter, powered by TypeSafe Jev.
+
+        The TypeSafe decision tool and Loki Autorouter are separate capabilities: allowing the
+        ``typesafe`` toolset does not prove a credential exists and does not enable routing.  This
+        command makes those states explicit and can capture the key securely for already-onboarded
+        users without invoking the blocking standalone setup wizard inside prompt_toolkit.
+        """
+        from agent.typesafe_client import configured_typesafe_key
+        from loki_cli.config import load_config, save_config
+
+        action = _command_arg(cmd, lower=True) or "status"
+        action = {"on": "enable", "off": "disable"}.get(action, action)
+        if action not in {"enable", "disable", "status", "setup"}:
+            return _cp("  Usage: /jev [status|enable|disable|setup]")
+
+        config = load_config() or {}
+        routing = config.get("smart_model_routing")
+        if not isinstance(routing, dict):
+            routing = {}
+            config["smart_model_routing"] = routing
+
+        has_key = bool(configured_typesafe_key())
+
+        if action in {"enable", "setup"} and not has_key:
+            _cp(
+                _accent_line("Loki Autorouter setup — powered by Jev"),
+                _dim_line("A TypeSafe API key is required for Jev routing and the TypeSafe decision tool."),
+                _dim_line("Get a key at https://console.typesafe.ai"),
+            )
+            try:
+                from loki_cli.callbacks import prompt_for_secret
+
+                result = prompt_for_secret(
+                    self,
+                    "TYPESAFE_API_KEY",
+                    "Paste your TypeSafe API key",
+                    metadata={"url": "https://console.typesafe.ai", "provider": "TypeSafe"},
+                )
+            except Exception:
+                logger.exception("TypeSafe secret capture failed")
+                result = {"success": False, "skipped": True}
+            has_key = bool(configured_typesafe_key())
+            if not has_key:
+                if result.get("skipped"):
+                    return _cp(
+                        _dim_line("TypeSafe key setup was skipped; Loki Autorouter remains OFF."),
+                        _dim_line("You can also configure it later with `loki setup jev`."),
+                    )
+                return _cp(_dim_line("TypeSafe key was not saved; Loki Autorouter remains OFF."))
+
+        if action in {"enable", "setup"}:
+            routing.update({"enabled": True, "mode": "jev_auto"})
+            save_config(config)
+            return _cp(
+                _accent_line("Loki Autorouter: ON · powered by Jev"),
+                _dim_line("New sessions may choose a model from the CURRENT gateway only."),
+                _dim_line("The route stays sticky for the session to preserve prompt caching."),
+            )
+
+        if action == "disable":
+            routing.update({"enabled": False, "mode": "jev_auto"})
+            save_config(config)
+            return _cp(
+                _accent_line("Loki Autorouter: OFF"),
+                _dim_line("Your TypeSafe key is kept, and the Jev decision tool can remain available."),
+                _dim_line("Loki will keep the model you select manually."),
+            )
+
+        enabled = bool(routing.get("enabled", False)) and str(routing.get("mode") or "jev_auto") == "jev_auto"
+        state = "ON" if enabled else "OFF"
+        key_state = "configured" if has_key else "NOT CONFIGURED"
+        bias = str(routing.get("cost_bias") or "balanced")
+        threshold = routing.get("confidence_threshold", 0.55)
+        _cp(
+            _accent_line(f"Loki Autorouter: {state} · powered by Jev"),
+            _dim_line(f"TypeSafe API key: {key_state} · cost bias: {bias} · confidence: {threshold}"),
+            _dim_line("Jev decision tool: ready" if has_key else "Jev decision tool: unavailable until a key is configured"),
+            _dim_line("Use /jev enable to set up + enable, /jev disable to stop routing, or /jev setup to configure."),
+        )
+
+    def _handle_ads_command(self, cmd: str) -> None:
+        """``/ads [on|off|status]`` — persist the user's advertisement consent preference.
+
+        Consent is deliberately separate from the feature rollout gates.  ``/ads on`` opts the
+        user in but does not activate ad delivery in releases where ``ads.enabled`` remains false.
+        """
+        from loki_cli.config import load_config, save_config
+
+        action = _command_arg(cmd, lower=True) or "status"
+        if action not in {"on", "off", "status"}:
+            return _cp("  Usage: /ads [on|off|status]")
+
+        config = load_config() or {}
+        ads_cfg = config.get("ads")
+        if not isinstance(ads_cfg, dict):
+            ads_cfg = {}
+            config["ads"] = ads_cfg
+        opted_in = bool(ads_cfg.get("user_opt_in", False))
+
+        if action in {"on", "off"}:
+            opted_in = action == "on"
+            ads_cfg["user_opt_in"] = opted_in
+            save_config(config)
+            if opted_in:
+                _cp(_accent_line("Ads preference: OPTED IN"),
+                    _dim_line("No ads will display while Loki's advertisement feature gate is disabled."),
+                    _dim_line("Use /ads off at any time to revoke this preference."))
+            else:
+                _cp(_accent_line("Ads preference: OPTED OUT"),
+                    _dim_line("Sponsored content will not be displayed for this profile."))
+            return
+
+        text_cfg = ads_cfg.get("text") if isinstance(ads_cfg.get("text"), dict) else {}
+        rollout_enabled = bool(ads_cfg.get("enabled", False)) and bool(text_cfg.get("enabled", False))
+        inventory = text_cfg.get("messages") if isinstance(text_cfg.get("messages"), list) else []
+        state = "OPTED IN" if opted_in else "OPTED OUT"
+        _cp(_accent_line(f"Ads preference: {state}"))
+        if not opted_in:
+            _cp(_dim_line("Use /ads on to record an opt-in; ads remain off by default."))
+        elif not rollout_enabled:
+            _cp(_dim_line("Your opt-in is saved, but ad delivery is not enabled in this release/configuration."))
+        elif not inventory:
+            _cp(_dim_line("Ad delivery is enabled, but no sponsored messages are configured."))
+        else:
+            _cp(_dim_line("Sponsored text may appear as a separate labeled item beneath answers."))
+        _cp(_dim_line("Sponsored content never enters model context or the assistant transcript."))
+
     # ---- /tools, /profile -----------------------------------------------------------------
     def _handle_tools_command(self, cmd: str):
         """Handle /tools [list|disable|enable]. Bare shows the tool list; ``list`` shows per-toolset
@@ -1073,10 +1306,9 @@ class CLICommandsMixin:
         verb = "Disabling" if subcommand == "disable" else "Enabling"
         _cp(_accent(f"{verb} {', '.join(names)}..."))
         self._run_tools_config(tools_action=subcommand, names=names, platform="cli")
-        from loki_cli.tools_config import _get_platform_tools
-        from loki_cli.config import load_config
-        self.enabled_toolsets = _get_platform_tools(load_config(), "cli")
+        # Close the old conversation before replacing the live agent's tool snapshot.
         self.new_session()
+        _refresh_cli_toolsets(self)
         _cp(_dim("Session reset. New tool configuration is active."))
 
     def _run_tools_config(self, **ns) -> None:
@@ -2120,7 +2352,16 @@ class CLICommandsMixin:
     def _handle_browser_command(self, cmd: str):
         """Handle /browser connect|disconnect|status|use — manage the live Chromium-family CDP connection."""
         sub = _command_arg(cmd).lower() or "status"
-        if sub == "use" or sub.startswith("use "):
+        if sub in {"on", "enable"}:
+            # Friendly alias: users naturally try `/browser on`; make it mean
+            # "enable browser automation with the default Browser Use backend".
+            _browser_use(self, "on")
+        elif sub in {"off", "disable"}:
+            # This is the authority switch.  `/browser use off` only selects the
+            # built-in backend and intentionally keeps browser automation enabled.
+            self._handle_tools_command("/tools disable browser")
+            _say_block("🌐 Browser automation disabled", "   Use /browser on or /tools enable browser to restore it.")
+        elif sub == "use" or sub.startswith("use "):
             _browser_use(self, sub.split(None, 1)[1].strip() if " " in sub else "on")
         elif sub.startswith("connect"):
             connect_parts = cmd.strip().split(None, 2)  # ["/browser", "connect", "ws://..."]
@@ -2129,14 +2370,16 @@ class CLICommandsMixin:
         elif sub == "disconnect":
             _browser_disconnect(self)
         elif sub == "status":
-            _browser_status()
+            _browser_status(self)
         else:
             _say_block(
-                "Usage: /browser connect|disconnect|status|use", "",
+                "Usage: /browser on|off|connect|disconnect|status|use", "",
+                "   on           Enable browser automation (Browser Use backend)",
+                "   off          Disable browser automation entirely",
                 "   connect      Connect browser tools to your live Chromium-family browser session",
                 "   disconnect   Revert to default browser backend",
                 "   status       Show current browser mode",
-                "   use [off]    Switch to Browser Use mode (CLI 3.0) / back to built-in tools")
+                "   use [off]    Browser Use backend / built-in browser backend (both keep tools enabled)")
 
     # ---- /heartbeat, /refine, /review -----------------------------------------------------
     def _session_manager(self, getter, label: str):

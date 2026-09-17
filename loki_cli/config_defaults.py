@@ -20,6 +20,32 @@ def _aux(timeout, *, reasoning_effort=True, **extra):
 
 DEFAULT_CONFIG = {
     "model": "",
+    # Optional first-task model router. Jev Auto makes one bounded decision at the start of a new
+    # root session and only chooses among models exposed by the already-selected gateway/provider;
+    # it never changes gateways. Keeping the route session-sticky preserves provider prompt caches.
+    "smart_model_routing": {
+        "enabled": False,
+        "mode": "jev_auto",
+        "confidence_threshold": 0.55,
+        "max_candidates": 12,
+        # Cost preference supplied to Jev. Supported values are economy, balanced, quality.
+        "cost_bias": "balanced",
+    },
+    # Advertisement plumbing is intentionally dark by default. Both gates must be explicitly true
+    # before Loki can append a clearly labelled local text ad; no targeting/network ad provider is
+    # configured here and ad copy is never added to model context or the durable transcript.
+    "ads": {
+        # Explicit per-user consent is separate from the rollout switch below. /ads on only
+        # changes this preference; sponsored content still cannot render until the feature gates
+        # are enabled by a future release/configuration.
+        "user_opt_in": False,
+        "enabled": False,
+        "text": {
+            "enabled": False,
+            "every_n_turns": 6,
+            "messages": [],
+        },
+    },
     "providers": {},
     "fallback_providers": [],
     "credential_pool_strategies": {},
@@ -2530,6 +2556,13 @@ OPTIONAL_ENV_VARS = {
         "Azure Foundry base URL (set via 'loki model' for endpoint-specific config)",
         "Azure Foundry base URL", None, password=False),
     # ── Tool API keys ──
+    "TYPESAFE_API_KEY": _tool(
+        "TypeSafe AI API key for Jev structured decisions",
+        "TypeSafe AI / Jev API key",
+        "https://console.typesafe.ai",
+        help="Enables the typesafe_ask tool (Choice, Score, Noul) while keeping your normal chat provider.",
+        tools=["typesafe_ask"],
+    ),
     "EXA_API_KEY": _tool("Exa API key for AI-native web search and contents", "Exa API key",
         "https://exa.ai/", tools=["web_search", "web_extract"]),
     "PARALLEL_API_KEY": _tool("Parallel API key for AI-native web search and extract",

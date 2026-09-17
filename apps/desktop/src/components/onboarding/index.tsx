@@ -42,7 +42,8 @@ import {
   LocalModelsProviderRow,
   OpenRouterProviderRow,
   ProviderRow,
-  sortProviders
+  sortProviders,
+  TypeSafeProviderRow
 } from './providers'
 
 export {
@@ -52,7 +53,8 @@ export {
   OpenRouterProviderRow,
   ProviderRow,
   providerTitle,
-  sortProviders
+  sortProviders,
+  TypeSafeProviderRow
 } from './providers'
 
 import { requestGatewayForProfile } from '@/store/gateway'
@@ -87,6 +89,14 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
     name: 'OpenRouter',
     envKey: 'OPENROUTER_API_KEY',
     docsUrl: 'https://openrouter.ai/keys'
+  },
+  {
+    id: 'typesafe',
+    name: 'TypeSafe Jev',
+    envKey: 'TYPESAFE_API_KEY',
+    docsUrl: 'https://console.typesafe.ai',
+    short: 'Optional companion decision engine',
+    description: 'Adds Jev decisions alongside your chat model; Jev Auto routing can then be enabled in Agent settings.'
   },
   {
     id: 'openai',
@@ -585,6 +595,7 @@ export function Picker({ ctx }: { ctx: OnboardingContext }) {
           <ProviderRow key={p.id} onSelect={select} provider={p} />
         ))}
         <OpenRouterProviderRow onClick={() => openKeyForm('OPENROUTER_API_KEY')} />
+        <TypeSafeProviderRow onClick={() => openKeyForm('TYPESAFE_API_KEY')} />
       </div>
       <div className="flex items-center justify-between gap-3 pt-1">
         {/* First run only: let the user defer the choice and land in the app.

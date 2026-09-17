@@ -1,7 +1,7 @@
 {
   "name": "@wundercorp/loki",
-  "version": "0.21.8",
-  "description": "Loki Agent \u2014 a self-improving AI agent by WunderCorp, Inc.",
+  "version": "0.21.15",
+  "description": "Loki Agent — a self-improving AI agent by WunderCorp, Inc.",
   "private": false,
   "workspaces": [
     "apps/*",
@@ -12,7 +12,7 @@
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "echo '\u2705 Node dependencies installed. Run: loki --help (or loki --help)'",
+    "postinstall": "echo '✅ Node dependencies installed. Run: loki --help (or loki --help)'",
     "install:root": "npm install --workspaces=false",
     "install:web": "npm install --workspace web",
     "install:tui": "npm install --workspace tui-ui",

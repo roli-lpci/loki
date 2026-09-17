@@ -110,6 +110,7 @@ class TestExistingInstallDefault:
                 prompt_choice="loki_cli.setup.prompt_choice",
                 quick="loki_cli.setup._run_quick_setup",
                 model="loki_cli.setup.setup_model_provider",
+                typesafe="loki_cli.setup.setup_typesafe_jev",
                 terminal="loki_cli.setup.setup_terminal_backend",
                 agent="loki_cli.setup.setup_agent_settings",
                 gateway="loki_cli.setup.setup_gateway",
@@ -125,6 +126,7 @@ class TestExistingInstallDefault:
         # Model/terminal/gateway/tools run; agent settings are no longer
         # prompted on existing installs (they keep their tuned values).
         m["model"].assert_called_once()
+        m["typesafe"].assert_called_once()
         m["terminal"].assert_called_once()
         m["agent"].assert_not_called()
         m["gateway"].assert_called_once()
@@ -142,6 +144,7 @@ class TestQuickFlag:
                 stack,
                 quick="loki_cli.setup._run_quick_setup",
                 model="loki_cli.setup.setup_model_provider",
+                typesafe="loki_cli.setup.setup_typesafe_jev",
                 terminal="loki_cli.setup.setup_terminal_backend",
                 agent="loki_cli.setup.setup_agent_settings",
                 gateway="loki_cli.setup.setup_gateway",
@@ -160,6 +163,7 @@ class TestQuickFlag:
         assert section_indexes == [0]
         # Full reconfigure sections must NOT run.
         m["model"].assert_not_called()
+        m["typesafe"].assert_not_called()
         m["terminal"].assert_not_called()
         m["agent"].assert_not_called()
         m["gateway"].assert_not_called()
@@ -198,7 +202,7 @@ class TestFreshInstall:
         with ExitStack() as stack:
             m = _enter_fresh_install_patches(
                 stack,
-                prompt=("loki_cli.setup.prompt_choice", {"return_value": 2}),
+                prompt=("loki_cli.setup.prompt_choice", {"return_value": 3}),
                 blank="loki_cli.setup_quick._run_blank_slate_setup",
             )
             from loki_cli import setup as setup_mod

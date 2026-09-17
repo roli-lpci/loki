@@ -550,6 +550,7 @@ def _record_send_consent_change(*, enabled: bool) -> None:
 # loki_cli.setup. They import this module lazily inside bodies, so this is cycle-free.
 
 from loki_cli.setup_tts import setup_tts  # noqa: E402
+from loki_cli.setup_typesafe import setup_typesafe_jev  # noqa: E402
 from loki_cli.setup_terminal import setup_terminal_backend  # noqa: E402
 from loki_cli.setup_platforms import setup_gateway  # noqa: E402
 from loki_cli.setup_summary import _print_setup_summary  # noqa: E402,F401
@@ -561,6 +562,7 @@ from loki_cli.setup_quick import _run_quick_setup  # noqa: E402
 
 SETUP_SECTIONS = [
     ("model", "Model & Provider", setup_model_provider),
+    ("jev", "TypeSafe Jev", setup_typesafe_jev),
     ("tts", "Text-to-Speech", setup_tts),
     ("terminal", "Terminal Backend", setup_terminal_backend),
     ("gateway", "Messaging Platforms (Gateway)", setup_gateway),
@@ -627,6 +629,7 @@ def _run_full_setup(config: dict, loki_home, *, is_existing: bool, migration_ran
 
     _run_setup_steps([
         _step("model", "Model & Provider", lambda: setup_model_provider(config)),
+        _step("jev", "TypeSafe Jev", lambda: setup_typesafe_jev(config)),
         _step("terminal", "Terminal Backend", lambda: setup_terminal_backend(config)),
         ("Messaging Platforms", _gateway_step),
         _step("tools", "Tools", lambda: setup_tools(config, first_install=not is_existing))])
@@ -636,6 +639,8 @@ def _run_full_setup(config: dict, loki_home, *, is_existing: bool, migration_ran
 _FIRST_TIME_MODES = (
     ("Quick Setup (OpenRouter) — API key + model, then recommended defaults",
      "_run_first_time_quick_setup"),
+    ("Quick Setup + TypeSafe Jev — OpenRouter chat plus Jev typed decisions",
+     "_run_first_time_typesafe_setup"),
     ("Full setup — configure every provider, tool & option yourself (bring your own keys)", None),
     ("Blank Slate — everything off except the bare minimum; opt in to each capability", "_run_blank_slate_setup"),
 )
@@ -692,7 +697,7 @@ def _run_setup_wizard_impl(args):
         print_success("You already have Loki configured.")
         _info("Running the full wizard — each prompt shows your current value.",
               "Press Enter to keep it, or type a new value to change it.", "",
-              "Tip: jump straight to a section with 'loki setup model|terminal|",
+              "Tip: jump straight to a section with 'loki setup model|jev|terminal|",
               "     gateway|tools|agent', or fill only missing items with --quick.")
     else:
         # First-time setup (--reconfigure / --quick are meaningless here; fall through)

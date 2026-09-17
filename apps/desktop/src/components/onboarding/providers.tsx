@@ -79,6 +79,16 @@ export function OpenRouterProviderRow({ onClick }: { onClick: () => void }) {
   return <KeyProviderRow onClick={onClick} pitch={t.onboarding.openRouterPitch} title="OpenRouter" />
 }
 
+export function TypeSafeProviderRow({ onClick }: { onClick: () => void }) {
+  return (
+    <KeyProviderRow
+      onClick={onClick}
+      pitch="Optional Jev decisions plus Jev Auto same-gateway model routing; keep your normal chat provider."
+      title="TypeSafe Jev (companion)"
+    />
+  )
+}
+
 export function ProviderRow({
   onSelect,
   provider

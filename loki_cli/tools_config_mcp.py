@@ -191,7 +191,15 @@ def _print_tools_list(enabled_toolsets: set, mcp_servers: dict, platform: str = 
     def _print_rows(entries):
         for ts_key, label in entries:
             status = color("✓ enabled", Colors.GREEN) if ts_key in enabled_toolsets else color("✗ disabled", Colors.RED)
-            print(f"  {status}  {ts_key}  {color(label, Colors.DIM)}")
+            readiness = ""
+            if ts_key == "typesafe" and ts_key in enabled_toolsets:
+                from loki_cli.config import get_env_value
+
+                if str(get_env_value("TYPESAFE_API_KEY") or "").strip():
+                    readiness = color("  [key configured · router: /jev status]", Colors.DIM)
+                else:
+                    readiness = color("  [not ready: no TypeSafe key · run /jev setup]", Colors.YELLOW)
+            print(f"  {status}  {ts_key}  {color(label, Colors.DIM)}{readiness}")
 
     print(f"Built-in toolsets ({platform}):")
     _print_rows((k, l) for k, l, _ in effective if k in builtin_keys)

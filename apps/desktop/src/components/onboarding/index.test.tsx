@@ -56,6 +56,7 @@ describe('onboarding Picker', () => {
     expect(screen.getByText('Fireworks AI')).toBeTruthy()
     expect(screen.getByText('Anthropic API Key')).toBeTruthy()
     expect(screen.getByText('OpenRouter')).toBeTruthy()
+    expect(screen.getByText('TypeSafe Jev (companion)')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Other providers' })).toBeNull()
   })
 
@@ -93,6 +94,17 @@ describe('onboarding Picker', () => {
     expect(screen.getByText('OpenRouter')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Other providers' })).toBeNull()
     expect(screen.queryByText('Recommended')).toBeNull()
+  })
+
+  it('offers TypeSafe Jev as a companion and opens its key form', () => {
+    setProviders([makeOAuthProvider('minimax-oauth', 'MiniMax')])
+    render(<Picker ctx={ctx} />)
+
+    fireEvent.click(screen.getByText('TypeSafe Jev (companion)'))
+
+    expect($desktopOnboarding.get().mode).toBe('apikey')
+    expect(screen.getByText('TypeSafe Jev')).toBeTruthy()
+    expect(screen.getByText('Adds Jev decisions alongside your chat model; Jev Auto routing can then be enabled in Agent settings.')).toBeTruthy()
   })
 
   it('offers "choose later" on first run and persists the skip', () => {

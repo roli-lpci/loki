@@ -58,6 +58,8 @@ If you already have Git installed, the installer detects it and uses that instea
 
 After installation, the installer reloads your shell configuration and starts `loki` automatically. The first-run quick setup uses OpenRouter by default; press `o` at the API-key prompt to open [openrouter.ai/keys](https://openrouter.ai/keys), then paste the key and choose your model.
 
+Want Jev alongside your chat model? Choose **Quick Setup + TypeSafe Jev** in the CLI, or select **TypeSafe Jev (companion)** during Loki Desktop onboarding, then paste your `TYPESAFE_API_KEY` from [TypeSafe](https://console.typesafe.ai). You can also run `loki setup jev` later or manage the key under **Settings → Keys → Tools**. Existing CLI users can run `/jev status`, `/jev enable`, `/jev disable`, or `/jev setup` directly in a session. **Loki Autorouter — powered by Jev** is an optional model router that classifies the first task of a new session and selects a sufficiently capable lower-cost model from the *currently selected gateway only*; the route then stays sticky for that session to preserve prompt caching.
+
 ### Troubleshooting
 
 #### Windows Defender or antivirus flags `uv.exe` as malware
@@ -124,6 +126,9 @@ Run `loki` for the terminal UI, or start the gateway and talk to Loki Agent from
 | Start fresh conversation       | `/new` or `/reset`                            | `/new` or `/reset`                                                               |
 | Change model                   | `/model [provider:model]`                     | `/model [provider:model]`                                                        |
 | Set a personality              | `/personality [name]`                         | `/personality [name]`                                                            |
+| Open CLI settings              | `/settings`                                   | —                                                                                |
+| Manage tools                   | `/settings tools` or `/tools list`            | —                                                                                |
+| Advertisement preference       | `/ads on`, `/ads off`, `/ads status`          | —                                                                                |
 | Retry or undo the last turn    | `/retry`, `/undo`                             | `/retry`, `/undo`                                                                |
 | Compress context / check usage | `/compress`, `/usage`, `/insights [--days N]` | `/compress`, `/usage`, `/insights [days]`                                        |
 | Browse skills                  | `/skills` or `/<skill-name>`                  | `/<skill-name>`                                                                  |
@@ -224,6 +229,10 @@ scripts/run_tests.sh
 ## 🧩 Tools & Ecosystem
 
 Loki can be paired with purpose-built tools for desktop control, browser automation, isolated execution, and mobile access. These integrations live here instead of under Community so project resources and community links stay clearly separated.
+
+### ⚡ Structured decisions
+
+- **[TypeSafe Jev](https://docs.typesafe.ai/introduction)** — optional System One decision engine for typed Choice, Score, and Noul judgments; `loki setup jev` exposes the credential-gated `typesafe_ask` tool and can opt you into **Loki Autorouter — powered by Jev**, a same-gateway, session-sticky cost/capability model router.
 
 ### 🖥️ Computer & browser control
 

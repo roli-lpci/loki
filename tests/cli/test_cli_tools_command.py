@@ -99,3 +99,50 @@ class TestToolsSlashEnableWithReset:
         cli_obj._handle_tools_command("/tools enable")
         out = capsys.readouterr().out
         assert "Usage" in out
+
+
+def test_typesafe_toolset_list_marks_missing_key_as_not_ready(capsys):
+    from loki_cli.tools_config_mcp import _print_tools_list
+
+    with patch("loki_cli.config.get_env_value", return_value=None):
+        _print_tools_list({"typesafe"}, {}, platform="cli")
+
+    out = capsys.readouterr().out
+    assert "typesafe" in out
+    assert "not ready" in out
+    assert "/jev setup" in out
+
+
+def test_typesafe_toolset_list_points_to_router_status_when_key_exists(capsys):
+    from loki_cli.tools_config_mcp import _print_tools_list
+
+    with patch("loki_cli.config.get_env_value", return_value="ts-key"):
+        _print_tools_list({"typesafe"}, {}, platform="cli")
+
+    out = capsys.readouterr().out
+    assert "key configured" in out
+    assert "/jev status" in out
+
+
+def test_tools_enable_reloads_existing_agent_tool_snapshot():
+    """In-session tool changes must update AIAgent.tools, not only LokiCLI.enabled_toolsets."""
+    cli_obj = _make_cli(["memory"])
+    cli_obj.disabled_toolsets = []
+    cli_obj.agent = MagicMock()
+    cli_obj.agent._tool_search_scope_cache = ("stale", {"old_tool"})
+
+    with patch("loki_cli.tools_config.load_config",
+               return_value={"platform_toolsets": {"cli": ["memory", "web"]}}), \
+         patch("loki_cli.tools_config.save_config"), \
+         patch("loki_cli.tools_config._get_platform_tools", return_value={"memory", "web"}), \
+         patch("loki_cli.config.load_config",
+               return_value={"platform_toolsets": {"cli": ["memory", "web"]}, "agent": {}}), \
+         patch("agent.agent_init._load_tools") as reload_tools, \
+         patch.object(cli_obj, "new_session") as mock_reset:
+        cli_obj._handle_tools_command("/tools enable web")
+
+    mock_reset.assert_called_once()
+    reload_tools.assert_called_once_with(cli_obj.agent, {"memory", "web"}, [])
+    assert cli_obj.agent.enabled_toolsets == {"memory", "web"}
+    assert cli_obj.agent.disabled_toolsets == []
+    assert cli_obj.agent._tool_search_scope_cache is None

@@ -1462,6 +1462,17 @@ def _run_conversation_turn(
     except Exception:
         logger.debug("per-turn env credential refresh failed", exc_info=True)
 
+    # Jev Auto is deliberately a first-task/session-sticky route.  It runs before
+    # build_turn_context so a successful model switch cannot invalidate a prompt prefix that has
+    # already been assembled/cached. MoA owns its own virtual routing and is left untouched.
+    agent._jev_auto_last_route = None
+    if not moa_config:
+        try:
+            from agent.jev_auto_router import maybe_route_first_session_task
+            maybe_route_first_session_task(agent, user_message, conversation_history)
+        except Exception:
+            logger.warning("Jev Auto pre-turn routing failed open", exc_info=True)
+
     # Per-turn setup: build_turn_context mutates ``agent`` and returns the locals the loop reads.
     try:
         _ctx = build_turn_context(
@@ -1612,6 +1623,17 @@ def run_conversation(
         moa_config=moa_config,
         turn_author=turn_author,
     )
+    jev_route = getattr(agent, "_jev_auto_last_route", None)
+    if isinstance(jev_route, dict):
+        result["jev_auto_route"] = dict(jev_route)
+
+    # Sponsored presentation happens strictly after the model/transcript turn is complete so ad
+    # copy never becomes model context or durable assistant history. Both ad config gates default off.
+    try:
+        from agent.ads import maybe_attach_text_ad
+        result = maybe_attach_text_ad(agent, result)
+    except Exception:
+        logger.warning("Advertisement presentation failed open", exc_info=True)
     return export_current_turn_boundary(agent, result, user_message)
 
 

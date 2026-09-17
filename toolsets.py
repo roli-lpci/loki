@@ -37,6 +37,8 @@ _LOKI_CORE_TOOLS = [
     "computer_use",
     # Service-gated connector account status and authorization links.
     "manage_connections",
+    # TypeSafe Jev is credential-gated by the tool check; harmless when unconfigured.
+    "typesafe_ask",
 ]
 
 # Webhook payloads are untrusted third-party content: no file/system execution.
@@ -82,6 +84,7 @@ TOOLSETS = {
         ["x_search"],
     ),
     "vision": _ts("Image analysis and vision tools", ["vision_analyze"]),
+    "typesafe": _ts("TypeSafe Jev typed decision tools", ["typesafe_ask"]),
     "video": _ts("Video analysis and understanding tools (opt-in, not in default toolset)", ["video_analyze"]),
     "image_gen": _ts("Creative generation tools (images)", ["image_generate"]),
     "video_gen": _ts(

@@ -48,8 +48,8 @@ def test_registry_names_resolve_into_the_table():
         assert cmd is not None and LokiCLI._slash_handler(cmd.name) is not None, name
     # registry commands the CLI never handled inline must still fall through
     dispatched = {c.name for c in COMMAND_REGISTRY if LokiCLI._slash_handler(c.name)}
-    # /login has no old branch; it resolves through the naming-convention fallback.
-    assert dispatched == set(OLD_CHAIN_COMMANDS) - {"exit"} | {"quit", "login"}
+    # /login and newer named handlers resolve through the naming-convention fallback.
+    assert dispatched == set(OLD_CHAIN_COMMANDS) - {"exit"} | {"quit", "login", "settings", "jev", "ads"}
 
 
 def _cli():

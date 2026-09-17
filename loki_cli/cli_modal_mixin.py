@@ -418,6 +418,55 @@ class CLIModalMixin:
             pass
         return entries
 
+    def _build_settings_palette_entries(self) -> list:
+        """Curated CLI settings hub entries.
+
+        Every row delegates to an existing slash command so settings have one write path.  The
+        selected command is queued back through the normal input dispatcher instead of running
+        from prompt_toolkit's main thread.
+        """
+        return [
+            ("/model", "Settings", "Model & gateway — choose the session model/provider"),
+            ("/tools list", "Settings", "Tools — inspect enabled toolsets, then enable or disable them"),
+            ("/skills", "Settings", "Skills — search, install, inspect, and manage skills"),
+            ("/jev status", "Settings", "Loki Autorouter — powered by Jev; inspect or configure routing"),
+            ("/reasoning", "Settings", "Reasoning — effort level and reasoning display"),
+            ("/personality", "Settings", "Personality — choose Loki's response style"),
+            ("/voice status", "Settings", "Voice — inspect or toggle voice mode"),
+            ("/ads status", "Settings", "Ads — view or change the explicit advertisement opt-in"),
+            ("/approvals", "Settings", "Approvals — dangerous-command approval mode"),
+            ("/busy status", "Settings", "Busy input — queue, steer, or interrupt while Loki works"),
+            ("/focus status", "Settings", "Focus view — reduce tool-progress noise"),
+            ("/footer status", "Settings", "Runtime footer — model/context/cwd metadata"),
+            ("/timestamps status", "Settings", "Timestamps — show message times"),
+            ("/skin", "Settings", "Theme — choose the CLI skin"),
+            ("/indicator", "Settings", "Busy indicator — choose the TUI activity style"),
+            ("/config", "Settings", "Configuration — inspect the current merged config"),
+        ]
+
+    def _open_settings_palette(self, initial_filter: str = "") -> None:
+        """Open the in-session settings hub.
+
+        Unlike the general command palette, Settings executes the chosen row by queueing it back
+        through ``_pending_input``.  This keeps interactive model/tool modals on their normal
+        worker-thread path and avoids nested stdin reads inside prompt_toolkit.
+        """
+        if getattr(self, "_command_palette_state", None):
+            return
+        if (self._model_picker_state or self._clarify_state or self._approval_state
+                or self._slash_confirm_state or self._sudo_state or self._secret_state):
+            return
+        self._capture_modal_input_snapshot()
+        self._command_palette_state = {
+            "entries": self._build_settings_palette_entries(),
+            "filter": (initial_filter or "").strip(),
+            "selected": 0,
+            "_scroll_offset": 0,
+            "title": "⚙ Settings",
+            "execute_selection": True,
+        }
+        self._invalidate(min_interval=0.0)
+
     def _open_command_palette(self) -> None:
         """Open the Ctrl+P fuzzy command palette modal (never stacked over another modal)."""
         if getattr(self, "_command_palette_state", None):
@@ -487,16 +536,28 @@ class CLIModalMixin:
             self._close_command_palette()
             return
         cmd = rows[selected][0]
+        execute_selection = bool(state.get("execute_selection"))
         self._close_command_palette()
         try:
             app = getattr(self, "_app", None)
+            if execute_selection:
+                pending = getattr(self, "_pending_input", None)
+                if pending is not None:
+                    if app is not None:
+                        app.current_buffer.reset()
+                    pending.put(cmd)
+                    self._invalidate(min_interval=0.0)
+                    return
+                # Non-TUI/unit-test fallback: dispatch synchronously when there is no worker queue.
+                self.process_command(cmd)
+                return
             if app is not None:
                 buf = app.current_buffer
                 buf.text = cmd + " "
                 buf.cursor_position = len(buf.text)
                 self._invalidate(min_interval=0.0)
         except Exception:
-            logger.debug("command palette prefill failed", exc_info=True)
+            logger.debug("command palette selection failed", exc_info=True)
 
     @classmethod
     def _split_destructive_skip(cls, cmd_text: Optional[str]) -> tuple[str, bool]:

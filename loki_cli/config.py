@@ -1030,7 +1030,6 @@ _EXTRA_KNOWN_ROOT_KEYS = {
     "image_gen",         # agent/image_gen_registry.py
     "video_gen",         # agent/video_gen_registry.py
     "plugins",           # plugin enable/disable lists (loki_cli/plugins_cmd.py)
-    "smart_model_routing",   # written by the setup wizard
     "platform_toolsets",     # written by the setup wizard
     "known_plugin_toolsets", # loki_cli/tools_config.py toolset-save flow
     "known_builtin_toolsets",  # ditto — builtin toolsets a platform's checklist has offered

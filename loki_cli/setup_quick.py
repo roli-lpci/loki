@@ -81,7 +81,7 @@ def _run_portal_one_shot(config: dict) -> None:
     _info("  Run `loki portal info` to inspect routing.", "  Run `loki` to start chatting.")
 
 
-def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool):
+def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool, *, include_typesafe: bool = False):
     """Streamlined first-time setup via OpenRouter: API key, model, terminal and messaging;
     everything else gets defaults."""
     from loki_cli.setup import (
@@ -102,6 +102,10 @@ def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool):
         print_warning(f"OpenRouter setup encountered an error: {exc}")
         print_info("You can try again later with: loki model")
     _reload_config_into(config)
+
+    if include_typesafe:
+        from loki_cli.setup_typesafe import setup_typesafe_jev
+        setup_typesafe_jev(config)
 
     setup_terminal_backend(config)
     _apply_default_agent_settings(config)
@@ -125,6 +129,13 @@ def _run_first_time_quick_setup(config: dict, loki_home, is_existing: bool):
     _print_macos_fda_tip()
     print()
     _print_setup_summary(config, loki_home)
+
+
+def _run_first_time_typesafe_setup(config: dict, loki_home, is_existing: bool):
+    """First-time quick setup with Jev as a companion decision engine."""
+    return _run_first_time_quick_setup(
+        config, loki_home, is_existing, include_typesafe=True
+    )
 
 
 def _print_macos_fda_tip() -> None:

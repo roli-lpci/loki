@@ -1008,6 +1008,23 @@ export async function saveOnboardingApiKey(
       return { ok: false }
     }
 
+    // TypeSafe Jev is a companion decision engine, not an inference provider.
+    // Persist its credential but do not run model-provider readiness/default-model
+    // logic: the user still needs (or may already have) a normal chat provider.
+    if (envKey === 'TYPESAFE_API_KEY') {
+      const providers = $desktopOnboarding.get().providers
+      if (providers && providers.length > 0) {
+        patch({ mode: 'oauth' })
+      }
+      notify({
+        kind: 'success',
+        title: 'TypeSafe Jev connected',
+        message: 'Jev is available as a companion decision tool; keep or choose a chat provider for normal conversations.'
+      })
+
+      return { ok: true }
+    }
+
     // For API-key flows we don't have a definitive provider id (the
     // user picked which API key they're entering, but the corresponding
     // backend slug — e.g. OPENROUTER_API_KEY → "openrouter" — is the

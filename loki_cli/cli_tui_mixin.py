@@ -664,13 +664,16 @@ class CLITuiMixin:
         state["_visible_count"] = len(rows)
         _query = state.get("filter", "") or ""
         total = len(state.get("entries") or [])
+        execute_selection = bool(state.get("execute_selection"))
+        action = "runs" if execute_selection else "inserts"
         if _query:
-            hint = f"Filter: {_query}▏  ({len(rows)}/{total} match — Enter inserts, Esc cancels)"
+            hint = f"Filter: {_query}▏  ({len(rows)}/{total} match — Enter {action}, Esc cancels)"
         else:
-            hint = f"Type to filter {total} commands — ↑/↓ then Enter inserts, Esc cancels"
+            hint = f"Type to filter {total} options — ↑/↓ then Enter {action}, Esc cancels"
         labels = [f"{c}  —  {d}" if d else c for (c, _cat, d) in rows] or ["(no matching commands)"]
+        title = state.get("title") or "⚙ Command Palette"
         return self._render_scroll_list_panel(
-            state, "⚙ Command Palette", hint, labels, min_width=50, max_width=90, indent='    ')
+            state, title, hint, labels, min_width=50, max_width=90, indent='    ')
 
     def _render_sudo_style_panel(self, title: str, body_lines: list[str]):
         """Bordered ``sudo-*`` panel: blank, each body line, blank, body-final line, blank."""

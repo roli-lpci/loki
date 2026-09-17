@@ -75,6 +75,31 @@ _SCHEMA_OVERRIDES: Dict[str, Dict[str, Any]] = {
         "description": "Context window override (0 = auto-detect from model metadata)",
         "category": "general",
     },
+    "smart_model_routing.enabled": {
+        "type": "boolean",
+        "description": (
+            "Loki Autorouter (powered by Jev): send the first task plus bounded model metadata to TypeSafe, then choose "
+            "a sufficiently capable model from the current gateway only; no history or provider "
+            "credentials are sent. Requires TYPESAFE_API_KEY."
+        ),
+        "category": "agent",
+    },
+    "smart_model_routing.mode": _select(
+        "Model-routing engine", "jev_auto", category="agent"
+    ),
+    "smart_model_routing.confidence_threshold": {
+        "type": "number",
+        "description": "Minimum Jev confidence required before changing the configured model (0–1)",
+        "category": "agent",
+    },
+    "smart_model_routing.max_candidates": {
+        "type": "number",
+        "description": "Maximum same-gateway model candidates sent to Loki Autorouter / Jev (2–24)",
+        "category": "agent",
+    },
+    "smart_model_routing.cost_bias": _select(
+        "Loki Autorouter cost/capability preference", "economy", "balanced", "quality", category="agent"
+    ),
     "terminal.backend": _select(
         "Terminal execution backend",
         "local", "docker", "ssh", "agentvm", "modal", "daytona", "vercel_sandbox", "singularity",
@@ -198,6 +223,10 @@ _CATEGORY_MERGE: Dict[str, str] = {
 
 _UI_TYPES = ((bool, "boolean"), (int, "number"), (float, "number"), (list, "list"), (dict, "object"))
 
+# Product scaffolding that must not be user-toggleable yet. Runtime defaults still exist so the
+# feature can be tested safely, but the generic Desktop Config surface does not advertise it.
+_SCHEMA_HIDDEN_PREFIXES = ("ads.",)
+
 
 def _infer_type(value: Any) -> str:
     """Infer a UI field type from a Python value."""
@@ -209,7 +238,10 @@ def _build_schema_from_config(config: Dict[str, Any], prefix: str = "") -> Dict[
     schema: Dict[str, Dict[str, Any]] = {}
     for key, value in config.items():
         full_key = f"{prefix}.{key}" if prefix else key
-        if full_key == "_config_version":
+        if full_key == "_config_version" or any(
+            full_key == hidden.rstrip(".") or full_key.startswith(hidden)
+            for hidden in _SCHEMA_HIDDEN_PREFIXES
+        ):
             continue
         if isinstance(value, dict):
             schema.update(_build_schema_from_config(value, full_key))

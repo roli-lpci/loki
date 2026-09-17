@@ -17,6 +17,7 @@ import stat
 import subprocess
 import sys
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -1421,3 +1422,51 @@ class TestTimeoutProcessGroupKill:
         monkeypatch.setattr(bu_cli, "_kill_cli_process_group", lambda proc: None)
         with pytest.raises(subprocess.TimeoutExpired):
             bu_cli._run_cli_killing_process_group(["x"], "code", {}, 5)
+
+
+def test_browser_use_on_enables_browser_toolset_when_cli_policy_disabled(monkeypatch):
+    """Backend selection must not leave Browser Automation disabled in /tools policy."""
+    import loki_cli.config as hc
+    import loki_cli.tools_config as tools_config
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    config = {"platform_toolsets": {"cli": ["terminal"]}, "agent": {}, "browser": {}}
+    saved = {}
+
+    class Stub:
+        def __init__(self):
+            self.session_resets = 0
+            self.enabled_toolsets = {"terminal"}
+            self.disabled_toolsets = []
+            self.agent = None
+            self.tool_mutations = []
+
+        def _run_tools_config(self, **kwargs):
+            self.tool_mutations.append(kwargs)
+            config["platform_toolsets"]["cli"].append("browser")
+
+        def new_session(self):
+            self.session_resets += 1
+
+    monkeypatch.setattr(hc, "load_config", lambda: config)
+    monkeypatch.setattr(hc, "save_config", lambda c: saved.update(c))
+    monkeypatch.setattr(tools_config, "_get_platform_tools",
+                        lambda cfg, platform, **kwargs: set(cfg.get("platform_toolsets", {}).get(platform, [])))
+
+    stub = Stub()
+    CLICommandsMixin._handle_browser_command(stub, "/browser use on")
+
+    assert stub.tool_mutations == [{"tools_action": "enable", "names": ["browser"], "platform": "cli"}]
+    assert config["browser"]["backend"] == "browser-use"
+    assert stub.enabled_toolsets == {"terminal", "browser"}
+    assert stub.session_resets == 1
+
+
+def test_browser_on_is_alias_for_enabling_browser_use(monkeypatch):
+    """The natural `/browser on` spelling should enable the backend instead of being ignored."""
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    stub = type("Stub", (), {})()
+    with patch("loki_cli.cli_commands_mixin._browser_use") as use:
+        CLICommandsMixin._handle_browser_command(stub, "/browser on")
+    use.assert_called_once_with(stub, "on")

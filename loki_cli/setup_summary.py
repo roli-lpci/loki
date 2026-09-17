@@ -40,6 +40,7 @@ _DONE_BANNER = (
 # (command, description) rows; the description carries its own alignment padding.
 _EDIT_WIZARD_ROWS = (
     ("loki setup", "          Re-run the full wizard"), ("loki setup model", "    Change model/provider"),
+    ("loki setup jev", "      Configure TypeSafe Jev"),
     ("loki setup terminal", " Change terminal backend"), ("loki setup gateway", "  Configure messaging"),
     ("loki setup tools", "    Configure tool providers"))
 _EDIT_CONFIG_ROWS = (
@@ -183,6 +184,10 @@ def _spotify_row(config, feats):
     return None
 
 
+def _typesafe_row(config, feats):
+    return ("TypeSafe Jev (structured decisions)", True, None) if _setup.get_env_value("TYPESAFE_API_KEY") else None
+
+
 def _skills_hub_row(config, feats):
     ok = bool(_setup.get_env_value("GITHUB_TOKEN"))
     return ("Skills Hub (GitHub)", ok, None if ok else "GITHUB_TOKEN")
@@ -196,7 +201,7 @@ def _always_on_rows(config, feats):
 
 _TOOL_ROW_BUILDERS = (
     _vision_row, _web_row, _browser_row, _image_gen_row, _video_gen_row, _tts_row, _stt_row,
-    _modal_row, _home_assistant_row, _spotify_row, _skills_hub_row, _always_on_rows)
+    _modal_row, _home_assistant_row, _spotify_row, _typesafe_row, _skills_hub_row, _always_on_rows)
 
 
 def _print_cmd_rows(rows):
