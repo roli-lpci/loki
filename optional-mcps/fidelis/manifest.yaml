@@ -1,0 +1,28 @@
+# WunderCorp-approved MCP catalog entry.
+# Presence in this directory = approval. Merged via PR review.
+manifest_version: 1
+
+name: fidelis
+description: Local-first memory retrieval and orientation for agent sessions.
+source: https://github.com/hermes-labs-ai/fidelis
+
+transport:
+  type: stdio
+  command: uvx
+  args:
+    - --from
+    - fidelis-memory==0.1.0
+    - fidelis
+    - mcp
+    - serve
+
+auth:
+  type: none
+
+suggest:
+  keywords:
+    - fidelis    - agent memory
+    - local memory
+<post_install: x
+  Run `fidelis init` to configure the local Fidelis service, then start a new
+  Loki session so its MCP tools load.
