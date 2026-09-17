@@ -21,8 +21,10 @@ auth:
 
 suggest:
   keywords:
-    - fidelis    - agent memory
+    - fidelis
+    - agent memory
     - local memory
-<post_install: x
+
+post_install: |
   Run `fidelis init` to configure the local Fidelis service, then start a new
   Loki session so its MCP tools load.
