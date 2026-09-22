@@ -59,8 +59,8 @@ Environment:
   LOKI_NPM_CONFIRM_ATTEMPTS                Registry confirmation polls after successful npm publish (default: 24)
   LOKI_NPM_CONFIRM_DELAY                   Seconds between confirmation polls (default: 5)
   LOKI_RELEASE_BRANCH                      Production source branch used by install.sh (default: main)
-  LOKI_RELEASE_REPO_URL                    Git repository cloned by the public installer
-                                           (default: git@github.com:wundercorp/loki.git)
+  LOKI_EXPECTED_RELEASE_ORIGIN             Expected standalone Loki repository
+                                               (default: https://github.com/wundercorp/loki.git)
   LOKI_ALLOW_NON_RELEASE_BRANCH_DEPLOY     Set to 1 only to intentionally deploy from another branch
 USAGE
 }
@@ -409,46 +409,102 @@ fi
 cd "$REPO_ROOT"
 
 RELEASE_BRANCH="${LOKI_RELEASE_BRANCH:-main}"
-RELEASE_REPO_URL="${LOKI_RELEASE_REPO_URL:-git@github.com:wundercorp/loki.git}"
+EXPECTED_RELEASE_ORIGIN="${LOKI_EXPECTED_RELEASE_ORIGIN:-https://github.com/wundercorp/loki.git}"
 ALLOW_NON_RELEASE_BRANCH_DEPLOY="${LOKI_ALLOW_NON_RELEASE_BRANCH_DEPLOY:-0}"
 
 normalize_git_url() {
   printf '%s' "$1" \
-    | sed -E 's#^git@github\.com:#https://github.com/#; s#\.git$##; s#/$##'
+    | sed -E \
+        -e 's#^git@github\.com:#https://github.com/#' \
+        -e 's#\.git$##' \
+        -e 's#/$##'
 }
 
-release_source_commit() {
-  local git_top package_prefix
-  git_top="$(git rev-parse --show-toplevel)"
-  package_prefix="$(git rev-parse --show-prefix)"
-  package_prefix="${package_prefix%/}"
+verify_release_origin() {
+  local origin_url
+  local normalized_origin
+  local normalized_expected
 
-  if [ "$git_top" = "$REPO_ROOT" ] || [ -z "$package_prefix" ]; then
-    git rev-parse HEAD
-    return 0
-  fi
+  origin_url="$(git remote get-url origin 2>/dev/null || true)"
 
-  printf 'Preparing standalone Loki source from monorepo prefix %s...\n' "$package_prefix" >&2
-  git -C "$git_top" subtree split --prefix="$package_prefix" HEAD
-}
-
-push_public_installer_source() {
-  local source_commit remote_commit
-  source_commit="$(release_source_commit)"
-
-  printf 'Publishing installer source to %s (%s)...\n' "$RELEASE_REPO_URL" "$RELEASE_BRANCH"
-  git push "$RELEASE_REPO_URL" "$source_commit:refs/heads/$RELEASE_BRANCH"
-
-  remote_commit="$(git ls-remote "$RELEASE_REPO_URL" "refs/heads/$RELEASE_BRANCH" | awk 'NR == 1 {print $1}')"
-  if [ -z "$remote_commit" ] || [ "$remote_commit" != "$source_commit" ]; then
-    printf 'Public installer source verification failed.\n' >&2
-    printf 'Expected %s, remote %s/%s reported %s.\n' \
-      "$source_commit" "$RELEASE_REPO_URL" "$RELEASE_BRANCH" "${remote_commit:-missing}" >&2
+  if [ -z "$origin_url" ]; then
+    printf '%s\n' \
+      'ERROR: standalone Loki releases require an origin remote.' \
+      >&2
     exit 1
   fi
 
-  printf 'Verified public installer source: %s@%s\n' "$RELEASE_BRANCH" "${source_commit:0:12}"
+  normalized_origin="$(normalize_git_url "$origin_url")"
+  normalized_expected="$(normalize_git_url "$EXPECTED_RELEASE_ORIGIN")"
+
+  if [ "$normalized_origin" != "$normalized_expected" ]; then
+    printf '%s\n' \
+      'ERROR: this checkout does not point at the expected standalone Loki repository.' \
+      >&2
+
+    printf 'Expected: %s\n' \
+      "$EXPECTED_RELEASE_ORIGIN" \
+      >&2
+
+    printf 'Actual:   %s\n' \
+      "$origin_url" \
+      >&2
+
+    exit 1
+  fi
 }
+
+push_release_source() {
+  local source_commit
+  local remote_commit
+
+  verify_release_origin
+
+  source_commit="$(git rev-parse HEAD)"
+
+  printf 'Publishing Loki source to origin (%s)...\n' \
+    "$RELEASE_BRANCH"
+
+  git push \
+    origin \
+    "HEAD:refs/heads/$RELEASE_BRANCH"
+
+  remote_commit="$(
+    git ls-remote \
+      origin \
+      "refs/heads/$RELEASE_BRANCH" \
+    | awk 'NR == 1 {print $1}'
+  )"
+
+  if [ -z "$remote_commit" ]; then
+    printf '%s\n' \
+      'ERROR: origin did not report a release branch commit.' \
+      >&2
+    exit 1
+  fi
+
+  if [ "$remote_commit" != "$source_commit" ]; then
+    printf '%s\n' \
+      'ERROR: release source verification failed.' \
+      >&2
+
+    printf 'Local HEAD: %s\n' \
+      "$source_commit" \
+      >&2
+
+    printf 'Remote %s: %s\n' \
+      "$RELEASE_BRANCH" \
+      "$remote_commit" \
+      >&2
+
+    exit 1
+  fi
+
+  printf 'Verified standalone Loki release source: %s@%s\n' \
+    "$RELEASE_BRANCH" \
+    "${source_commit:0:12}"
+}
+
 if ! $DRY_RUN && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   DEPLOY_BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
   if [ -n "$DEPLOY_BRANCH" ] && [ "$DEPLOY_BRANCH" != "$RELEASE_BRANCH" ] \
@@ -636,9 +692,7 @@ PYDATE
         printf '%s\n' 'Cannot publish from a detached HEAD with release git integration enabled. Re-run with --no-version-git only if that is intentional.' >&2
         exit 1
       fi
-      printf 'Pushing release metadata/source commit on %s...\n' "$CURRENT_BRANCH"
-      git push origin HEAD
-      push_public_installer_source
+      push_release_source
     fi
 
     if npm view "$PACKAGE_NAME@$TARGET_VERSION" version --registry=https://registry.npmjs.org --prefer-online --fetch-retries=0 >/dev/null 2>&1; then
@@ -685,10 +739,9 @@ PYDATE
   fi
 fi
 
-# The public shell/PowerShell installers clone the standalone WunderCorp Loki
-# repository, not the npm package. A site-only deploy from the monorepo must
-# therefore keep that repository in sync too, otherwise a freshly-uploaded
-# install.sh can still install an older Loki checkout.
+# The public shell/PowerShell installers clone this standalone repository.
+# A site-only deploy still synchronizes origin/main before uploading installers
+# so the installer source and the deployed installer remain on the same commit.
 if $DEPLOY_SITE && ! $DEPLOY_NPM && ! $DRY_RUN \
    && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if [ -n "$(git status --porcelain)" ]; then
@@ -701,8 +754,7 @@ if $DEPLOY_SITE && ! $DEPLOY_NPM && ! $DRY_RUN \
     printf '%s\n' 'Cannot publish installer source from a detached HEAD.' >&2
     exit 1
   fi
-  git push origin HEAD
-  push_public_installer_source
+  push_release_source
 fi
 
 if $DEPLOY_SITE; then
