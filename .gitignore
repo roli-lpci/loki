@@ -1,5 +1,8 @@
 cat > .gitignore <<'EOF'
 # Dependencies
+__MACOSX
+.pyc
+.pytest_cache
 infra/
 MagicMock/
 node_modules/

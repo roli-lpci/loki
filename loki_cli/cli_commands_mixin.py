@@ -2290,6 +2290,81 @@ class CLICommandsMixin:
             title_suffix="(sign-in)", empty_note="  (No result)", console=console)
         thread.start()
 
+    def _handle_sso_command(self, cmd_original: str) -> None:
+        action = _command_arg(cmd_original, lower=True) or "status"
+        if action not in {"status", "login", "logout"}:
+            return _cp("  Usage: /sso [status|login|logout]")
+        from loki_cli import wundercorp_sso
+        if action == "status":
+            return _cp(*(f"  {line}" for line in wundercorp_sso.format_sso_status().splitlines()))
+
+        console = None if getattr(self, "_app", None) else getattr(self, "console", None)
+        if action == "login":
+            _cp("  Opening WunderCorp sign-in in your browser…")
+
+        def produce() -> str:
+            if action == "logout":
+                wundercorp_sso.logout_sso()
+                return "WunderCorp SSO signed out.\nYour Link grant is separate and remains connected until /link disconnect."
+            wundercorp_sso.login_sso()
+            identity = wundercorp_sso.sso_status()
+            label = identity.get("email") or identity.get("username") or identity.get("subject") or "your account"
+            return f"WunderCorp SSO connected as {label}.\n/link connect will reuse this session."
+
+        thread = self._side_worker(
+            produce,
+            name=f"sso-{action}",
+            fail_label="WunderCorp SSO",
+            header_lines=["  WunderCorp SSO"],
+            title_suffix=f"({action})",
+            empty_note="  (No result)",
+            console=console,
+        )
+        thread.start()
+
+    def _handle_link_command(self, cmd_original: str) -> None:
+        action = _command_arg(cmd_original, lower=True) or "status"
+        aliases = {"methods": "payment-methods", "payments": "payment-methods"}
+        action = aliases.get(action, action)
+        if action not in {"status", "connect", "disconnect", "user", "payment-methods"}:
+            return _cp("  Usage: /link [status|connect|disconnect|user|payment-methods]")
+        from loki_cli import link_connection
+        console = None if getattr(self, "_app", None) else getattr(self, "console", None)
+        if action == "connect":
+            _cp("  Connecting Link… WunderCorp sign-in will open first if needed.")
+
+        def produce() -> str:
+            if action == "connect":
+                status = link_connection.connect_link()
+                return link_connection.format_link_status(status)
+            if action == "disconnect":
+                result = link_connection.disconnect_link()
+                if result.get("revoked") is False and result.get("connected") is False:
+                    return "Link disconnected locally. Remote revocation was not confirmed."
+                return "Link disconnected."
+            if action == "user":
+                return link_connection.format_link_user_info(link_connection.link_user_info())
+            if action == "payment-methods":
+                return link_connection.format_link_payment_methods(link_connection.link_payment_methods())
+            try:
+                status = link_connection.link_status(interactive_sso=False)
+            except link_connection.LinkConnectionError as exc:
+                if "WunderCorp SSO is required" in str(exc):
+                    return "WunderCorp SSO: signed out\nLink: unknown\nRun /link connect to sign in and connect Link."
+                raise
+            return link_connection.format_link_status(status)
+
+        thread = self._side_worker(
+            produce,
+            name=f"link-{action}",
+            fail_label="Link",
+            header_lines=["  Link"],
+            title_suffix=f"({action})",
+            empty_note="  (No result)",
+            console=console,
+        )
+        thread.start()
+
     def _handle_btw_command(self, cmd: str):
         """Handle /btw <question> — answer a side question about this conversation from a
         history snapshot via a one-shot auxiliary call. The live session is never touched
