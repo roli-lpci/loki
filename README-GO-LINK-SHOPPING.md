@@ -80,3 +80,23 @@ loki_cli/go_workflows.py
 ```
 
 Add another `GoWorkflow` to `WORKFLOWS` to introduce modes such as travel, booking, research, deployment, or another task-specific bundle without adding more root commands.
+
+## Toolset activation fix
+
+`link-wallet` is a first-class configurable built-in toolset. `/go shopping` now verifies that every required toolset was actually enabled before resetting the session or reporting ready. If a required toolset cannot be enabled, the command stops and reports the missing toolset instead of continuing with a partial execution surface.
+
+## Business operations mode
+
+This build also includes `/ops` and `/go ops`. `/ops` is independent of Link and activates a broad business-operations tool contract for finance, sales, CRM, leads, operations, inventory, people/HR, hiring, customers, marketing, projects, and risk. See `README-OPS-SUITE.md`.
+
+## If `/go shopping` says `Unknown toolset 'link-wallet'`
+
+That message means the `loki` executable is importing an older installed source tree. The current build registers `link-wallet` as a configurable toolset and `/go shopping` fails closed if its browser/Link runtime tools are absent.
+
+From this repository, run:
+
+```bash
+bash ./scripts/reinstall-current-loki.sh
+```
+
+Then fully quit/restart Loki. The script re-points the environment behind the current `loki` executable at this source tree and verifies the relevant implementation before returning success.

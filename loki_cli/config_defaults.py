@@ -50,6 +50,12 @@ DEFAULT_CONFIG = {
     "fallback_providers": [],
     "credential_pool_strategies": {},
     "toolsets": ["loki-cli"],
+    # Business operations mode. Business context is user-authored non-secret configuration and
+    # is injected only into fresh /ops sessions; live metrics still come from tools/data sources.
+    "ops": {
+        "business_context": "",
+        "default_lens": "overview",
+    },
     # journal_mode: SQLite journal mode for every Loki DB. "wal" default; use "delete" on
     # weak-fsync/shared filesystems where WAL is not crash-safe (macOS virtiofs, NFS, SMB).
     "database": {

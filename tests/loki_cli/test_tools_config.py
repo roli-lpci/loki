@@ -1323,3 +1323,25 @@ class TestLightpandaPostSetup:
         # Not in the forced-setup gate: a missing binary must not nag every
         # user who toggles the browser toolset.
         assert "lightpanda" not in _POST_SETUP_INSTALLED
+
+
+def test_tools_command_defaults_returning_user_menu_to_done(monkeypatch):
+    import loki_cli.tools_config as tc
+
+    seen = {}
+
+    monkeypatch.setattr(tc, "_get_enabled_platforms", lambda: ["cli"])
+    monkeypatch.setattr(tc, "_platform_menu_label", lambda config, pkey: "Configure CLI")
+
+    def fake_prompt(question, choices, default=0):
+        seen["question"] = question
+        seen["choices"] = list(choices)
+        seen["default"] = default
+        return default
+
+    monkeypatch.setattr(tc, "_prompt_choice", fake_prompt)
+
+    tc.tools_command(config={})
+
+    assert seen["question"] == "Select an option:"
+    assert seen["choices"][seen["default"]] == "Done"

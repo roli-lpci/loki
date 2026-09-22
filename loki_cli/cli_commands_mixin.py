@@ -2367,33 +2367,14 @@ class CLICommandsMixin:
         )
         thread.start()
 
-    def _handle_go_command(self, cmd_original: str) -> None:
-        from loki_cli.go_workflows import resolve_workflow, workflow_lines
-
-        action = _command_arg(cmd_original, lower=True) or "status"
-        if action in {"status", "list"}:
-            mode = getattr(self, "_go_mode", None)
-            if mode:
-                return _cp(f"  /go mode: {mode}", "  /go off exits the workflow mode.")
-            return _cp("  /go workflows", *workflow_lines(), "", "  Usage: /go <workflow>")
-        if action in {"off", "stop", "exit"}:
-            self._go_mode = None
-            agent = getattr(self, "agent", None)
-            if agent is not None:
-                prompt = str(getattr(agent, "ephemeral_system_prompt", "") or "")
-                marker_text = "[LOKI_GO_"
-                marker_index = prompt.find(marker_text)
-                if marker_index >= 0:
-                    prompt = prompt[:marker_index].rstrip()
-                agent.ephemeral_system_prompt = prompt or None
-                if hasattr(agent, "_invalidate_system_prompt"):
-                    agent._invalidate_system_prompt()
-            return _cp("  /go workflow mode disabled. Enabled tools remain available.")
-
-        workflow = resolve_workflow(action)
-        if workflow is None:
-            return _cp("  Unknown /go workflow.", *workflow_lines(), "", "  Usage: /go <workflow>")
-
+    def _activate_go_workflow(
+        self,
+        workflow,
+        *,
+        ephemeral_prompt: str | None = None,
+        display_name: str | None = None,
+    ) -> bool:
+        """Enable a workflow's tool contract, rotate session, and install its prompt."""
         from loki_cli.config import load_config, save_config
         from loki_cli.tools_config import _get_platform_tools
         from tools.registry import invalidate_check_fn_cache
@@ -2404,6 +2385,14 @@ class CLICommandsMixin:
         if missing:
             self._run_tools_config(tools_action="enable", names=missing, platform="cli")
             config = load_config()
+            enabled_after = set(_get_platform_tools(config, "cli", include_default_mcp_servers=False))
+            still_missing = [name for name in workflow.toolsets if name not in enabled_after]
+            if still_missing:
+                return bool(_cp(
+                    f"  Could not enable {display_name or f'/go {workflow.name}'}.",
+                    "  Missing required toolsets: " + ", ".join(still_missing),
+                    "  Run /tools list to inspect the active tool configuration.",
+                ))
         if workflow.browser_backend:
             config.setdefault("browser", {})["backend"] = workflow.browser_backend
         save_config(config)
@@ -2411,20 +2400,95 @@ class CLICommandsMixin:
 
         self.new_session()
         _refresh_cli_toolsets(self)
-        self._go_mode = workflow.name
+
         agent = getattr(self, "agent", None)
+        required_runtime_tools = tuple(getattr(workflow, "required_runtime_tools", ()) or ())
+        if required_runtime_tools:
+            visible_tools = set(getattr(agent, "valid_tool_names", ()) or ()) if agent is not None else set()
+            missing_runtime_tools = [name for name in required_runtime_tools if name not in visible_tools]
+            if missing_runtime_tools:
+                self._go_mode = None
+                return bool(_cp(
+                    f"  Could not enable {display_name or f'/go {workflow.name}' }.",
+                    "  The configured toolsets did not produce the required runtime tools:",
+                    "  " + ", ".join(missing_runtime_tools),
+                    "  /go will not report ready until those tools are actually model-visible.",
+                ))
+
+        self._go_mode = workflow.name
+        prompt_to_apply = ephemeral_prompt if ephemeral_prompt is not None else workflow.ephemeral_prompt
         if agent is not None:
             base = str(getattr(agent, "ephemeral_system_prompt", "") or "").rstrip()
-            if workflow.ephemeral_prompt.splitlines()[0] not in base:
-                agent.ephemeral_system_prompt = (base + "\n\n" + workflow.ephemeral_prompt).strip()
+            marker_indexes = [
+                index for marker in ("[LOKI_GO_", "[LOKI_OPS]")
+                if (index := base.find(marker)) >= 0
+            ]
+            if marker_indexes:
+                base = base[:min(marker_indexes)].rstrip()
+            agent.ephemeral_system_prompt = (base + "\n\n" + prompt_to_apply).strip()
             if hasattr(agent, "_invalidate_system_prompt"):
                 agent._invalidate_system_prompt()
 
+        label = display_name or f"/go {workflow.name}"
         _cp(
-            f"  🚀 /go {workflow.name} enabled",
+            f"  🚀 {label} enabled",
             "  Required tools are active in a fresh session.",
             "  Preparing connected services…" if workflow.requires_link else "  Workflow ready.",
         )
+        return True
+
+    def _handle_go_command(self, cmd_original: str) -> None:
+        from loki_cli.go_workflows import resolve_workflow, workflow_lines
+
+        action = _command_arg(cmd_original, lower=True) or "status"
+        if action in {"status", "list"}:
+            mode = getattr(self, "_go_mode", None)
+            if mode:
+                detail = f" ({getattr(self, '_ops_lens', 'overview')})" if mode == "ops" else ""
+                return _cp(f"  /go mode: {mode}{detail}", "  /go off exits the workflow mode.")
+            return _cp("  /go workflows", *workflow_lines(), "", "  Usage: /go <workflow>")
+        if action in {"off", "stop", "exit"}:
+            self.new_session()
+            self._go_mode = None
+            self._ops_lens = None
+            agent = getattr(self, "agent", None)
+            if agent is not None:
+                prompt = str(getattr(agent, "ephemeral_system_prompt", "") or "")
+                marker_indexes = [
+                    index for marker in ("[LOKI_GO_", "[LOKI_OPS]")
+                    if (index := prompt.find(marker)) >= 0
+                ]
+                if marker_indexes:
+                    prompt = prompt[:min(marker_indexes)].rstrip()
+                agent.ephemeral_system_prompt = prompt or None
+                if hasattr(agent, "_invalidate_system_prompt"):
+                    agent._invalidate_system_prompt()
+            return _cp("  /go workflow mode disabled in a fresh session. Enabled tools remain available.")
+
+        workflow = resolve_workflow(action)
+        if workflow is None:
+            return _cp("  Unknown /go workflow.", *workflow_lines(), "", "  Usage: /go <workflow>")
+
+        prompt_override = None
+        if workflow.name == "ops":
+            from loki_cli.config import load_config
+            from loki_cli.ops_mode import build_ops_prompt, resolve_lens
+
+            config = load_config()
+            ops_config = config.get("ops") or {}
+            default_lens = str(ops_config.get("default_lens") or "overview")
+            resolved_lens = resolve_lens(default_lens) or resolve_lens("overview")
+            self._ops_lens = resolved_lens.name
+            prompt_override = build_ops_prompt(
+                lens=resolved_lens.name,
+                business_context=str(ops_config.get("business_context") or ""),
+            )
+        else:
+            self._ops_lens = None
+
+        if not CLICommandsMixin._activate_go_workflow(self, workflow, ephemeral_prompt=prompt_override):
+            return
+
         if not workflow.requires_link:
             return
 
@@ -2453,6 +2517,96 @@ class CLICommandsMixin:
             console=console,
         )
         thread.start()
+
+    def _handle_ops_command(self, cmd_original: str) -> None:
+        from loki_cli.config import load_config, save_config
+        from loki_cli.go_workflows import resolve_workflow
+        from loki_cli.ops_mode import build_ops_prompt, lens_lines, resolve_lens
+
+        raw = _command_arg(cmd_original)
+        parts = raw.split(None, 1) if raw else []
+        action = parts[0].lower() if parts else ""
+        detail = parts[1].strip() if len(parts) > 1 else ""
+        config = load_config()
+        ops_config = config.setdefault("ops", {})
+
+        if action in {"status", "list"}:
+            active = getattr(self, "_go_mode", None) == "ops"
+            lens = getattr(self, "_ops_lens", None) or str(ops_config.get("default_lens") or "overview")
+            profile = str(ops_config.get("business_context") or "").strip()
+            return _cp(
+                f"  /ops: {'active' if active else 'inactive'}",
+                f"  Lens: {lens}",
+                f"  Business profile: {'configured' if profile else 'not configured'}",
+                "",
+                *lens_lines(),
+                "",
+                "  Use /ops setup <business description> to persist business context.",
+            )
+
+        if action == "setup":
+            if not detail:
+                return _cp(
+                    "  Usage: /ops setup <business description>",
+                    "  Example: /ops setup Single-site gas station and convenience store in Virginia; 8 employees; fuel, c-store and car wash revenue.",
+                )
+            ops_config["business_context"] = detail
+            save_config(config)
+            return _cp(
+                "  ✓ Business operations profile saved.",
+                "  It will be included in new /ops sessions as user-provided context, not treated as live verified data.",
+                "  Run /ops or /ops <lens> to start.",
+            )
+
+        if action in {"profile", "context"}:
+            profile = str(ops_config.get("business_context") or "").strip()
+            if not profile:
+                return _cp("  No business profile configured.", "  Use /ops setup <business description>.")
+            return _cp("  Business operations profile:", f"  {profile}")
+
+        if action in {"clear-profile", "clear"}:
+            ops_config["business_context"] = ""
+            save_config(config)
+            return _cp("  ✓ Business operations profile cleared.")
+
+        if action in {"off", "stop", "exit"}:
+            if getattr(self, "_go_mode", None) != "ops":
+                return _cp("  /ops is not active.")
+            return self._handle_go_command("/go off")
+
+        if action in {"", "on", "start"}:
+            action = str(ops_config.get("default_lens") or "overview")
+
+        lens = resolve_lens(action)
+        if lens is None:
+            return _cp(
+                f"  Unknown /ops lens: {action}",
+                *lens_lines(),
+                "",
+                "  Usage: /ops <lens> or /ops setup <business description>",
+            )
+
+        workflow = resolve_workflow("ops")
+        if workflow is None:
+            return _cp("  /ops workflow is unavailable in this build.")
+
+        prompt = build_ops_prompt(
+            lens=lens.name,
+            business_context=str(ops_config.get("business_context") or ""),
+        )
+        if not CLICommandsMixin._activate_go_workflow(
+            self,
+            workflow,
+            ephemeral_prompt=prompt,
+            display_name=f"/ops {lens.name}",
+        ):
+            return
+
+        self._ops_lens = lens.name
+        _cp(
+            f"  Ops lens: {lens.name} — {lens.description}",
+            "  Give Loki a business question, KPI problem, file, dashboard URL, or operating objective.",
+        )
 
     def _handle_btw_command(self, cmd: str):
         """Handle /btw <question> — answer a side question about this conversation from a

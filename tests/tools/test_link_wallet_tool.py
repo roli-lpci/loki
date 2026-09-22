@@ -90,3 +90,12 @@ def test_checkout_fill_never_returns_card_values(monkeypatch):
     payload = json.loads(result)
     assert payload["success"] is True
     assert payload["filled_fields"] == 4
+
+
+def test_link_wallet_is_configurable_toolset():
+    from loki_cli.tools_config import CONFIGURABLE_TOOLSETS
+    from toolsets import validate_toolset
+
+    keys = {key for key, _label, _description in CONFIGURABLE_TOOLSETS}
+    assert "link-wallet" in keys
+    assert validate_toolset("link-wallet") is True

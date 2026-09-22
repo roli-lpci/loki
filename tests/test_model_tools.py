@@ -568,3 +568,12 @@ class TestBridgeDispatch:
             out = handle_function_call("tool_call", {"name": "mcp_x"}, task_id="t")
         assert json.loads(out) == {"ok": True}
         assert disp.call_args.args[0] == "mcp_x" and disp.call_args.args[1] == {"a": 1}
+
+
+def test_browser_exec_authority_accepts_process_manage_marker():
+    from model_tools import _rewrite_browser_exec
+
+    tool = {"type": "function", "function": {"name": "browser_exec", "description": "x", "parameters": {}}}
+    assert _rewrite_browser_exec(tool, {"process_manage"}) is tool
+    assert _rewrite_browser_exec(tool, {"terminal"}) is tool
+    assert _rewrite_browser_exec(tool, {"browser_vault_list"}) is None

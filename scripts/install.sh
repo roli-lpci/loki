@@ -37,8 +37,10 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
+BRIGHT_BLUE='\033[0;94m'
+SKY_BLUE='\033[38;5;75m'
 CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
 
@@ -72,7 +74,7 @@ RUN_SETUP=true
 SKIP_BROWSER=false
 SKIP_COMPUTER_USE=false
 NO_SKILLS=false
-BRANCH="main"
+BRANCH="${LOKI_INSTALL_BRANCH:-main}"
 INSTALL_COMMIT=""
 FORCE_COMMIT=false
 ENSURE_DEPS=""
@@ -216,13 +218,12 @@ done
 
 print_banner() {
     echo ""
-    echo -e "${MAGENTA}${BOLD}"
-    echo "┌─────────────────────────────────────────────────────────┐"
-    echo "│             ⚕ Loki Agent Installer                      │"
-    echo "├─────────────────────────────────────────────────────────┤"
-    echo "│  An open source AI agent by WunderCorp, Inc.            │"
-    echo "└─────────────────────────────────────────────────────────┘"
-    echo -e "${NC}"
+    echo -e "${BRIGHT_BLUE}${BOLD}┌─────────────────────────────────────────────────────────┐${NC}"
+    echo -e "${SKY_BLUE}${BOLD}│             ⚕ Loki Agent Installer                      │${NC}"
+    echo -e "${CYAN}${BOLD}├─────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${SKY_BLUE}│  An open source AI agent by WunderCorp, Inc.            │${NC}"
+    echo -e "${BRIGHT_BLUE}${BOLD}└─────────────────────────────────────────────────────────┘${NC}"
+    echo ""
 }
 
 log_info() {

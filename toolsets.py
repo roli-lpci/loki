@@ -131,6 +131,21 @@ TOOLSETS = {
     "context_engine": _ts("Runtime tools exposed by the active context engine"),
     "session_search": _ts("Search and recall past conversations with summarization", ["session_search"]),
     "connections": _ts("Remote connector discovery, execution, and account authorization", ["manage_connections"]),
+    "link-wallet": _ts(
+        "WunderCorp Link wallet tools for agentic shopping, spend approval, and secure checkout",
+        [
+            "link_wallet_status",
+            "link_wallet_user_info",
+            "link_wallet_payment_methods",
+            "link_wallet_shipping_addresses",
+            "link_spend_create",
+            "link_spend_request_approval",
+            "link_spend_get",
+            "link_spend_wait",
+            "link_spend_cancel",
+            "link_checkout_fill",
+        ],
+    ),
     "project": _ts("Desktop Projects — create/switch named workspaces (GUI sessions only)", ["desktop_project"]),
     "bot_room": _ts("Verified text-only Group Chat turn capabilities"),
 

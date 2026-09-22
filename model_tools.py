@@ -375,10 +375,15 @@ def _rewrite_browser_navigate(td: Dict[str, Any], available: set) -> Optional[Di
 
 
 def _rewrite_browser_exec(td: Dict[str, Any], available: set) -> Optional[Dict[str, Any]]:
-    """browser_exec runs arbitrary host Python: a session without the terminal surface
-    must not regain host execution via the browser toolset. Session-level gate rather
-    than a check_fn because check_fns are TTL-cached process-wide across sessions."""
-    return td if "terminal" in available else None
+    """browser_exec runs arbitrary host Python, so it requires explicit terminal-toolset authority.
+
+    ``process_manage`` is part of the same terminal toolset and remains visible when the
+    terminal backend probe itself is temporarily unavailable. Treating it as the authority
+    marker prevents Browser Use from disappearing solely because the shell backend check
+    failed, while still keeping browser_exec unavailable to sessions that did not enable
+    the terminal toolset at all.
+    """
+    return td if {"terminal", "process_manage"} & available else None
 
 
 def _rewrite_delegate_task(td: Dict[str, Any], available: set) -> Optional[Dict[str, Any]]:

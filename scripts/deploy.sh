@@ -58,6 +58,8 @@ Environment:
   LOKI_VERSION_BUMP                       Optional default bump component: patch, minor, or major
   LOKI_NPM_CONFIRM_ATTEMPTS                Registry confirmation polls after successful npm publish (default: 24)
   LOKI_NPM_CONFIRM_DELAY                   Seconds between confirmation polls (default: 5)
+  LOKI_RELEASE_BRANCH                      Production source branch used by install.sh (default: main)
+  LOKI_ALLOW_NON_RELEASE_BRANCH_DEPLOY     Set to 1 only to intentionally deploy from another branch
 USAGE
 }
 
@@ -402,6 +404,21 @@ if $APPLY_INFRA && ! $DEPLOY_SITE; then
   exit 1
 fi
 
+cd "$REPO_ROOT"
+
+RELEASE_BRANCH="${LOKI_RELEASE_BRANCH:-main}"
+ALLOW_NON_RELEASE_BRANCH_DEPLOY="${LOKI_ALLOW_NON_RELEASE_BRANCH_DEPLOY:-0}"
+if ! $DRY_RUN && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  DEPLOY_BRANCH="$(git symbolic-ref --quiet --short HEAD || true)"
+  if [ -n "$DEPLOY_BRANCH" ] && [ "$DEPLOY_BRANCH" != "$RELEASE_BRANCH" ] \
+     && [ "$ALLOW_NON_RELEASE_BRANCH_DEPLOY" != "1" ]; then
+    printf 'Refusing production deploy from branch %s.\n' "$DEPLOY_BRANCH" >&2
+    printf 'The public installer clones %s by default, so publishing from another branch can make loki.computer/install.sh install older code.\n' "$RELEASE_BRANCH" >&2
+    printf 'Merge/switch to %s first, or set LOKI_ALLOW_NON_RELEASE_BRANCH_DEPLOY=1 only when this mismatch is intentional.\n' "$RELEASE_BRANCH" >&2
+    exit 1
+  fi
+fi
+
 if ! $DRY_RUN && ! $YES; then
   printf 'This will deploy%s%s. Continue? [y/N] ' \
     "$($DEPLOY_SITE && printf ' loki.computer' || true)" \
@@ -412,8 +429,6 @@ if ! $DRY_RUN && ! $YES; then
     *) printf '%s\n' 'Cancelled.'; exit 1 ;;
   esac
 fi
-
-cd "$REPO_ROOT"
 
 SITE_DOMAIN="${LOKI_SITE_DOMAIN:-loki.computer}"
 SITE_BUCKET="${LOKI_SITE_BUCKET:-$SITE_DOMAIN}"
@@ -590,7 +605,7 @@ PYDATE
       exit 1
     fi
 
-    npm publish --access public --provenance=false
+    npm publish --access public --provenance=false --registry=https://registry.npmjs.org
 
     NPM_CONFIRM_ATTEMPTS="${LOKI_NPM_CONFIRM_ATTEMPTS:-24}"
     NPM_CONFIRM_DELAY="${LOKI_NPM_CONFIRM_DELAY:-5}"

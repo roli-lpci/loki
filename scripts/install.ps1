@@ -460,11 +460,11 @@ function Get-WindowsArch {
 
 function Write-Banner {
     Write-Host ""
-    Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|             * Loki Agent Installer                      |" -ForegroundColor Magenta
-    Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|  An open source AI agent by WunderCorp, Inc.            |" -ForegroundColor Magenta
-    Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
+    Write-Host "+---------------------------------------------------------+" -ForegroundColor Blue
+    Write-Host "|             * Loki Agent Installer                      |" -ForegroundColor Cyan
+    Write-Host "+---------------------------------------------------------+" -ForegroundColor DarkCyan
+    Write-Host "|  An open source AI agent by WunderCorp, Inc.            |" -ForegroundColor Cyan
+    Write-Host "+---------------------------------------------------------+" -ForegroundColor Blue
     Write-Host ""
 }
 

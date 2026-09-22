@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from loki_cli.ops_mode import OPS_TOOLSETS, build_ops_prompt
+
 
 @dataclass(frozen=True)
 class GoWorkflow:
@@ -12,6 +14,7 @@ class GoWorkflow:
     browser_backend: str | None = None
     requires_link: bool = False
     aliases: tuple[str, ...] = ()
+    required_runtime_tools: tuple[str, ...] = ()
 
 
 SHOPPING_PROMPT = (
@@ -32,8 +35,25 @@ WORKFLOWS: dict[str, GoWorkflow] = {
         toolsets=("terminal", "browser", "link-wallet"),
         browser_backend="browser-use",
         requires_link=True,
+        required_runtime_tools=(
+            "browser_exec",
+            "link_wallet_status",
+            "link_spend_create",
+            "link_spend_request_approval",
+            "link_spend_wait",
+            "link_checkout_fill",
+        ),
         ephemeral_prompt=SHOPPING_PROMPT,
         aliases=("shop",),
+    ),
+    "ops": GoWorkflow(
+        name="ops",
+        description="business operations, metrics, systems, and execution",
+        toolsets=OPS_TOOLSETS,
+        browser_backend="browser-use",
+        requires_link=False,
+        ephemeral_prompt=build_ops_prompt(),
+        aliases=("business",),
     ),
 }
 

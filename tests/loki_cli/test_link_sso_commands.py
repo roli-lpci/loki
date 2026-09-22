@@ -85,7 +85,7 @@ def test_registry_exposes_go_shopping_command():
     go = resolve_command("go")
     assert go is not None
     assert go.cli_only is True
-    assert go.subcommands == ("shopping", "status", "off")
+    assert go.subcommands == ("shopping", "ops", "status", "off")
 
 
 def test_link_connection_spend_helpers_forward_json(monkeypatch):
@@ -116,6 +116,14 @@ def test_go_shopping_enables_required_toolsets_and_prompt(monkeypatch):
 
     class Agent:
         ephemeral_system_prompt = None
+        valid_tool_names = {
+            "browser_exec",
+            "link_wallet_status",
+            "link_spend_create",
+            "link_spend_request_approval",
+            "link_spend_wait",
+            "link_checkout_fill",
+        }
 
         def _invalidate_system_prompt(self):
             return None
@@ -172,3 +180,98 @@ def test_go_shopping_enables_required_toolsets_and_prompt(monkeypatch):
     assert stub._go_mode == "shopping"
     assert "[LOKI_GO_SHOPPING]" in stub.agent.ephemeral_system_prompt
     assert stub.worker.started is True
+
+
+def test_go_shopping_fails_closed_when_required_toolset_cannot_enable(monkeypatch):
+    from loki_cli import cli_commands_mixin as commands_mixin
+    from loki_cli import config as config_module
+    from loki_cli import tools_config
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    config = {"platform_toolsets": {"cli": []}, "browser": {}}
+    outputs = []
+
+    class Stub:
+        def __init__(self):
+            self.agent = None
+            self._app = True
+            self.reset_count = 0
+
+        def _run_tools_config(self, **kwargs):
+            for name in kwargs["names"]:
+                if name != "link-wallet":
+                    config["platform_toolsets"]["cli"].append(name)
+
+        def new_session(self):
+            self.reset_count += 1
+
+    monkeypatch.setattr(config_module, "load_config", lambda: config)
+    monkeypatch.setattr(config_module, "save_config", lambda value: None)
+    monkeypatch.setattr(
+        tools_config,
+        "_get_platform_tools",
+        lambda cfg, platform, **kwargs: set(cfg.get("platform_toolsets", {}).get(platform, [])),
+    )
+    monkeypatch.setattr(commands_mixin, "_cp", lambda *lines: outputs.append(lines))
+    monkeypatch.setattr("tools.registry.invalidate_check_fn_cache", lambda: None)
+
+    stub = Stub()
+    CLICommandsMixin._handle_go_command(stub, "/go shopping")
+
+    assert stub.reset_count == 0
+    assert any("Missing required toolsets: link-wallet" in line for call in outputs for line in call)
+
+
+def test_go_shopping_fails_closed_when_runtime_tools_are_missing(monkeypatch):
+    import loki_cli.config as config_module
+    import loki_cli.tools_config as tools_config
+    import loki_cli.cli_commands_mixin as commands_mixin
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    config = {
+        "platform_toolsets": {"cli": ["terminal", "browser", "link-wallet"]},
+        "agent": {},
+        "browser": {"backend": "browser-use"},
+    }
+    outputs = []
+
+    class Agent:
+        ephemeral_system_prompt = None
+        valid_tool_names = {"browser_exec", "link_wallet_status"}
+
+        def _invalidate_system_prompt(self):
+            return None
+
+    class Stub:
+        def __init__(self):
+            self.agent = Agent()
+            self._app = True
+            self.reset_count = 0
+            self._go_mode = None
+
+        def _run_tools_config(self, **kwargs):
+            raise AssertionError("toolsets were already configured")
+
+        def new_session(self):
+            self.reset_count += 1
+
+    monkeypatch.setattr(config_module, "load_config", lambda: config)
+    monkeypatch.setattr(config_module, "save_config", lambda value: None)
+    monkeypatch.setattr(
+        tools_config,
+        "_get_platform_tools",
+        lambda cfg, platform, **kwargs: set(cfg["platform_toolsets"][platform]),
+    )
+    monkeypatch.setattr(commands_mixin, "_refresh_cli_toolsets", lambda cli: None)
+    monkeypatch.setattr(commands_mixin, "_cp", lambda *lines: outputs.append(lines))
+    monkeypatch.setattr("tools.registry.invalidate_check_fn_cache", lambda: None)
+
+    stub = Stub()
+    CLICommandsMixin._handle_go_command(stub, "/go shopping")
+
+    assert stub.reset_count == 1
+    assert stub._go_mode is None
+    flattened = "\n".join(line for call in outputs for line in call)
+    assert "did not produce the required runtime tools" in flattened
+    assert "link_spend_create" in flattened
+    assert "link_checkout_fill" in flattened

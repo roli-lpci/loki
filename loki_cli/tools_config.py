@@ -69,6 +69,7 @@ CONFIGURABLE_TOOLSETS = [
     ("context_engine",  "🧩 Context Engine",            "runtime tools from the active context engine"),
     ("session_search",  "🔎 Session Search",            "search past conversations"),
     ("connections",     "🔌 Connections",               "remote connector tools and account authorization"),
+    ("link-wallet",     "💳 Link Wallet",                "WunderCorp Link payments and secure checkout"),
     ("clarify",         "❓ Clarifying Questions",      "clarify"),
     ("delegation",      "👥 Task Delegation",           "delegate_task"),
     ("cronjob",         "⏰ Cron Jobs",                 "create/list/update/pause/resume/run, with optional attached skills"),
@@ -1051,7 +1052,7 @@ def tools_command(args=None, first_install: bool = False, config: dict = None):
     done_idx = _add_row("Done")
 
     while True:
-        idx = _prompt_choice("Select an option:", platform_choices, default=0)
+        idx = _prompt_choice("Select an option:", platform_choices, default=done_idx)
         if idx == done_idx:
             break
         if idx == reconfig_idx:
