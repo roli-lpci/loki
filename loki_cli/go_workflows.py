@@ -58,6 +58,24 @@ WORKFLOWS: dict[str, GoWorkflow] = {
 }
 
 
+_WORKFLOW_MARKERS = ("[LOKI_GO_", "[LOKI_OPS]")
+
+
+def strip_workflow_prompt(value: str | None) -> str:
+    text = str(value or "").rstrip()
+    indexes = [index for marker in _WORKFLOW_MARKERS if (index := text.find(marker)) >= 0]
+    if indexes:
+        text = text[:min(indexes)].rstrip()
+    return text
+
+
+def apply_workflow_prompt(agent, prompt: str) -> None:
+    base = strip_workflow_prompt(getattr(agent, "ephemeral_system_prompt", None))
+    agent.ephemeral_system_prompt = (base + "\n\n" + prompt).strip() if base else prompt.strip()
+    if hasattr(agent, "_invalidate_system_prompt"):
+        agent._invalidate_system_prompt()
+
+
 def resolve_workflow(name: str) -> GoWorkflow | None:
     normalized = str(name or "").strip().lower()
     if normalized in WORKFLOWS:

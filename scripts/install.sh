@@ -1707,7 +1707,15 @@ EOF
         fi
     fi
 
-    log_success "Repository ready"
+    local source_commit source_version source_branch
+    source_commit="$(git rev-parse --short=12 HEAD 2>/dev/null || true)"
+    source_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || printf 'detached')"
+    source_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' pyproject.toml 2>/dev/null | head -n 1)"
+    if [ -n "$source_version" ] && [ -n "$source_commit" ]; then
+        log_success "Repository ready — Loki v$source_version ($source_branch@$source_commit)"
+    else
+        log_success "Repository ready"
+    fi
 }
 
 setup_venv() {

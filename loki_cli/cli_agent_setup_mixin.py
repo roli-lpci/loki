@@ -567,6 +567,11 @@ class CLIAgentSetupMixin:
                 tool_gen_callback=self._on_tool_gen_start if self.streaming_enabled else None,
                 notice_callback=self._on_notice, notice_clear_callback=self._on_notice_clear,
                 reaction_callback=self._on_reaction)
+            pending_go_prompt = getattr(self, "_go_ephemeral_prompt", None)
+            if pending_go_prompt:
+                from loki_cli.go_workflows import apply_workflow_prompt
+                apply_workflow_prompt(self.agent, pending_go_prompt)
+
             # Reference for atexit memory-provider shutdown: ``_run_cleanup`` in cli.py
             # reads ``cli._active_agent_ref``, so this MUST write the ``cli`` module's
             # global — a ``global`` statement here would bind this module's namespace.

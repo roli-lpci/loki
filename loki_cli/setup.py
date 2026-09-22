@@ -353,13 +353,69 @@ def _module_installed(name: str) -> bool:
         return False
 
 
-def _print_banner(*lines: str) -> None:
-    """Print the magenta box banner: top border, the given body lines, bottom border."""
+def _print_banner(title: str, *lines: str) -> None:
+    """Print the setup banner using Loki blue and terminal-cell-correct padding."""
+    from wcwidth import wcwidth, wcswidth
+
+    inner_width = 57
+
+    def _rgb(hex_color: str) -> str:
+        value = hex_color.lstrip("#")
+        r, g, b = (int(value[index:index + 2], 16) for index in (0, 2, 4))
+        return f"\033[38;2;{r};{g};{b}m"
+
+    border_color = _rgb("#2563EB")
+    title_color = _rgb("#93C5FD")
+    text_color = _rgb("#60A5FA")
+
+    def _body(text: str) -> str:
+        value = str(text or "").strip()
+        if value.startswith("│"):
+            value = value[1:]
+        if value.endswith("│"):
+            value = value[:-1]
+        return value.strip()
+
+    def _width(text: str) -> int:
+        measured = wcswidth(text)
+        return len(text) if measured < 0 else measured
+
+    def _clip(text: str, width: int) -> str:
+        output: list[str] = []
+        used = 0
+        for char in text:
+            cells = wcwidth(char)
+            if cells < 0:
+                cells = 0
+            if used + cells > width:
+                break
+            output.append(char)
+            used += cells
+        return "".join(output)
+
+    def _center(text: str, width: int) -> str:
+        clipped = _clip(text, width)
+        remaining = max(0, width - _width(clipped))
+        left = remaining // 2
+        right = remaining - left
+        return " " * left + clipped + " " * right
+
+    def _left(text: str, width: int) -> str:
+        clipped = _clip(text, width)
+        return clipped + " " * max(0, width - _width(clipped))
+
+    clean_title = _body(title)
+    clean_lines = [_body(line) for line in lines if _body(line)]
+
     print()
-    print(color("┌─────────────────────────────────────────────────────────┐", Colors.MAGENTA))
-    for line in lines:
-        print(color(line, Colors.MAGENTA))
-    print(color("└─────────────────────────────────────────────────────────┘", Colors.MAGENTA))
+    print(color("┌" + "─" * inner_width + "┐", border_color, Colors.BOLD))
+    print(color("│" + _center(clean_title, inner_width) + "│", title_color, Colors.BOLD))
+    if clean_lines:
+        print(color("├" + "─" * inner_width + "┤", border_color, Colors.BOLD))
+        content_width = inner_width - 4
+        for line in clean_lines:
+            print(color("│  " + _left(line, content_width) + "  │", text_color))
+    print(color("└" + "─" * inner_width + "┘", border_color, Colors.BOLD))
 
 
 # ── Section 1: Model & Provider Configuration ──
@@ -590,7 +646,7 @@ def _run_setup_section(config: dict, section: str) -> None:
         print_info(f"Available sections: {', '.join(k for k, _, _ in SETUP_SECTIONS)}")
         return
     label, func = entry
-    _print_banner(f"│     𖤍 Loki Setup — {label:<34s} │")
+    _print_banner(f"𖤍 Loki Setup — {label}")
     _run_setup_steps([(label, lambda: func(config))])
     save_config(config)
     print()
@@ -681,10 +737,11 @@ def _run_setup_wizard_impl(args):
     from loki_cli.auth import get_active_provider
     is_existing = bool(get_env_value("OPENROUTER_API_KEY") or get_env_value("OPENAI_BASE_URL")
                        or get_active_provider() is not None)
-    _print_banner("│             𖤍 Loki Agent Setup Wizard                │",
-                  "├─────────────────────────────────────────────────────────┤",
-                  "│  Let's configure your Loki Agent installation.       │",
-                  "│  Press Ctrl+C at any time to exit.                     │")
+    _print_banner(
+        "𖤍 Loki Agent Setup Wizard",
+        "Let's configure your Loki Agent installation.",
+        "Press Ctrl+C at any time to exit.",
+    )
     migration_ran = False
     if is_existing:
         # Full reconfigure wizard is the default (Enter keeps each current value); `--quick`

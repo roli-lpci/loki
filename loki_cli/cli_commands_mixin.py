@@ -2381,53 +2381,100 @@ class CLICommandsMixin:
 
         config = load_config()
         enabled_now = set(_get_platform_tools(config, "cli", include_default_mcp_servers=False))
-        missing = [name for name in workflow.toolsets if name not in enabled_now]
-        if missing:
-            self._run_tools_config(tools_action="enable", names=missing, platform="cli")
+
+        from agent.skill_utils import parse_config_string_list
+        disabled_now = set(parse_config_string_list((config.get("agent") or {}).get("disabled_toolsets")))
+        needs_enable = [
+            name for name in workflow.toolsets
+            if name not in enabled_now or name in disabled_now
+        ]
+        if needs_enable:
+            self._run_tools_config(tools_action="enable", names=needs_enable, platform="cli")
             config = load_config()
             enabled_after = set(_get_platform_tools(config, "cli", include_default_mcp_servers=False))
-            still_missing = [name for name in workflow.toolsets if name not in enabled_after]
+            disabled_after = set(parse_config_string_list((config.get("agent") or {}).get("disabled_toolsets")))
+            still_missing = [
+                name for name in workflow.toolsets
+                if name not in enabled_after or name in disabled_after
+            ]
             if still_missing:
                 return bool(_cp(
-                    f"  Could not enable {display_name or f'/go {workflow.name}'}.",
+                    f"  Could not enable {display_name or f'/go {workflow.name}' }.",
                     "  Missing required toolsets: " + ", ".join(still_missing),
                     "  Run /tools list to inspect the active tool configuration.",
                 ))
+
         if workflow.browser_backend:
             config.setdefault("browser", {})["backend"] = workflow.browser_backend
         save_config(config)
         invalidate_check_fn_cache()
 
+        if workflow.browser_backend == "browser-use":
+            import tools.browser_use_cli  # noqa: F401
+        if "link-wallet" in workflow.toolsets:
+            import tools.link_wallet_tool  # noqa: F401
+
         self.new_session()
         _refresh_cli_toolsets(self)
 
+        self._go_mode = workflow.name
+        prompt_to_apply = ephemeral_prompt if ephemeral_prompt is not None else workflow.ephemeral_prompt
+        self._go_ephemeral_prompt = prompt_to_apply
+
         agent = getattr(self, "agent", None)
+        init_agent = getattr(self, "_init_agent", None)
+        if agent is None and callable(init_agent):
+            if not init_agent():
+                self._go_mode = None
+                self._go_ephemeral_prompt = None
+                return bool(_cp(
+                    f"  Could not enable {display_name or f'/go {workflow.name}' }.",
+                    "  Loki could not initialize the fresh workflow agent.",
+                ))
+            agent = getattr(self, "agent", None)
+
         required_runtime_tools = tuple(getattr(workflow, "required_runtime_tools", ()) or ())
         if required_runtime_tools:
-            visible_tools = set(getattr(agent, "valid_tool_names", ()) or ()) if agent is not None else set()
+            if agent is not None:
+                visible_tools = set(getattr(agent, "valid_tool_names", ()) or ())
+                missing_runtime_tools = [name for name in required_runtime_tools if name not in visible_tools]
+                if missing_runtime_tools:
+                    _refresh_cli_toolsets(self)
+                    visible_tools = set(getattr(agent, "valid_tool_names", ()) or ())
+            else:
+                import model_tools
+                tool_defs = model_tools.get_tool_definitions(
+                    enabled_toolsets=list(getattr(self, "enabled_toolsets", ()) or ()),
+                    disabled_toolsets=list(getattr(self, "disabled_toolsets", ()) or ()),
+                    quiet_mode=True,
+                    skip_tool_search_assembly=True,
+                )
+                visible_tools = {
+                    tool.get("function", {}).get("name", "")
+                    for tool in tool_defs
+                    if isinstance(tool, dict)
+                }
             missing_runtime_tools = [name for name in required_runtime_tools if name not in visible_tools]
             if missing_runtime_tools:
                 self._go_mode = None
+                self._go_ephemeral_prompt = None
+                if agent is not None:
+                    from loki_cli.go_workflows import strip_workflow_prompt
+                    agent.ephemeral_system_prompt = strip_workflow_prompt(
+                        getattr(agent, "ephemeral_system_prompt", None)
+                    )
+                    if hasattr(agent, "_invalidate_system_prompt"):
+                        agent._invalidate_system_prompt()
                 return bool(_cp(
                     f"  Could not enable {display_name or f'/go {workflow.name}' }.",
-                    "  The configured toolsets did not produce the required runtime tools:",
+                    "  The fresh agent is missing required runtime tools:",
                     "  " + ", ".join(missing_runtime_tools),
                     "  /go will not report ready until those tools are actually model-visible.",
                 ))
 
-        self._go_mode = workflow.name
-        prompt_to_apply = ephemeral_prompt if ephemeral_prompt is not None else workflow.ephemeral_prompt
         if agent is not None:
-            base = str(getattr(agent, "ephemeral_system_prompt", "") or "").rstrip()
-            marker_indexes = [
-                index for marker in ("[LOKI_GO_", "[LOKI_OPS]")
-                if (index := base.find(marker)) >= 0
-            ]
-            if marker_indexes:
-                base = base[:min(marker_indexes)].rstrip()
-            agent.ephemeral_system_prompt = (base + "\n\n" + prompt_to_apply).strip()
-            if hasattr(agent, "_invalidate_system_prompt"):
-                agent._invalidate_system_prompt()
+            from loki_cli.go_workflows import apply_workflow_prompt
+            apply_workflow_prompt(agent, prompt_to_apply)
 
         label = display_name or f"/go {workflow.name}"
         _cp(
@@ -2451,15 +2498,11 @@ class CLICommandsMixin:
             self.new_session()
             self._go_mode = None
             self._ops_lens = None
+            self._go_ephemeral_prompt = None
             agent = getattr(self, "agent", None)
             if agent is not None:
-                prompt = str(getattr(agent, "ephemeral_system_prompt", "") or "")
-                marker_indexes = [
-                    index for marker in ("[LOKI_GO_", "[LOKI_OPS]")
-                    if (index := prompt.find(marker)) >= 0
-                ]
-                if marker_indexes:
-                    prompt = prompt[:min(marker_indexes)].rstrip()
+                from loki_cli.go_workflows import strip_workflow_prompt
+                prompt = strip_workflow_prompt(getattr(agent, "ephemeral_system_prompt", None))
                 agent.ephemeral_system_prompt = prompt or None
                 if hasattr(agent, "_invalidate_system_prompt"):
                     agent._invalidate_system_prompt()
