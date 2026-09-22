@@ -21,7 +21,8 @@ def link_api_url() -> str:
     return os.getenv("LOKI_LINK_API_URL", DEFAULT_LINK_API_URL).rstrip("/")
 
 
-def _request(method: str, path: str, *, interactive_sso: bool = False, retry_auth: bool = True) -> dict[str, Any]:
+def _request(method: str, path: str, *, interactive_sso: bool = False, retry_auth: bool = True,
+             json_body: dict[str, Any] | None = None) -> dict[str, Any]:
     access_token = get_sso_access_token(interactive=interactive_sso)
     if not access_token:
         raise LinkConnectionError("WunderCorp SSO is required. Run /sso login or /link connect.")
@@ -30,6 +31,7 @@ def _request(method: str, path: str, *, interactive_sso: bool = False, retry_aut
             method,
             f"{link_api_url()}{path}",
             headers={"authorization": f"Bearer {access_token}", "accept": "application/json"},
+            json=json_body,
             timeout=20.0,
         )
     except httpx.HTTPError as exc:
@@ -37,7 +39,7 @@ def _request(method: str, path: str, *, interactive_sso: bool = False, retry_aut
     if response.status_code == 401 and retry_auth:
         access_token = get_sso_access_token(interactive=interactive_sso, force_refresh=True)
         if access_token:
-            return _request(method, path, interactive_sso=interactive_sso, retry_auth=False)
+            return _request(method, path, interactive_sso=interactive_sso, retry_auth=False, json_body=json_body)
     if response.status_code >= 400:
         message = ""
         try:
@@ -94,6 +96,40 @@ def link_user_info() -> dict[str, Any]:
 def link_payment_methods() -> dict[str, Any]:
     return _request("GET", "/api/link/payment-methods", interactive_sso=False)
 
+
+
+def link_shipping_addresses() -> dict[str, Any]:
+    return _request("GET", "/api/link/shipping-addresses", interactive_sso=False)
+
+
+def link_spend_requests() -> dict[str, Any]:
+    return _request("GET", "/api/link/spend-requests", interactive_sso=False)
+
+
+def create_spend_request(payload: dict[str, Any]) -> dict[str, Any]:
+    return _request("POST", "/api/link/spend-requests", interactive_sso=False, json_body=payload)
+
+
+def get_spend_request(spend_request_id: str) -> dict[str, Any]:
+    return _request("GET", f"/api/link/spend-requests/{spend_request_id}", interactive_sso=False)
+
+
+def request_spend_approval(spend_request_id: str) -> dict[str, Any]:
+    return _request("POST", f"/api/link/spend-requests/{spend_request_id}/request-approval", interactive_sso=False)
+
+
+def cancel_spend_request(spend_request_id: str) -> dict[str, Any]:
+    return _request("POST", f"/api/link/spend-requests/{spend_request_id}/cancel", interactive_sso=False)
+
+
+def get_spend_credential(spend_request_id: str, credential_type: str = "card") -> dict[str, Any]:
+    if credential_type not in {"card", "shared_payment_token", "link_pay_token"}:
+        raise LinkConnectionError("Unsupported Link credential type")
+    return _request(
+        "GET",
+        f"/api/link/spend-requests/{spend_request_id}/credential?type={credential_type}",
+        interactive_sso=False,
+    )
 
 def format_link_status(status: dict[str, Any]) -> str:
     if not status.get("connected"):

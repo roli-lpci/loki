@@ -1470,3 +1470,42 @@ def test_browser_on_is_alias_for_enabling_browser_use(monkeypatch):
     with patch("loki_cli.cli_commands_mixin._browser_use") as use:
         CLICommandsMixin._handle_browser_command(stub, "/browser on")
     use.assert_called_once_with(stub, "on")
+
+
+def test_browser_use_on_also_enables_terminal_when_missing(monkeypatch):
+    import loki_cli.config as hc
+    import loki_cli.tools_config as tools_config
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    config = {"platform_toolsets": {"cli": []}, "agent": {}, "browser": {}}
+
+    class Stub:
+        def __init__(self):
+            self.enabled_toolsets = set()
+            self.disabled_toolsets = []
+            self.agent = None
+            self.tool_mutations = []
+
+        def _run_tools_config(self, **kwargs):
+            self.tool_mutations.append(kwargs)
+            config["platform_toolsets"]["cli"].extend(kwargs["names"])
+
+        def new_session(self):
+            return None
+
+    monkeypatch.setattr(hc, "load_config", lambda: config)
+    monkeypatch.setattr(hc, "save_config", lambda c: None)
+    monkeypatch.setattr(
+        tools_config,
+        "_get_platform_tools",
+        lambda cfg, platform, **kwargs: set(cfg.get("platform_toolsets", {}).get(platform, [])),
+    )
+
+    stub = Stub()
+    CLICommandsMixin._handle_browser_command(stub, "/browser use on")
+
+    assert stub.tool_mutations == [{
+        "tools_action": "enable",
+        "names": ["terminal", "browser"],
+        "platform": "cli",
+    }]

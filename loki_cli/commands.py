@@ -270,6 +270,9 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("browser", "Connect browser tools to your live Chromium-family browser via CDP, or switch to Browser Use mode", "Tools & Skills",
                cli_only=True, args_hint="[connect|disconnect|status|use]",
                subcommands=("connect", "disconnect", "status", "use")),
+    CommandDef("go", "Activate an extensible task workflow", "Tools & Skills",
+               cli_only=True, args_hint="[shopping|status|off]",
+               subcommands=("shopping", "status", "off"), busy_policy="dispatch", desktop="terminal"),
     CommandDef("plugins", "List installed plugins and their status",
                "Tools & Skills", cli_only=True, desktop="terminal"),
 

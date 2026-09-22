@@ -480,8 +480,10 @@ def _browser_use(cli, arg: str) -> None:
     # the normal /tools mutation path so Blank Slate's agent.disabled_toolsets is also
     # reconciled correctly.
     config = load_config()
-    if "browser" not in _get_platform_tools(config, "cli", include_default_mcp_servers=False):
-        cli._run_tools_config(tools_action="enable", names=["browser"], platform="cli")
+    enabled_now = set(_get_platform_tools(config, "cli", include_default_mcp_servers=False))
+    missing = [name for name in ("terminal", "browser") if name not in enabled_now]
+    if missing:
+        cli._run_tools_config(tools_action="enable", names=missing, platform="cli")
         config = load_config()
 
     if arg == "on":
@@ -2360,6 +2362,93 @@ class CLICommandsMixin:
             fail_label="Link",
             header_lines=["  Link"],
             title_suffix=f"({action})",
+            empty_note="  (No result)",
+            console=console,
+        )
+        thread.start()
+
+    def _handle_go_command(self, cmd_original: str) -> None:
+        from loki_cli.go_workflows import resolve_workflow, workflow_lines
+
+        action = _command_arg(cmd_original, lower=True) or "status"
+        if action in {"status", "list"}:
+            mode = getattr(self, "_go_mode", None)
+            if mode:
+                return _cp(f"  /go mode: {mode}", "  /go off exits the workflow mode.")
+            return _cp("  /go workflows", *workflow_lines(), "", "  Usage: /go <workflow>")
+        if action in {"off", "stop", "exit"}:
+            self._go_mode = None
+            agent = getattr(self, "agent", None)
+            if agent is not None:
+                prompt = str(getattr(agent, "ephemeral_system_prompt", "") or "")
+                marker_text = "[LOKI_GO_"
+                marker_index = prompt.find(marker_text)
+                if marker_index >= 0:
+                    prompt = prompt[:marker_index].rstrip()
+                agent.ephemeral_system_prompt = prompt or None
+                if hasattr(agent, "_invalidate_system_prompt"):
+                    agent._invalidate_system_prompt()
+            return _cp("  /go workflow mode disabled. Enabled tools remain available.")
+
+        workflow = resolve_workflow(action)
+        if workflow is None:
+            return _cp("  Unknown /go workflow.", *workflow_lines(), "", "  Usage: /go <workflow>")
+
+        from loki_cli.config import load_config, save_config
+        from loki_cli.tools_config import _get_platform_tools
+        from tools.registry import invalidate_check_fn_cache
+
+        config = load_config()
+        enabled_now = set(_get_platform_tools(config, "cli", include_default_mcp_servers=False))
+        missing = [name for name in workflow.toolsets if name not in enabled_now]
+        if missing:
+            self._run_tools_config(tools_action="enable", names=missing, platform="cli")
+            config = load_config()
+        if workflow.browser_backend:
+            config.setdefault("browser", {})["backend"] = workflow.browser_backend
+        save_config(config)
+        invalidate_check_fn_cache()
+
+        self.new_session()
+        _refresh_cli_toolsets(self)
+        self._go_mode = workflow.name
+        agent = getattr(self, "agent", None)
+        if agent is not None:
+            base = str(getattr(agent, "ephemeral_system_prompt", "") or "").rstrip()
+            if workflow.ephemeral_prompt.splitlines()[0] not in base:
+                agent.ephemeral_system_prompt = (base + "\n\n" + workflow.ephemeral_prompt).strip()
+            if hasattr(agent, "_invalidate_system_prompt"):
+                agent._invalidate_system_prompt()
+
+        _cp(
+            f"  🚀 /go {workflow.name} enabled",
+            "  Required tools are active in a fresh session.",
+            "  Preparing connected services…" if workflow.requires_link else "  Workflow ready.",
+        )
+        if not workflow.requires_link:
+            return
+
+        from loki_cli import link_connection
+        console = None if getattr(self, "_app", None) else getattr(self, "console", None)
+
+        def produce() -> str:
+            try:
+                status = link_connection.link_status(interactive_sso=False)
+                if not status.get("connected"):
+                    status = link_connection.connect_link()
+            except link_connection.LinkConnectionError:
+                status = link_connection.connect_link()
+            return (
+                link_connection.format_link_status(status)
+                + "\nShopping mode ready. Tell Loki what to shop for, or give it a product URL."
+            )
+
+        thread = self._side_worker(
+            produce,
+            name=f"go-{workflow.name}",
+            fail_label=f"/go {workflow.name}",
+            header_lines=[f"  /go {workflow.name}"],
+            title_suffix="(ready)",
             empty_note="  (No result)",
             console=console,
         )
