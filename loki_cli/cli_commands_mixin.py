@@ -2411,6 +2411,8 @@ class CLICommandsMixin:
 
         if workflow.browser_backend == "browser-use":
             import tools.browser_use_cli  # noqa: F401
+        if "webmcp" in workflow.toolsets:
+            import tools.webmcp_tool  # noqa: F401
         if "link-wallet" in workflow.toolsets:
             import tools.link_wallet_tool  # noqa: F401
 

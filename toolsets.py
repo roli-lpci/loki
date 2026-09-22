@@ -131,6 +131,16 @@ TOOLSETS = {
     "context_engine": _ts("Runtime tools exposed by the active context engine"),
     "session_search": _ts("Search and recall past conversations with summarization", ["session_search"]),
     "connections": _ts("Remote connector discovery, execution, and account authorization", ["manage_connections"]),
+    "webmcp": _ts(
+        "WebMCP browser-page tools and directory discovery for structured website interaction",
+        [
+            "webmcp_lookup",
+            "webmcp_list_tools",
+            "webmcp_describe_tool",
+            "webmcp_call",
+            "webmcp_search_sites",
+        ],
+    ),
     "link-wallet": _ts(
         "WunderCorp Link wallet tools for agentic shopping, spend approval, and secure checkout",
         [

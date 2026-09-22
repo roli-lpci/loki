@@ -100,3 +100,8 @@ bash ./scripts/reinstall-current-loki.sh
 ```
 
 Then fully quit/restart Loki. The script re-points the environment behind the current `loki` executable at this source tree and verifies the relevant implementation before returning success.
+
+
+## WebMCP
+
+`/go shopping` also enables the `webmcp` toolset. Loki checks the live page for `document.modelContext` tools first, uses structured WebMCP actions when they fit, and falls back to `browser_exec` when the site does not expose the needed capability. Directory metadata from webmcp.com is discovery guidance only; live page capability is verified separately. Sensitive WebMCP `transact` actions are human-gated and must not bypass Link spend approval.

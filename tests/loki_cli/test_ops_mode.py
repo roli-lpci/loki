@@ -26,6 +26,7 @@ def test_go_shopping_requires_link_wallet_and_ops_does_not():
     assert ops is not None
     assert ops.toolsets == OPS_TOOLSETS
     assert "connections" in ops.toolsets
+    assert "webmcp" in ops.toolsets
     assert "cronjob" in ops.toolsets
     assert "link-wallet" not in ops.toolsets
     assert ops.requires_link is False

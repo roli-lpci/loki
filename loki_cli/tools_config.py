@@ -69,6 +69,7 @@ CONFIGURABLE_TOOLSETS = [
     ("context_engine",  "🧩 Context Engine",            "runtime tools from the active context engine"),
     ("session_search",  "🔎 Session Search",            "search past conversations"),
     ("connections",     "🔌 Connections",               "remote connector tools and account authorization"),
+    ("webmcp",          "🧩 WebMCP",                     "structured tools exposed by websites + WebMCP directory"),
     ("link-wallet",     "💳 Link Wallet",                "WunderCorp Link payments and secure checkout"),
     ("clarify",         "❓ Clarifying Questions",      "clarify"),
     ("delegation",      "👥 Task Delegation",           "delegate_task"),
@@ -94,7 +95,7 @@ def gui_toolset_label(label: str) -> str:
 
 # OFF by default for new installs (still in _LOKI_CORE_TOOLS; the checklist won't pre-select them). x_search
 # auto-enables when xAI creds exist (mirrors HASS_TOKEN → homeassistant); its check_fn still gates the schema.
-_DEFAULT_OFF_TOOLSETS = {"homeassistant", "spotify", "discord", "discord_admin", "video", "video_gen", "x_search", "a2a"}
+_DEFAULT_OFF_TOOLSETS = {"homeassistant", "spotify", "discord", "discord_admin", "video", "video_gen", "x_search", "a2a", "webmcp", "link-wallet"}
 
 # Config-only capabilities: provider setup in `loki tools` (TOOL_CATEGORIES) but not model toolsets — zero
 # schemas, own switch (``stt.enabled``), never in ``platform_toolsets`` or the per-platform checklist.
