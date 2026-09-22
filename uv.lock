@@ -1670,7 +1670,7 @@ wheels = [
 
 [[package]]
 name = "loki-agent"
-version = "0.21.16"
+version = "0.21.20"
 source = { editable = "." }
 dependencies = [
     { name = "certifi" },
