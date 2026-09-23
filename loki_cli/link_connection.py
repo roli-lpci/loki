@@ -97,7 +97,6 @@ def link_payment_methods() -> dict[str, Any]:
     return _request("GET", "/api/link/payment-methods", interactive_sso=False)
 
 
-
 def link_shipping_addresses() -> dict[str, Any]:
     return _request("GET", "/api/link/shipping-addresses", interactive_sso=False)
 
@@ -131,6 +130,7 @@ def get_spend_credential(spend_request_id: str, credential_type: str = "card") -
         interactive_sso=False,
     )
 
+
 def format_link_status(status: dict[str, Any]) -> str:
     if not status.get("connected"):
         return "Link: not connected\nRun /link connect to connect your Link wallet."
@@ -149,4 +149,8 @@ def format_link_user_info(payload: dict[str, Any]) -> str:
 
 
 def format_link_payment_methods(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, indent=2, sort_keys=True)
+
+
+def format_link_shipping_addresses(payload: dict[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True)

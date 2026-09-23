@@ -16,6 +16,7 @@ node_modules/
 __pycache__/
 
 # Build output
+Archive.zip
 dist/
 build/
 infra/

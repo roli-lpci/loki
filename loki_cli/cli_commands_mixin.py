@@ -2326,10 +2326,16 @@ class CLICommandsMixin:
 
     def _handle_link_command(self, cmd_original: str) -> None:
         action = _command_arg(cmd_original, lower=True) or "status"
-        aliases = {"methods": "payment-methods", "payments": "payment-methods"}
+        aliases = {
+            "methods": "payment-methods",
+            "payments": "payment-methods",
+            "addresses": "address",
+            "shipping-address": "address",
+            "shipping-addresses": "address",
+        }
         action = aliases.get(action, action)
-        if action not in {"status", "connect", "disconnect", "user", "payment-methods"}:
-            return _cp("  Usage: /link [status|connect|disconnect|user|payment-methods]")
+        if action not in {"status", "connect", "disconnect", "user", "payment-methods", "address"}:
+            return _cp("  Usage: /link [status|connect|disconnect|user|payment-methods|address]")
         from loki_cli import link_connection
         console = None if getattr(self, "_app", None) else getattr(self, "console", None)
         if action == "connect":
@@ -2348,6 +2354,8 @@ class CLICommandsMixin:
                 return link_connection.format_link_user_info(link_connection.link_user_info())
             if action == "payment-methods":
                 return link_connection.format_link_payment_methods(link_connection.link_payment_methods())
+            if action == "address":
+                return link_connection.format_link_shipping_addresses(link_connection.link_shipping_addresses())
             try:
                 status = link_connection.link_status(interactive_sso=False)
             except link_connection.LinkConnectionError as exc:

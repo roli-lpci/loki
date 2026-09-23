@@ -23,7 +23,7 @@
     "audit:fix:root": "npm audit fix --workspaces=false",
     "audit:fix:web": "npm audit fix --workspace web",
     "audit:fix:tui": "npm audit fix --workspace tui-ui",
-    "check": "npm run check:docs && npm run --ws --if-present check",
+    "check": "npm run check:deps && npm run check:docs && npm run --ws --if-present check",
     "fix": "npm run --ws fix",
     "verify:brand": "node scripts/verify-rebrand.mjs",
     "release:check": "npm run verify:version && npm run verify:lock && npm run verify:brand && npm run verify:package",
@@ -38,7 +38,8 @@
     "verify:version": "python3 scripts/sync_version.py verify",
     "verify:package": "node scripts/verify-package-contents.mjs",
     "check:docs": "npm --prefix website test",
-    "check:quick": "npm run typecheck --workspace apps/shared && npm run typecheck --workspace apps/desktop && npm run typecheck --workspace tui-ui && npm run typecheck --workspace web && npm run test --workspace tests-js && npm run test --workspace web -- src/components/OAuthLoginModal.test.tsx src/pages/SessionsPage.test.tsx && npm run lint --workspace apps/shared && npm run lint --workspace apps/desktop"
+    "check:quick": "npm run typecheck --workspace apps/shared && npm run typecheck --workspace apps/desktop && npm run typecheck --workspace tui-ui && npm run typecheck --workspace web && npm run test --workspace tests-js && npm run test --workspace web -- src/components/OAuthLoginModal.test.tsx src/pages/SessionsPage.test.tsx && npm run lint --workspace apps/shared && npm run lint --workspace apps/desktop",
+    "check:deps": "node scripts/check-unused-workspace-deps.mjs"
   },
   "repository": {
     "type": "git",

@@ -92,11 +92,6 @@ export default defineConfig({
     dedupe: [
       "react",
       "react-dom",
-      "@react-three/fiber",
-      "@observablehq/plot",
-      "three",
-      "leva",
-      "gsap",
     ],
   },
   build: {
@@ -107,8 +102,8 @@ export default defineConfig({
     // regression still warns.
     chunkSizeWarningLimit: 600,
     // Split heavy vendors so the first dashboard paint does not download
-    // xterm/three/plot/etc. until a route actually needs them. Lazy page
-    // imports in App.tsx create the route boundaries; these groups keep
+    // route-specific dependencies until they are needed. Lazy page imports
+    // in App.tsx create the route boundaries; these groups keep
     // shared node_modules out of every page chunk.
     rolldownOptions: {
       output: {
@@ -122,18 +117,6 @@ export default defineConfig({
             {
               name: "xterm",
               test: /node_modules[\\/]@xterm[\\/]/,
-            },
-            {
-              name: "three",
-              test: /node_modules[\\/](three|@react-three)([\\/]|$)/,
-            },
-            {
-              name: "plot",
-              test: /node_modules[\\/]@observablehq[\\/]plot([\\/]|$)/,
-            },
-            {
-              name: "motion",
-              test: /node_modules[\\/](motion|framer-motion)([\\/]|$)/,
             },
             {
               name: "ui",

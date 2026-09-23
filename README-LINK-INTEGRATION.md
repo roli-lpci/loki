@@ -10,6 +10,7 @@ Commands:
 - `/link disconnect` — revoke/remove the Link grant without signing out of WunderCorp SSO
 - `/link user` — fetch Link user info
 - `/link payment-methods` — fetch Link payment methods
+- `/link address` — fetch saved Link shipping addresses
 - `/wallet` — alias for `/link`
 
 Defaults:

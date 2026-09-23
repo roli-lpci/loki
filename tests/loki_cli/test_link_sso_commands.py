@@ -29,6 +29,7 @@ def test_registry_exposes_sso_and_link_commands():
     assert link.cli_only is True
     assert wallet is link
     assert "connect" in link.subcommands
+    assert "address" in link.subcommands
 
 
 def test_sso_authorization_url_uses_registered_loopback_and_pkce(monkeypatch):
@@ -79,6 +80,56 @@ def test_link_status_copy_for_disconnected():
         "Link: not connected\nRun /link connect to connect your Link wallet."
     )
 
+
+def test_link_address_uses_shipping_addresses_endpoint(monkeypatch):
+    from loki_cli import cli_commands_mixin as commands_mixin
+    from loki_cli.cli_commands_mixin import CLICommandsMixin
+
+    calls = []
+    outputs = []
+
+    monkeypatch.setattr(
+        link_connection,
+        "link_shipping_addresses",
+        lambda: calls.append("shipping-addresses") or {
+            "addresses": [{"city": "New York", "country": "US"}]
+        },
+    )
+    monkeypatch.setattr(commands_mixin, "_cp", lambda *lines: outputs.extend(lines))
+
+    class Worker:
+        def __init__(self, produce):
+            self.produce = produce
+
+        def start(self):
+            outputs.append(self.produce())
+
+    class Stub:
+        _app = True
+
+        def _side_worker(self, produce, **kwargs):
+            return Worker(produce)
+
+    CLICommandsMixin._handle_link_command(Stub(), "/link address")
+
+    assert calls == ["shipping-addresses"]
+    assert any('"city": "New York"' in output for output in outputs)
+
+
+def test_link_shipping_addresses_helper_calls_shipping_endpoint(monkeypatch):
+    calls = []
+
+    def fake_request(method, path, **kwargs):
+        calls.append((method, path, kwargs))
+        return {"addresses": []}
+
+    monkeypatch.setattr(link_connection, "_request", fake_request)
+    assert link_connection.link_shipping_addresses() == {"addresses": []}
+    assert calls == [(
+        "GET",
+        "/api/link/shipping-addresses",
+        {"interactive_sso": False},
+    )]
 
 
 def test_registry_exposes_go_shopping_command():

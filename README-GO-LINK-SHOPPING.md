@@ -6,7 +6,7 @@ This build adds an execution layer on top of the existing WunderCorp SSO and Lin
 
 ```text
 /sso [status|login|logout]
-/link [status|connect|disconnect|user|payment-methods]
+/link [status|connect|disconnect|user|payment-methods|address]
 /wallet                         alias for /link
 /go                             list workflow modes
 /go shopping                    activate the shopping workflow
