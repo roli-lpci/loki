@@ -1,0 +1,13 @@
+name: fidelis
+repo: https://github.com/hermes-labs-ai/loki-fidelis
+sha: 878ccab2da65fd5dd9f79884c97a7d3744d7e3e1
+description: Opt-in local Fidelis memory provider with prompt-time recall and explicit storage and correction.
+maintainer: Roli Bosch
+tier: community
+docs_url: https://github.com/hermes-labs-ai/loki-fidelis
+platforms: [linux, macos]
+capabilities:
+  provides_tools: []
+  provides_hooks: []
+  provides_middleware: []
+  requires_env: []
