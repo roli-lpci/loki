@@ -51,6 +51,7 @@ PLATFORMS = {k: {"label": info.label, "default_toolset": info.default_toolset} f
 # Toolsets shown in the configurator: (toolset key in toolsets.py TOOLSETS, label, description).
 CONFIGURABLE_TOOLSETS = [
     ("web",             "🔍 Web Search & Scraping",    "web_search, web_extract"),
+    ("guardian_search", "🔍 Guardian Search MCP",       "structured web, shopping, site, and finance discovery"),
     ("browser",         "🌐 Browser Automation",       "navigate, click, type, scroll"),
     ("terminal",        "💻 Terminal & Processes",      "terminal, process"),
     ("file",            "📁 File Operations",           "read, write, patch, search"),

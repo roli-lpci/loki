@@ -117,6 +117,9 @@ def test_go_shopping_enables_required_toolsets_and_prompt(monkeypatch):
     class Agent:
         ephemeral_system_prompt = None
         valid_tool_names = {
+            "mcp__guardian_search__search_web",
+            "mcp__guardian_search__search_shopping",
+            "mcp__guardian_search__discover_sites",
             "browser_exec",
             "webmcp_lookup",
             "webmcp_list_tools",
@@ -175,7 +178,7 @@ def test_go_shopping_enables_required_toolsets_and_prompt(monkeypatch):
 
     assert stub.mutations == [{
         "tools_action": "enable",
-        "names": ["terminal", "browser", "webmcp", "link-wallet"],
+        "names": ["terminal", "web", "browser", "webmcp", "guardian_search", "link-wallet"],
         "platform": "cli",
     }]
     assert saved["browser"]["backend"] == "browser-use"
@@ -232,7 +235,7 @@ def test_go_shopping_fails_closed_when_runtime_tools_are_missing(monkeypatch):
     from loki_cli.cli_commands_mixin import CLICommandsMixin
 
     config = {
-        "platform_toolsets": {"cli": ["terminal", "browser", "webmcp", "link-wallet"]},
+        "platform_toolsets": {"cli": ["terminal", "web", "browser", "webmcp", "guardian_search", "link-wallet"]},
         "agent": {},
         "browser": {"backend": "browser-use"},
     }
@@ -287,7 +290,7 @@ def test_go_shopping_eagerly_initializes_lazy_agent(monkeypatch):
     from loki_cli.cli_commands_mixin import CLICommandsMixin
 
     config = {
-        "platform_toolsets": {"cli": ["terminal", "browser", "webmcp", "link-wallet"]},
+        "platform_toolsets": {"cli": ["terminal", "web", "browser", "webmcp", "guardian_search", "link-wallet"]},
         "agent": {},
         "browser": {"backend": "browser-use"},
     }
@@ -296,6 +299,9 @@ def test_go_shopping_eagerly_initializes_lazy_agent(monkeypatch):
     class Agent:
         ephemeral_system_prompt = None
         valid_tool_names = {
+            "mcp__guardian_search__search_web",
+            "mcp__guardian_search__search_shopping",
+            "mcp__guardian_search__discover_sites",
             "browser_exec",
             "webmcp_lookup",
             "webmcp_list_tools",
@@ -363,7 +369,7 @@ def test_go_shopping_reenables_globally_disabled_toolsets(monkeypatch):
     from loki_cli.cli_commands_mixin import CLICommandsMixin
 
     config = {
-        "platform_toolsets": {"cli": ["terminal", "browser", "webmcp", "link-wallet"]},
+        "platform_toolsets": {"cli": ["terminal", "web", "browser", "webmcp", "guardian_search", "link-wallet"]},
         "agent": {"disabled_toolsets": ["browser", "link-wallet"]},
         "browser": {"backend": "browser-use"},
     }
@@ -371,6 +377,7 @@ def test_go_shopping_reenables_globally_disabled_toolsets(monkeypatch):
     class Agent:
         ephemeral_system_prompt = None
         valid_tool_names = {
+            "mcp__guardian_search__search_web", "mcp__guardian_search__search_shopping", "mcp__guardian_search__discover_sites",
             "browser_exec", "webmcp_lookup", "webmcp_list_tools", "webmcp_call", "link_wallet_status", "link_spend_create",
             "link_spend_request_approval", "link_spend_wait", "link_checkout_fill",
         }

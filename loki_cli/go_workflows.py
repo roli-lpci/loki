@@ -19,20 +19,21 @@ class GoWorkflow:
 
 SHOPPING_PROMPT = (
     "[LOKI_GO_SHOPPING]\n"
-    "Shopping workflow is active. You have WebMCP tools for structured website actions, browser_exec for live web navigation and fallback, and Link wallet tools for payments. "
-    "When the user asks to shop, act on the site instead of claiming browser access is unavailable. On each retailer/service, prefer this order: first call webmcp_lookup or webmcp_list_tools on the live page; use webmcp_call for suitable product search/cart/form actions; fall back to browser_exec only when the page does not expose the needed WebMCP capability. webmcp.com directory metadata is discovery guidance, not proof that the active page has a callable interface. "
+    "Shopping workflow is active. Guardian Search MCP is the primary discovery layer, WebMCP is the primary structured merchant interaction layer, browser_exec is an interaction fallback, and Link wallet tools handle approved payment. "
+    "DISCOVERY ORDER: If the user names a merchant, do not search the web for alternatives; probe that merchant with webmcp_lookup(url=...) first. If the merchant is not named, call mcp__guardian_search__search_shopping first. Use mcp__guardian_search__discover_sites only when you need destination websites rather than products. Make at most two Guardian discovery calls before choosing a viable merchant or asking one concise question. "
+    "webmcp_search_sites searches the WebMCP capability directory; it is NOT a product search engine. Never call it repeatedly with product keywords such as 'paper towels'. Once a candidate merchant is known, use webmcp_lookup(url=...) to inspect directory metadata without opening a browser, then open only the selected merchant when live page tools are needed. "
+    "If Guardian Search MCP is unavailable or returns no useful result, use the normal web_search tool (DuckDuckGo/keyless search when configured) as the next discovery fallback. Do not use browser_exec to browse Google, Bing, DuckDuckGo, Yahoo, or other search-result pages. Browser automation is reserved for a known destination merchant or service. "
+    "INTERACTION ORDER: On a selected site, prefer live WebMCP tools via webmcp_list_tools/webmcp_call. Use browser_exec only for capabilities the page does not expose through WebMCP. If a CAPTCHA, login, identity check, or other human gate appears, preserve the current browser session, report the exact URL, and ask for only the required human interaction before resuming. "
     "Never use a WebMCP transact/checkout tool to bypass Link spend approval or the user's purchase authorization. Use Link only after reaching checkout and reading the exact final total. Create a spend request with accurate merchant, item, shipping, tax and total context; request Link approval; wait for approval; then use link_checkout_fill when card fields are needed. "
-    "Never request, display, repeat, log, or place raw payment credentials in model context. link_checkout_fill keeps credentials model-blind. "
-    "Before submitting the final merchant order, verify the merchant, items, shipping choice and total still match the approved spend request. "
-    "If a merchant requires user interaction such as CAPTCHA, identity verification, or account login that cannot be completed with available tools, ask for only that interaction and continue afterward."
+    "Never request, display, repeat, log, or place raw payment credentials in model context. link_checkout_fill keeps credentials model-blind. Before submitting the final merchant order, verify merchant, items, shipping choice and total still match the approved spend request."
 )
 
 
 WORKFLOWS: dict[str, GoWorkflow] = {
     "shopping": GoWorkflow(
         name="shopping",
-        description="browser + WunderCorp SSO + Link wallet purchasing",
-        toolsets=("terminal", "browser", "webmcp", "link-wallet"),
+        description="Guardian Search MCP + WebMCP + browser fallback + Link wallet purchasing",
+        toolsets=("terminal", "web", "browser", "webmcp", "guardian_search", "link-wallet"),
         browser_backend="browser-use",
         requires_link=True,
         required_runtime_tools=(

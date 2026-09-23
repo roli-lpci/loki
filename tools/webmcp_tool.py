@@ -151,8 +151,28 @@ def webmcp_list_tools(*, session: str = "", task_id: str | None = None) -> str:
 
 
 def webmcp_lookup(url: str = "", *, session: str = "", task_id: str | None = None) -> str:
+    requested_url = str(url or "").strip()
+    # A URL-only lookup is pure directory discovery and must not spin up Browser Use. This is
+    # important in shopping discovery: the model can probe candidate merchants cheaply, then open
+    # exactly one selected destination when live page tools are actually needed.
+    if requested_url and not str(session or "").strip():
+        try:
+            directory = _directory_request("/api/v1/lookup", {"url": requested_url})
+        except RuntimeError as exc:
+            directory = {"ok": False, "error": str(exc)}
+        return tool_result({
+            "success": True,
+            "url": requested_url,
+            "live": {
+                "skipped": True,
+                "reason": "directory-only URL lookup; pass a browser session or omit url to inspect the live page",
+            },
+            "directory": directory,
+            "note": "Directory support is stored metadata, not proof that a live browser page exposes WebMCP.",
+        })
+
     live = _run_browser_expression(_live_list_expression(), session=session, task_id=task_id)
-    probe_url = str(url or live.get("url") or "").strip()
+    probe_url = str(requested_url or live.get("url") or "").strip()
     directory: dict[str, Any] | None = None
     if probe_url:
         try:
@@ -344,7 +364,7 @@ def webmcp_search_sites(query: str = "", tool: str = "", kind: str = "", limit: 
 
 _LOOKUP = {
     "name": "webmcp_lookup",
-    "description": "Inspect the current browser page for live WebMCP tools and, when a URL is available, compare that with webmcp.com's read-only directory metadata. Use this near the start of a website task before falling back to DOM clicking. Directory metadata is not proof that the current browser exposes a live WebMCP API.",
+    "description": "Probe WebMCP capability. When url is provided without a browser session, this performs a fast directory-only lookup and does NOT launch Browser Use. When url is omitted (or session is provided), it inspects the live page too. Use URL-only mode during merchant discovery, then inspect live tools only after selecting a destination.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -390,7 +410,7 @@ _CALL = {
 }
 _SEARCH = {
     "name": "webmcp_search_sites",
-    "description": "Search webmcp.com's read-only directory for sites and capabilities by site text, tool name, or action category. Use to discover WebMCP-capable retailers/services before browser fallback. Categories: answer=read-only, act=reversible action, transact=sensitive external commitment.",
+    "description": "Search webmcp.com's read-only CAPABILITY DIRECTORY for sites and tool definitions. This is not product search and must not be used repeatedly with shopping-item keywords. Use Guardian Search MCP for products/merchants, then this directory only to discover sites by capability or tool name. Categories: answer=read-only, act=reversible action, transact=sensitive commitment.",
     "parameters": {
         "type": "object",
         "properties": {

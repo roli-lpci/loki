@@ -1436,6 +1436,13 @@ platform_toolsets:
 #     sessions quickly (e.g. Unreal Engine editor MCP, ~15s), otherwise idle
 #     tool calls hit an expired session and pay a slow reconnect. Floored at 5s.
 #
+# Guardian Search MCP is already enabled in built-in defaults. Override or disable it with:
+# mcp_servers:
+#   guardian_search:
+#     url: https://mcp.guardianbrowser.sh/v1
+#     enabled: false
+#
+# Other server examples:
 # mcp_servers:
 #   time:
 #     command: uvx

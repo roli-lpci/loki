@@ -521,6 +521,19 @@ DEFAULT_CONFIG = {
     # the larger bound lets slow cold-start servers (npx, uvx, remote HTTP) land. Reachable servers
     # still only wait their real handshake time.
     "mcp_single_query_discovery_timeout": 15.0,
+    # First-party remote MCPs that are useful out of the box. User config deep-merges over these
+    # entries, so a profile can disable or replace Guardian Search without editing source.
+    "mcp_servers": {
+        "guardian_search": {
+            "url": "https://mcp.guardianbrowser.sh/v1",
+            "enabled": True,
+            "connect_timeout": 4.0,
+            "supports_parallel_tool_calls": True,
+            "tools": {
+                "include": ["search_web", "search_shopping", "discover_sites", "finance_quote"],
+            },
+        },
+    },
     "mcp": {  # MCP runtime behavior (distinct from mcp_servers: definitions and auxiliary.mcp).
         # Auto-reload MCP connections when config.yaml's mcp_servers changes (CLI watcher). Every
         # reload rebuilds the tool surface and INVALIDATES the provider prompt cache (next message

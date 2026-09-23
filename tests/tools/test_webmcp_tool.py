@@ -138,3 +138,23 @@ def test_directory_search_bounds_limit_and_kind(monkeypatch):
     assert seen["path"] == "/api/v1/sites"
     assert seen["params"]["limit"] == 25
     assert seen["params"]["kind"] == "act"
+
+
+def test_url_lookup_without_session_does_not_launch_browser(monkeypatch):
+    from tools import webmcp_tool
+
+    monkeypatch.setattr(
+        webmcp_tool,
+        "_run_browser_expression",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("browser must not launch")),
+    )
+    monkeypatch.setattr(
+        webmcp_tool,
+        "_directory_request",
+        lambda path, params=None: {"ok": True, "supported": False, "host": "example.com"},
+    )
+
+    result = json.loads(webmcp_tool.webmcp_lookup("https://example.com/product"))
+    assert result["success"] is True
+    assert result["live"]["skipped"] is True
+    assert result["directory"]["host"] == "example.com"
